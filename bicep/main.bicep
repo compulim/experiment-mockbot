@@ -208,10 +208,9 @@ resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
 // }
 
 resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
-  name: 'Direct Line channel'
   parent: bot
   properties: {
-    channelName: '${bot.properties.displayName}/DirectLineChannel'
+    channelName: 'DirectLineChannel'
     properties: {
       sites: [
         {
