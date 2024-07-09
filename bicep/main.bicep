@@ -216,14 +216,14 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09
       sites: [
         {
           isEnabled: true
-          // isSecureSiteEnabled: true
-          isSecureSiteEnabled: false
+          isSecureSiteEnabled: true
+          // isSecureSiteEnabled: false
           isV1Enabled: false
           isV3Enabled: true
           siteName: 'Default Site'
-          // trustedOrigins: [
-          //   'https://compulim.github.io'
-          // ]
+          trustedOrigins: [
+            'https://compulim.github.io'
+          ]
         }
       ]
     }
