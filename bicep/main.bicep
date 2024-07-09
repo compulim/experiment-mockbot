@@ -230,10 +230,10 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09
   }
 }
 
-resource directLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  name: 'direct-line-secret'
-  parent: keyVault
-  properties: {
-    value: botDirectLineChannel.properties.properties.sites[0].key
-  }
-}
+// resource directLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+//   name: 'direct-line-secret'
+//   parent: keyVault
+//   properties: {
+//     value: botDirectLineChannel.properties.properties.sites[0].key
+//   }
+// }
