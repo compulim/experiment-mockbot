@@ -27,8 +27,8 @@ param containerAppIdentityName string = '${deploymentFamilyName}-app-user'
 param botName string = '${deploymentFamilyName}-bot'
 param botIdentityName string = '${deploymentFamilyName}-bot-user'
 param keyVaultName string = '${deploymentFamilyName}-key'
-param location string = 'westus'
-// param location string = resourceGroup().location
+// param location string = 'westus'
+param location string = resourceGroup().location
 param logAnalyticsName string = '${deploymentFamilyName}-log'
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' = {
@@ -172,7 +172,7 @@ resource botIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-3
 resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   kind: 'azurebot'
   name: botName
-  location: location
+  location: 'global'
   sku: {
     name: 'S1'
   }
@@ -207,7 +207,7 @@ resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
 //   }
 // }
 
-resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
+resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
   name: 'DirectLineChannel'
   parent: bot
   properties: {
@@ -234,6 +234,14 @@ resource directLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: 'direct-line-secret'
   parent: keyVault
   properties: {
-    value: botDirectLineChannel.properties.properties.sites[0].key
+    value: '${botDirectLineChannel.properties.properties.sites[0].key}'
+  }
+}
+
+resource directLineExtensionKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  name: 'direct-line-extension-key'
+  parent: keyVault
+  properties: {
+    value: '${botDirectLineChannel.properties.properties.extensionKey1}'
   }
 }
