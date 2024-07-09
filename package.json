@@ -6,5 +6,8 @@
   "license": "MIT",
   "workspaces": [
     "/packages/bot/"
-  ]
+  ],
+  "scripts": {
+    "build": "npm run build --if-present --workspaces"
+  }
 }
