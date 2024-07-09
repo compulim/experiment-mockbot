@@ -17,6 +17,10 @@ param registryServer string
 @secure()
 param registryPassword string
 
+@description('Dummy value to set in Key Vault as a secret for testing.')
+@secure()
+param dummyToken string
+
 param containerAppEnvName string = '${deploymentFamilyName}-env'
 param containerAppName string = '${deploymentFamilyName}-app'
 param containerAppIdentityName string = '${deploymentFamilyName}-app-user'
@@ -66,7 +70,7 @@ resource dummyTokenSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: 'dummy-token'
   parent: keyVault
   properties: {
-    value: 'dummyToken'
+    value: dummyToken
   }
 }
 
