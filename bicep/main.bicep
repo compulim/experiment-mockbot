@@ -186,22 +186,54 @@ resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   }
 }
 
-resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+// resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+//   name: 'Direct Line channel'
+//   parent: bot
+//   properties: {
+//     channelName: 'DirectLineChannel'
+//     properties: {
+//       sites: [
+//         {
+//           isEnabled: true
+//           isSecureSiteEnabled: true
+//           isV1Enabled: false
+//           siteName: 'Default Site'
+//           trustedOrigins: [
+//             'https://compulim.github.io'
+//           ]
+//         }
+//       ]
+//     }
+//   }
+// }
+
+resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
   name: 'Direct Line channel'
   parent: bot
   properties: {
-    channelName: 'DirectLineChannel'
+    channelName: '${bot.properties.displayName}/DirectLineChannel'
     properties: {
       sites: [
         {
           isEnabled: true
+          // isSecureSiteEnabled: true
+          isSecureSiteEnabled: false
+          isV1Enabled: false
+          isV3Enabled: true
           siteName: 'Default Site'
-          isSecureSiteEnabled: true
-          trustedOrigins: [
-            'https://compulim.github.io'
-          ]
+          // trustedOrigins: [
+          //   'https://compulim.github.io'
+          // ]
         }
       ]
     }
+  }
+}
+
+resource directLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  name: 'direct-line-secret'
+  parent: keyVault
+  properties: {
+    value: botDirectLineChannel.properties.properties.sites[0].key
   }
 }
