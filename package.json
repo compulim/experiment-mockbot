@@ -1,0 +1,10 @@
+{
+  "name": "@microsoft/botframework-mockbot-root",
+  "version": "0.0.0-0",
+  "private": true,
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "workspaces": [
+    "/packages/bot/"
+  ]
+}
