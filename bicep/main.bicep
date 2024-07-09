@@ -170,6 +170,7 @@ resource botIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-3
 }
 
 resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
+  kind: 'azurebot'
   name: botName
   location: location
   sku: {
