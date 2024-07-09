@@ -27,7 +27,8 @@ param containerAppIdentityName string = '${deploymentFamilyName}-app-user'
 param botName string = '${deploymentFamilyName}-bot'
 param botIdentityName string = '${deploymentFamilyName}-bot-user'
 param keyVaultName string = '${deploymentFamilyName}-key'
-param location string = resourceGroup().location
+param location string = 'westus'
+// param location string = resourceGroup().location
 param logAnalyticsName string = '${deploymentFamilyName}-log'
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' = {
