@@ -1,6 +1,11 @@
 // Import required bot services.
 // See https://aka.ms/bot-services to learn more about the different parts of a bot.
-import { CloudAdapter, ConfigurationBotFrameworkAuthentication, type TurnContext } from 'botbuilder';
+import {
+  CloudAdapter,
+  ConfigurationBotFrameworkAuthentication,
+  ConfigurationServiceClientCredentialFactory,
+  type TurnContext
+} from 'botbuilder';
 import { object, parse, string } from 'valibot';
 
 // Catch-all for errors.
@@ -26,10 +31,14 @@ const onTurnErrorHandler: CloudAdapter['onTurnError'] = async (context: TurnCont
 const envSchema = object({
   MicrosoftAppId: string(),
   MicrosoftAppTenantId: string(),
+  MicrosoftAppType: string()
 });
 
 export default function createBotFrameworkAdapter() {
-  const botFrameworkAuthentication = new ConfigurationBotFrameworkAuthentication(parse(envSchema, process.env));
+  const botFrameworkAuthentication = new ConfigurationBotFrameworkAuthentication(
+    undefined,
+    new ConfigurationServiceClientCredentialFactory(parse(envSchema, process.env))
+  );
 
   // See https://aka.ms/about-bot-adapter to learn more about how bots work.
   const adapter = new CloudAdapter(botFrameworkAuthentication);
