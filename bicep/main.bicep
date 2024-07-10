@@ -23,8 +23,9 @@ param botName string = '${deploymentFamilyName}-bot'
 param containerAppIdentityName string = '${deploymentFamilyName}-app-user'
 param containerAppName string = '${deploymentFamilyName}-app'
 param keyVaultName string = '${deploymentFamilyName}-key'
-// param location string = 'westus'
-param location string = resourceGroup().location
+  // TODO: Temporarily setting KV to "westus".
+param location string = 'westus'
+// param location string = resourceGroup().location
 param logAnalyticsName string = '${deploymentFamilyName}-log'
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' = {
@@ -44,9 +45,7 @@ resource containerAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
-  // TODO: Temporarily setting KV to "westus".
-  // location: location
-  location: 'westus'
+  location: location
   properties: {
     accessPolicies: [
       {
