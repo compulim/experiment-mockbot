@@ -120,6 +120,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: containerAppName
   identity: {
     userAssignedIdentities: {
+      '${botIdentity.id}': {}
       '${containerAppIdentity.id}': {}
     }
     type: 'UserAssigned'
