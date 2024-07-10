@@ -20,11 +20,13 @@ const adapter = createBotFrameworkAdapter();
 const bot = new EchoBot();
 
 // Listen for incoming requests.
-app.post('/api/messages', (req, res, _) =>
+app.post('/api/messages', (req, res, _) => {
+  console.log('POST /api/messages', req.body);
+
   adapter.process(req, res, async context => {
     // Route to main dialog.
     await bot.run(context);
-  })
-);
+  });
+});
 
 app.listen(PORT, () => console.log(`Bot listening to port ${PORT}.`));
