@@ -235,6 +235,17 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09
   }
 }
 
+resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+  name: 'WebChatChannel'
+  parent: bot
+  properties: {
+    channelName: 'WebChatChannel'
+    properties: {
+      sites: []
+    }
+  }
+}
+
 output botIdentityName string = botIdentityName
 output botName string = botName
 output containerAppEnvName string = containerAppEnvName
