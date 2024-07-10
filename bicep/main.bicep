@@ -47,20 +47,31 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
   location: location
   properties: {
-    accessPolicies: [
-      {
-        objectId: containerAppIdentity.properties.principalId
-        permissions: {
-          secrets: ['get']
-        }
-        tenantId: tenant().tenantId
-      }
-    ]
+    enableRbacAuthorization: true
+    // accessPolicies: [
+    //   {
+    //     objectId: containerAppIdentity.properties.principalId
+    //     permissions: {
+    //       secrets: ['get']
+    //     }
+    //     tenantId: tenant().tenantId
+    //   }
+    // ]
     sku: {
       family: 'A'
       name: 'standard'
     }
     tenantId: tenant().tenantId
+  }
+}
+
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: keyVault
+  name: guid(keyVault.id, '4633458b-17de-408a-b874-0445c86b69e6', containerAppIdentity.id)
+  properties: {
+    roleDefinitionId: '4633458b-17de-408a-b874-0445c86b69e6'
+    principalId: containerAppIdentity.id
+    principalType: 'ServicePrincipal'
   }
 }
 
