@@ -17,10 +17,6 @@ param registryServer string
 @secure()
 param registryPassword string
 
-@description('Dummy value to set in Key Vault as a secret for testing.')
-@secure()
-param dummyToken string
-
 param containerAppEnvName string = '${deploymentFamilyName}-env'
 param botIdentityName string = '${deploymentFamilyName}-bot-user'
 param botName string = '${deploymentFamilyName}-bot'
@@ -66,6 +62,22 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
       name: 'standard'
     }
     tenantId: tenant().tenantId
+  }
+}
+
+resource directLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  name: 'direct-line-secret'
+  parent: keyVault
+  properties: {
+    value: '' // Creates an empty slot and we will fill it out later.
+  }
+}
+
+resource directLineExtensionKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  name: 'direct-line-extension-key'
+  parent: keyVault
+  properties: {
+    value: '' // Creates an empty slot and we will fill it out later.
   }
 }
 
@@ -200,22 +212,6 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09
         }
       ]
     }
-  }
-}
-
-resource directLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  name: 'direct-line-secret'
-  parent: keyVault
-  properties: {
-    value: '' // Creates an empty slot and we will fill it out later.
-  }
-}
-
-resource directLineExtensionKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  name: 'direct-line-extension-key'
-  parent: keyVault
-  properties: {
-    value: '' // Creates an empty slot and we will fill it out later.
   }
 }
 
