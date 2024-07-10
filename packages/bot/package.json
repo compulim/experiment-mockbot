@@ -4,6 +4,11 @@
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "./dist/index.js",
+  "files": [
+    "./.dockerignore",
+    "./dist/",
+    "./Dockerfile"
+  ],
   "private": true,
   "scripts": {
     "build": "tsup",
