@@ -180,6 +180,18 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               name: 'DIRECT_LINE_SECRET'
               secretRef: 'direct-line-secret'
             }
+            {
+              name: 'MicrosoftAppId'
+              value: botIdentity.properties.clientId
+            }
+            {
+              name: 'MicrosoftAppTenantId'
+              value: botIdentity.properties.tenantId
+            }
+            {
+              name: 'MicrosoftAppType'
+              value: 'UserAssignedMSI'
+            }
           ]
         }
       ]
@@ -241,7 +253,7 @@ resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15
   properties: {
     channelName: 'WebChatChannel'
     properties: {
-      sites: []
+      sites: [] // Remove all sites
     }
   }
 }
