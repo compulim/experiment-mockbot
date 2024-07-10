@@ -17,6 +17,9 @@ param registryServer string
 @secure()
 param registryPassword string
 
+@description('Object ID for the User-assigned Managed Identity to run this Bicep.')
+param builderObjectId string
+
 param containerAppEnvName string = '${deploymentFamilyName}-env'
 param botIdentityName string = '${deploymentFamilyName}-bot-user'
 param botName string = '${deploymentFamilyName}-bot'
@@ -47,16 +50,23 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
   location: location
   properties: {
-    enableRbacAuthorization: true
-    // accessPolicies: [
-    //   {
-    //     objectId: containerAppIdentity.properties.principalId
-    //     permissions: {
-    //       secrets: ['get']
-    //     }
-    //     tenantId: tenant().tenantId
-    //   }
-    // ]
+    // enableRbacAuthorization: true // Use RBAC for Key Vault so the "builder" identity could update Key Vault secrets.
+    accessPolicies: [
+      {
+        objectId: containerAppIdentity.properties.principalId
+        permissions: {
+          secrets: ['get']
+        }
+        tenantId: tenant().tenantId
+      }
+      {
+        objectId: builderObjectId
+        permissions: {
+          secrets: ['set']
+        }
+        tenantId: tenant().tenantId
+      }
+    ]
     sku: {
       family: 'A'
       name: 'standard'
@@ -65,15 +75,15 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   }
 }
 
-resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: keyVault
-  name: guid(keyVault.id, '4633458b-17de-408a-b874-0445c86b69e6', containerAppIdentity.id)
-  properties: {
-    roleDefinitionId: '4633458b-17de-408a-b874-0445c86b69e6'
-    principalId: containerAppIdentity.id
-    principalType: 'ServicePrincipal'
-  }
-}
+// resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+//   scope: keyVault
+//   name: guid(keyVault.id, '4633458b-17de-408a-b874-0445c86b69e6', containerAppIdentity.id)
+//   properties: {
+//     roleDefinitionId: '4633458b-17de-408a-b874-0445c86b69e6'
+//     principalId: containerAppIdentity.id
+//     principalType: 'ServicePrincipal'
+//   }
+// }
 
 resource directLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: 'direct-line-secret'
