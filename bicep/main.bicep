@@ -68,7 +68,7 @@ resource directLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: 'direct-line-secret'
   parent: keyVault
   properties: {
-    value: '' // Creates an empty slot and we will fill it out later.
+    value: 'DUMMY' // Creates an empty slot and we will fill it out later.
   }
 }
 
@@ -76,7 +76,7 @@ resource directLineExtensionKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' =
   name: 'direct-line-extension-key'
   parent: keyVault
   properties: {
-    value: '' // Creates an empty slot and we will fill it out later.
+    value: 'DUMMY' // Creates an empty slot and we will fill it out later.
   }
 }
 
