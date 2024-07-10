@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { json } from 'express';
 import createBotFrameworkAdapter from './adapter/createBotFrameworkAdapter';
 import EchoBot from './bot/EchoBot';
 
@@ -11,6 +11,8 @@ const {
 } = process;
 
 const app = express();
+
+app.use(json());
 
 app.get('/health.txt', (_, res) => {
   res.setHeader('content-type', 'text/plain').send(`ok\n\n${BUILD_TIME}`);
