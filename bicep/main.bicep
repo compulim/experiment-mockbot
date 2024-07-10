@@ -22,13 +22,13 @@ param registryPassword string
 param dummyToken string
 
 param containerAppEnvName string = '${deploymentFamilyName}-env'
-param containerAppName string = '${deploymentFamilyName}-app'
-param containerAppIdentityName string = '${deploymentFamilyName}-app-user'
-param botName string = '${deploymentFamilyName}-bot'
 param botIdentityName string = '${deploymentFamilyName}-bot-user'
+param botName string = '${deploymentFamilyName}-bot'
+param containerAppIdentityName string = '${deploymentFamilyName}-app-user'
+param containerAppName string = '${deploymentFamilyName}-app'
 param keyVaultName string = '${deploymentFamilyName}-key'
-param location string = 'westus'
-// param location string = resourceGroup().location
+// param location string = 'westus'
+param location string = resourceGroup().location
 param logAnalyticsName string = '${deploymentFamilyName}-log'
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' = {
@@ -48,7 +48,9 @@ resource containerAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
-  location: location
+  // TODO: Temporarily setting KV to "westus".
+  // location: location
+  location: 'westus'
   properties: {
     accessPolicies: [
       {
@@ -64,22 +66,6 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
       name: 'standard'
     }
     tenantId: tenant().tenantId
-  }
-}
-
-resource dummyTokenSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  name: 'dummy-token'
-  parent: keyVault
-  properties: {
-    value: dummyToken
-  }
-}
-
-resource registryPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  name: 'registry-password'
-  parent: keyVault
-  properties: {
-    value: registryPassword
   }
 }
 
@@ -129,13 +115,14 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       ]
       secrets: [
         {
-          name: 'registry-password'
-          value: registryPassword
+          name: 'direct-line-extension-key'
+          identity: containerAppIdentity.id
+          keyVaultUrl: directLineExtensionKey.properties.secretUri
         }
         {
-          name: 'dummy-token'
+          name: 'direct-line-secret'
           identity: containerAppIdentity.id
-          keyVaultUrl: dummyTokenSecret.properties.secretUri
+          keyVaultUrl: directLineSecret.properties.secretUri
         }
       ]
     }
@@ -172,8 +159,7 @@ resource botIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-3
 resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   kind: 'azurebot'
   name: botName
-  location: location
-  // location: 'global'
+  location: 'global'
   sku: {
     name: 'S1'
   }
@@ -187,27 +173,6 @@ resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   }
 }
 
-// resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
-//   name: 'Direct Line channel'
-//   parent: bot
-//   properties: {
-//     channelName: 'DirectLineChannel'
-//     properties: {
-//       sites: [
-//         {
-//           isEnabled: true
-//           isSecureSiteEnabled: true
-//           isV1Enabled: false
-//           siteName: 'Default Site'
-//           trustedOrigins: [
-//             'https://compulim.github.io'
-//           ]
-//         }
-//       ]
-//     }
-//   }
-// }
-
 resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
   name: 'DirectLineChannel'
   parent: bot
@@ -218,7 +183,6 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09
         {
           isEnabled: true
           isSecureSiteEnabled: true
-          // isSecureSiteEnabled: false
           isV1Enabled: false
           isV3Enabled: true
           siteName: 'Default Site'
@@ -235,7 +199,7 @@ resource directLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: 'direct-line-secret'
   parent: keyVault
   properties: {
-    value: '${botDirectLineChannel.properties.properties.sites[0].key}'
+    value: '' // Creates an empty slot and we will fill it out later.
   }
 }
 
@@ -243,6 +207,15 @@ resource directLineExtensionKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' =
   name: 'direct-line-extension-key'
   parent: keyVault
   properties: {
-    value: '${botDirectLineChannel.properties.properties.extensionKey1}'
+    value: '' // Creates an empty slot and we will fill it out later.
   }
 }
+
+output botIdentityName string = botIdentityName
+output botName string = botName
+output containerAppEnvName string = containerAppEnvName
+output containerAppIdentityName string = containerAppIdentityName
+output containerAppName string = containerAppName
+output directLineExtensionKeySecretName string = directLineExtensionKey.name
+output directLineSecretSecretName string = directLineSecret.name
+output keyVaultName string = keyVaultName
