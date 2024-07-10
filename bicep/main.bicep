@@ -141,8 +141,12 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           }
           env: [
             {
-              name: 'DUMMY_TOKEN'
-              secretRef: 'dummy-token'
+              name: 'DIRECT_LINE_EXTENSION_KEY'
+              secretRef: 'direct-line-extension-key'
+            }
+            {
+              name: 'DIRECT_LINE_SECRET'
+              secretRef: 'direct-line-secret'
             }
           ]
         }
