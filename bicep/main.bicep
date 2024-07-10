@@ -115,6 +115,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       ]
       secrets: [
         {
+          name: 'registry-password'
+          value: registryPassword
+        }
+        {
           name: 'direct-line-extension-key'
           identity: containerAppIdentity.id
           keyVaultUrl: directLineExtensionKey.properties.secretUri
