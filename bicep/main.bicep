@@ -133,7 +133,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         {
           name: 'direct-line-extension-key'
           identity: containerAppIdentity.id
-          keyVaultUrl: directLineExtensionKey.properties.secretUri
+          keyVaultUrl: directLineExtensionKey.properties..secretUri
         }
         {
           name: 'direct-line-secret'
