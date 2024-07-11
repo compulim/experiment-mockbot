@@ -44,7 +44,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Clean install
-        run: npm clean-install --install-strategy nested
+        run: npm clean-install --install-strategy=nested
 
       - name: Build
         run: npm run build
