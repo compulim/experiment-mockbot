@@ -54,7 +54,7 @@ jobs:
         working-directory: ./packages/bot
 
       - name: Pack node_modules
-        run: zip -R node_modules.zip ./node_modules/**
+        run: zip -R node_modules.zip ./node_modules/**/*
         working-directory: ./packages/bot
 
       - name: Upload tarball
