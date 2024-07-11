@@ -16,7 +16,8 @@ export default {
     }),
     commonjs(),
     typescript({
-      allowSyntheticDefaultImports: true
+      allowSyntheticDefaultImports: true,
+      target: 'ESNext'
     }),
     json()
   ],
