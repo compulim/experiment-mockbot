@@ -20,8 +20,8 @@ param registryPassword string
 @description('Object ID for the User-assigned Managed Identity to run this Bicep.')
 param builderObjectId string
 
-// @description('Name of the User-assigned Managed Identity to run this Bicep.')
-// param builderIdentityName string
+@description('Name of the User-assigned Managed Identity to run this Bicep.')
+param builderIdentityName string
 
 param containerAppEnvName string = '${deploymentFamilyName}-env'
 param botIdentityName string = '${deploymentFamilyName}-bot-user'
@@ -33,6 +33,10 @@ param keyVaultName string = '${deploymentFamilyName}-key'
 param location string = 'westus'
 // param location string = resourceGroup().location
 param logAnalyticsName string = '${deploymentFamilyName}-log'
+
+resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' existing = {
+  name: builderIdentityName
+}
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' = {
   name: logAnalyticsName
@@ -63,7 +67,8 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
         tenantId: tenant().tenantId
       }
       {
-        objectId: builderObjectId
+        // objectId: builderObjectId
+        objectId: builderIdentity.id
         permissions: {
           secrets: ['set']
         }
@@ -255,7 +260,8 @@ resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15
 resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   identity: {
     userAssignedIdentities: {
-      '${resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', builderObjectId)}': {}
+      '${builderIdentity.name}': {}
+      // '${resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', builderObjectId)}': {}
     }
     type: 'UserAssigned'
   }

@@ -169,7 +169,7 @@ jobs:
         uses: azure/arm-deploy@v2
         with:
           failOnStdErr: false
-          parameters: 'builderObjectId=${{ vars.BUILDER_OBJECT_ID }} deploymentFamilyName=${{ env.DEPLOYMENT_FAMILY_NAME }} imageName=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}:sha-${{ github.sha }} registryUsername=${{ vars.GH_USERNAME_READ_PACKAGES }} registryServer=${{ env.REGISTRY }} registryPassword=${{ secrets.GH_TOKEN_READ_PACKAGES }}'
+          parameters: 'builderIdentityName=${{ env.DEPLOYMENT_FAMILY_NAME }}-builder builderObjectId=${{ vars.BUILDER_OBJECT_ID }} deploymentFamilyName=${{ env.DEPLOYMENT_FAMILY_NAME }} imageName=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}:sha-${{ github.sha }} registryUsername=${{ vars.GH_USERNAME_READ_PACKAGES }} registryServer=${{ env.REGISTRY }} registryPassword=${{ secrets.GH_TOKEN_READ_PACKAGES }}'
           resourceGroupName: ${{ vars.RESOURCE_GROUP_NAME }}
           template: ./main.bicep
 
