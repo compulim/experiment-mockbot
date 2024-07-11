@@ -17,9 +17,6 @@ param registryServer string
 @secure()
 param registryPassword string
 
-@description('Object ID for the User-assigned Managed Identity to run this Bicep.')
-param builderObjectId string
-
 @description('Name of the User-assigned Managed Identity to run this Bicep.')
 param builderIdentityName string
 
