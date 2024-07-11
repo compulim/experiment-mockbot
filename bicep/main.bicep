@@ -20,6 +20,9 @@ param registryPassword string
 @description('Object ID for the User-assigned Managed Identity to run this Bicep.')
 param builderObjectId string
 
+// @description('Name of the User-assigned Managed Identity to run this Bicep.')
+// param builderIdentityName string
+
 param containerAppEnvName string = '${deploymentFamilyName}-env'
 param botIdentityName string = '${deploymentFamilyName}-bot-user'
 param botName string = '${deploymentFamilyName}-bot'
@@ -249,10 +252,15 @@ resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15
   }
 }
 
+resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' existing = {
+  // name: builderIdentityName
+  name: resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', builderObjectId)
+}
+
 resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   identity: {
     userAssignedIdentities: {
-      '${builderObjectId}': {}
+      '${builderIdentity.id}': {}
     }
     type: 'UserAssigned'
   }
