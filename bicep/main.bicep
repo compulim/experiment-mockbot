@@ -250,6 +250,12 @@ resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15
 }
 
 resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  identity: {
+    userAssignedIdentities: {
+      '${builderObjectId}': {}
+    }
+    type: 'UserAssigned'
+  }
   kind: 'AzurePowerShell'
   location: location
   name: 'saveSecretScript'
