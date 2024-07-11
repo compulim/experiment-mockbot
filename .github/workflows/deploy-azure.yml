@@ -44,7 +44,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Clean install
-        run: npm clean-install
+        run: npm clean-install --install-strategy nested
 
       - name: Build
         run: npm run build
@@ -53,12 +53,24 @@ jobs:
         run: npm pack
         working-directory: ./packages/bot
 
+      - name: Pack node_modules
+        run: zip node_modules.zip ./node_modules/
+        working-directory: ./packages/bot
+
       - name: Upload tarball
         uses: actions/upload-artifact@v4
         with:
           compression-level: 0
           name: bot-tarball
           path: ./packages/bot/*.tgz
+          retention-days: 1
+
+      - name: Upload node_modules.zip
+        uses: actions/upload-artifact@v4
+        with:
+          compression-level: 0
+          name: bot-node-modules
+          path: ./packages/bot/node_modules.zip
           retention-days: 1
 
       - name: Upload Bicep templates
@@ -83,8 +95,16 @@ jobs:
         with:
           name: bot-tarball
 
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: bot-node-modules
+
       - name: Extract tarball
         run: tar xvf ./*.tgz --strip-components=1
+
+      - name: Extract node_modules
+        run: unzip ./node_modules.zip
 
       - name: List directory
         run: ls -la

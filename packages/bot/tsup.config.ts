@@ -7,7 +7,6 @@ export default defineConfig([
     },
     entry: { index: './src/index.ts' },
     format: ['cjs'],
-    noExternal: [/./], // Bundle everything
     sourcemap: true
   }
 ]);
