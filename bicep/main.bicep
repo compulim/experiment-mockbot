@@ -252,15 +252,10 @@ resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15
   }
 }
 
-resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' existing = {
-  // name: builderIdentityName
-  name: resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', builderObjectId)
-}
-
 resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   identity: {
     userAssignedIdentities: {
-      '${builderIdentity.id}': {}
+      '${resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', builderObjectId)}': {}
     }
     type: 'UserAssigned'
   }
