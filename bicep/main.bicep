@@ -23,11 +23,12 @@ param builderObjectId string
 @description('Name of the User-assigned Managed Identity to run this Bicep.')
 param builderIdentityName string
 
-param containerAppEnvName string = '${deploymentFamilyName}-env'
 param botIdentityName string = '${deploymentFamilyName}-bot-user'
 param botName string = '${deploymentFamilyName}-bot'
+param containerAppEnvName string = '${deploymentFamilyName}-env'
 param containerAppIdentityName string = '${deploymentFamilyName}-app-user'
 param containerAppName string = '${deploymentFamilyName}-app'
+param deployTime string = utcNow()
 param keyVaultName string = '${deploymentFamilyName}-key'
   // TODO: Temporarily setting KV to "westus".
 param location string = 'westus'
@@ -117,11 +118,11 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' 
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: containerAppName
   identity: {
+    type: 'UserAssigned'
     userAssignedIdentities: {
       '${botIdentity.id}': {}
       '${containerAppIdentity.id}': {}
     }
-    type: 'UserAssigned'
   }
   location: location
   properties: {
@@ -259,36 +260,39 @@ resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15
 
 resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   identity: {
+    type: 'UserAssigned'
     userAssignedIdentities: {
       '${builderIdentity.id}': {}
-      // '${resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', builderObjectId)}': {}
     }
-    type: 'UserAssigned'
   }
   kind: 'AzurePowerShell'
   location: location
-  name: 'saveSecretScript'
+  #disable-next-line use-stable-resource-identifiers
+  name: 'saveSecretScript-${deployTime}'
   properties: {
-    arguments: '-botName \\"${bot.name}\\" -directLineExtensionKeySecretName \\"${directLineExtensionKey.name}\\" -directLineSecretSecretName \\"${directLineSecret.name}\\" -keyVaultName \\"${keyVault.name}\\" -resourceGroupName \\"${resourceGroup().name}\\"'
-    azPowerShellVersion: '6.4'
+    // arguments: '-botName \\"${bot.name}\\" -directLineExtensionKeySecretName \\"${directLineExtensionKey.name}\\" -directLineSecretSecretName \\"${directLineSecret.name}\\" -keyVaultName \\"${keyVault.name}\\" -resourceGroupName \\"${resourceGroup().name}\\"'
+    azPowerShellVersion: '8.3'
     cleanupPreference: 'Always'
     retentionInterval: 'P1D'
     scriptContent: '''
-      param([string] $botName)
-      param([string] $directLineExtensionKeySecretName)
-      param([string] $directLineSecretSecretName)
-      param([string] $keyVaultName)
-      param([string] $resourceGroupName)
-
-      $directLineExtensionKey = @(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.extensionKey1")
-      Write-Output '::add-mask::{0}' -f $directLineExtensionKey
-
-      $directLineSecret = @(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.sites[0].key")
-      Write-Output '::add-mask::{0}' -f $directLineSecret
-
-      az keyvault secret set --name $directLineExtensionKeySecretName --value $directLineExtensionKey --vault-name $keyVaultName
-      az keyvault secret set --name $directLineSecretSecretName --value $directLineSecret --vault-name $keyVaultName
+      Write-Output 'Hello, World!'
     '''
+    // scriptContent: '''
+    //   param([string] $botName)
+    //   param([string] $directLineExtensionKeySecretName)
+    //   param([string] $directLineSecretSecretName)
+    //   param([string] $keyVaultName)
+    //   param([string] $resourceGroupName)
+
+    //   $directLineExtensionKey = @(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.extensionKey1")
+    //   Write-Output '::add-mask::{0}' -f $directLineExtensionKey
+
+    //   $directLineSecret = @(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.sites[0].key")
+    //   Write-Output '::add-mask::{0}' -f $directLineSecret
+
+    //   az keyvault secret set --name $directLineExtensionKeySecretName --value $directLineExtensionKey --vault-name $keyVaultName
+    //   az keyvault secret set --name $directLineSecretSecretName --value $directLineSecret --vault-name $keyVaultName
+    // '''
     timeout: 'PT2M'
   }
 }
