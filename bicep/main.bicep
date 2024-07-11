@@ -68,7 +68,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
       }
       {
         // objectId: builderObjectId
-        objectId: builderIdentity.id
+        objectId: builderIdentity.properties.principalId
         permissions: {
           secrets: ['set']
         }
