@@ -1,4 +1,4 @@
-metadata description = 'Deploy to Container Apps'
+metadata description = 'Deploy to Azure'
 
 @description('Family name of the deployment.')
 param deploymentFamilyName string
@@ -74,16 +74,6 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     tenantId: tenant().tenantId
   }
 }
-
-// resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-//   scope: keyVault
-//   name: guid(keyVault.id, '4633458b-17de-408a-b874-0445c86b69e6', containerAppIdentity.id)
-//   properties: {
-//     roleDefinitionId: '4633458b-17de-408a-b874-0445c86b69e6'
-//     principalId: containerAppIdentity.id
-//     principalType: 'ServicePrincipal'
-//   }
-// }
 
 resource directLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: 'direct-line-secret'
@@ -259,11 +249,38 @@ resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15
   }
 }
 
+resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  kind: 'AzurePowerShell'
+  location: location
+  name: 'saveSecretScript'
+  properties: {
+    arguments: '-botName \\"${bot.name}\\" -directLineExtensionKeySecretName \\"${directLineExtensionKey.name}\\" -directLineSecretSecretName \\"${directLineSecret.name}\\" -keyVaultName \\"${keyVault.name}\\" -resourceGroupName \\"${resourceGroup().name}\\"'
+    azPowerShellVersion: '6.4'
+    cleanupPreference: 'Always'
+    retentionInterval: 'P1D'
+    scriptContent: '''
+      param([string] $botName)
+      param([string] $directLineExtensionKeySecretName)
+      param([string] $directLineSecretSecretName)
+      param([string] $keyVaultName)
+      param([string] $resourceGroupName)
+
+      $directLineExtensionKey = @(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.extensionKey1")
+      Write-Output '::add-mask::{0}' -f $directLineExtensionKey
+
+      $directLineSecret = @(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.sites[0].key")
+      Write-Output '::add-mask::{0}' -f $directLineSecret
+
+      az keyvault secret set --name $directLineExtensionKeySecretName --value $directLineExtensionKey --vault-name $keyVaultName
+      az keyvault secret set --name $directLineSecretSecretName --value $directLineSecret --vault-name $keyVaultName
+    '''
+    timeout: 'PT2M'
+  }
+}
+
 output botIdentityName string = botIdentityName
 output botName string = botName
 output containerAppEnvName string = containerAppEnvName
 output containerAppIdentityName string = containerAppIdentityName
 output containerAppName string = containerAppName
-output directLineExtensionKeySecretName string = directLineExtensionKey.name
-output directLineSecretSecretName string = directLineSecret.name
 output keyVaultName string = keyVaultName
