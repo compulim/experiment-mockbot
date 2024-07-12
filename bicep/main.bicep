@@ -285,7 +285,7 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
         [string] $directLineExtensionKeySecretName,
         [string] $directLineSecretSecretName,
         [string] $keyVaultName,
-        [string] $resourceGroupName,
+        [string] $resourceGroupName
       )
 
       $directLineExtensionKey = @(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.extensionKey1")
