@@ -104,8 +104,8 @@ resource directLineExtensionKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' =
   }
 }
 
-resource speechSubscriptionKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  name: 'speech-services-key'
+resource speechServicesSubscriptionKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  name: 'speech-services-subscription-key'
   parent: keyVault
   properties: {
     value: speechServices.listKeys().key1
@@ -173,8 +173,8 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         }
         {
           identity: containerAppIdentity.id
-          keyVaultUrl: speechSubscriptionKey.properties.secretUri
-          name: 'speech-subscription-key'
+          keyVaultUrl: speechServicesSubscriptionKey.properties.secretUri
+          name: 'speech-services-subscription-key'
         }
       ]
     }
