@@ -29,6 +29,7 @@ param botName string = '${deploymentFamilyName}-bot'
 param containerAppName string = '${deploymentFamilyName}-container'
 param keyVaultName string = '${deploymentFamilyName}-key'
 param logAnalyticsName string = '${deploymentFamilyName}-log'
+param speechServicesName string = '${deploymentFamilyName}-speech'
 param webAppName string = '${deploymentFamilyName}-app'
 
 resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' existing = {
@@ -48,6 +49,14 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-previ
 resource containerAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
   name: '${containerAppName}-identity'
+}
+
+resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
+  name: speechServicesName
+  kind: 'SpeechServices'
+  sku: {
+    name: 'S0'
+  }
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
@@ -91,6 +100,14 @@ resource directLineExtensionKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' =
   parent: keyVault
   properties: {
     value: 'DUMMY' // Creates an empty slot and we will fill it out later.
+  }
+}
+
+resource speechSubscriptionKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  name: 'speech-services-key'
+  parent: keyVault
+  properties: {
+    value: speechServices.listKeys().key1
   }
 }
 
@@ -141,10 +158,6 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       ]
       secrets: [
         {
-          name: 'registry-password'
-          value: registryPassword
-        }
-        {
           name: 'direct-line-extension-key'
           identity: containerAppIdentity.id
           keyVaultUrl: directLineExtensionKey.properties.secretUri
@@ -154,18 +167,20 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           identity: containerAppIdentity.id
           keyVaultUrl: directLineSecret.properties.secretUri
         }
+        {
+          name: 'registry-password'
+          value: registryPassword
+        }
+        {
+          name: 'speech-subscription-key'
+          identity: containerAppIdentity.id
+          keyVaultUrl: speechSubscriptionKey.properties.secretUri
+        }
       ]
     }
     template: {
       containers: [
         {
-          image: '${registryServer}/${imageName}'
-          name: containerAppName
-          resources: {
-            #disable-next-line BCP036
-            cpu: '0.25'
-            memory: '0.5Gi'
-          }
           env: [
             {
               name: 'DIRECT_LINE_SECRET'
@@ -184,6 +199,13 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: 'UserAssignedMSI'
             }
           ]
+          image: '${registryServer}/${imageName}'
+          name: containerAppName
+          resources: {
+            #disable-next-line BCP036
+            cpu: '0.25'
+            memory: '0.5Gi'
+          }
         }
       ]
       scale: {
@@ -269,33 +291,6 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
     }
   }
 }
-
-// resource webAppContainerDeployment 'Microsoft.Web/sites/sitecontainers@2023-12-01' = {
-//   name: '${webAppName}-deployment'
-//   parent: webApp
-//   properties: {
-//     authType: 'UserCredentials'
-//     image: '${registryServer}/${imageName}-windows'
-//     isMain: true
-//     passwordSecret: registryPassword
-//     targetPort: '8080'
-//     userName: registryUsername
-//   }
-// }
-
-// resource websiteContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
-//   scope: subscription()
-//   name: 'de139f84-1756-47ae-9be6-808fbbe84772'
-// }
-
-// resource webAppDeployRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-//   name: '${webAppName}-builder-rbac'
-//   properties: {
-//     principalId: builderIdentity.properties.principalId
-//     roleDefinitionId: websiteContributorRoleDefinition.id
-//   }
-//   scope: webApp
-// }
 
 resource botIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
