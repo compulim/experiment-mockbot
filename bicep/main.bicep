@@ -272,7 +272,7 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
     arguments: '-botName \\"${bot.name}\\" -directLineExtensionKeySecretName \\"${directLineExtensionKey.name}\\" -directLineSecretSecretName \\"${directLineSecret.name}\\" -keyVaultName \\"${keyVault.name}\\" -resourceGroupName \\"${resourceGroup().name}\\"'
     // arguments: '-botName \\"${bot.name}\\"'
     // azPowerShellVersion: '8.3'
-    azCliVersion: '2.62.0'
+    azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     retentionInterval: 'P1D'
     // scriptContent: '''
