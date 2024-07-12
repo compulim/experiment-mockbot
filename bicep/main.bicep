@@ -311,7 +311,8 @@ resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   }
   properties: {
     displayName: botName
-    endpoint: 'https://${containerApp.properties.configuration.ingress.fqdn}/api/messages'
+    // endpoint: 'https://${containerApp.properties.configuration.ingress.fqdn}/api/messages'
+    endpoint: 'https://${webApp.properties.defaultHostName}/api/messages'
     msaAppId: botIdentity.properties.clientId
     msaAppType: 'UserAssignedMSI'
     msaAppMSIResourceId: botIdentity.id
