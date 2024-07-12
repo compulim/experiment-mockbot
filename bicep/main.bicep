@@ -270,7 +270,7 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     forceUpdateTag: deployTime
-    retentionInterval: 'P0D'
+    retentionInterval: 'PT1H' // Minimal retention is 1 hour.
     scriptContent: '''
       set -eo pipefail
 
