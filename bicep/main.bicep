@@ -20,10 +20,10 @@ param registryPassword string
 @description('Name of the User-assigned Managed Identity to run this Bicep.')
 param builderIdentityName string
 
-param botIdentityName string = '${deploymentFamilyName}-bot-user'
+param botIdentityName string = '${deploymentFamilyName}-bot-identity'
 param botName string = '${deploymentFamilyName}-bot'
 param containerAppEnvName string = '${deploymentFamilyName}-env'
-param containerAppIdentityName string = '${deploymentFamilyName}-app-user'
+param containerAppIdentityName string = '${deploymentFamilyName}-app-identity'
 param containerAppName string = '${deploymentFamilyName}-app'
 param deployTime string = utcNow()
 param keyVaultName string = '${deploymentFamilyName}-key'
