@@ -168,10 +168,6 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           }
           env: [
             {
-              name: 'DIRECT_LINE_EXTENSION_KEY'
-              secretRef: 'direct-line-extension-key'
-            }
-            {
               name: 'DIRECT_LINE_SECRET'
               secretRef: 'direct-line-secret'
             }
@@ -232,21 +228,33 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
     serverFarmId: webAppPlan.id
     siteConfig: {
       appSettings: [
+        // {
+        //   name: 'WEBSITE_NODE_DEFAULT_VERSION'
+        //   value: '~20'
+        // }
         {
-          name: 'WEBSITE_NODE_DEFAULT_VERSION'
-          value: 'lts'
-        }
-        {
-          name: 'WEBSITE_RUN_FROM_PACKAGE'
-          value: '1'
+          name: 'DIRECTLINE_EXTENSION_VERSION'
+          value: 'latest'
         }
         {
           name: 'DirectLineExtensionKey'
           value: 'DUMMY'
         }
         {
-          name: 'DIRECTLINE_EXTENSION_VERSION'
-          value: 'latest'
+          name: 'MicrosoftAppId'
+          value: botIdentity.properties.clientId
+        }
+        {
+          name: 'MicrosoftAppTenantId'
+          value: botIdentity.properties.tenantId
+        }
+        {
+          name: 'MicrosoftAppType'
+          value: 'UserAssignedMSI'
+        }
+        {
+          name: 'WEBSITE_RUN_FROM_PACKAGE'
+          value: '1'
         }
       ]
       metadata: [
