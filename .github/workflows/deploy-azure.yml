@@ -98,7 +98,7 @@ jobs:
           tar xvf ../*.tgz
 
       - name: Compress as ZIP
-        run: zip ../bot.zip
+        run: zip ../bot.zip ./**/*
         working-directory: ./deploy
 
       - name: Upload ZIP
@@ -131,7 +131,7 @@ jobs:
       - run: mkdir ./deploy
 
       - name: Extract tarball
-        run: tar xvf ../*.tgz --strip-components=1
+        run: tar xvf ./*.tgz --strip-components=1
 
       - name: Extract node_modules
         run: unzip ./node_modules.zip
