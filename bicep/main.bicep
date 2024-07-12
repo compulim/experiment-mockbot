@@ -37,8 +37,8 @@ resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
 }
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' = {
-  name: logAnalyticsName
   location: location
+  name: logAnalyticsName
   properties: {
     sku: {
       name: 'PerGB2018'
@@ -52,16 +52,17 @@ resource containerAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@
 }
 
 resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name: speechServicesName
   kind: 'SpeechServices'
+  location: location
+  name: speechServicesName
   sku: {
     name: 'S0'
   }
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: keyVaultName
   location: location
+  name: keyVaultName
   properties: {
     accessPolicies: [
       {
@@ -113,8 +114,8 @@ resource speechSubscriptionKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = 
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.app/managedenvironments?pivots=deployment-language-bicep
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
-  name: '${containerAppName}-env'
   location: location
+  name: '${containerAppName}-env'
   properties: {
     appLogsConfiguration: {
       destination: 'log-analytics'
@@ -127,7 +128,6 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' 
 }
 
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
-  name: containerAppName
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -136,8 +136,8 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
     }
   }
   location: location
+  name: containerAppName
   properties: {
-    managedEnvironmentId: containerAppEnvironment.id
     configuration: {
       ingress: {
         clientCertificateMode: 'ignore'
@@ -158,26 +158,27 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       ]
       secrets: [
         {
-          name: 'direct-line-extension-key'
           identity: containerAppIdentity.id
           keyVaultUrl: directLineExtensionKey.properties.secretUri
+          name: 'direct-line-extension-key'
         }
         {
-          name: 'direct-line-secret'
           identity: containerAppIdentity.id
           keyVaultUrl: directLineSecret.properties.secretUri
+          name: 'direct-line-secret'
         }
         {
           name: 'registry-password'
           value: registryPassword
         }
         {
-          name: 'speech-subscription-key'
           identity: containerAppIdentity.id
           keyVaultUrl: speechSubscriptionKey.properties.secretUri
+          name: 'speech-subscription-key'
         }
       ]
     }
+    managedEnvironmentId: containerAppEnvironment.id
     template: {
       containers: [
         {
@@ -209,8 +210,8 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         }
       ]
       scale: {
-        minReplicas: 0
         maxReplicas: 1
+        minReplicas: 0
       }
     }
   }
@@ -236,8 +237,6 @@ resource webAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
 }
 
 resource webApp 'Microsoft.Web/sites@2023-12-01' = {
-  location: location
-  name: webAppName
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -245,11 +244,14 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       '${webAppIdentity.id}': {}
     }
   }
+  location: location
+  name: webAppName
   properties: {
     clientAffinityEnabled: false
     httpsOnly: true
     serverFarmId: webAppPlan.id
     siteConfig: {
+      alwaysOn: true
       appSettings: [
         {
           name: 'WEBSITE_NODE_DEFAULT_VERSION'
@@ -280,14 +282,13 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
           value: '1'
         }
       ]
+      ftpsState: 'Disabled'
       metadata: [
         {
           name: 'CURRENT_STACK'
           value: 'node'
         }
       ]
-      alwaysOn: true
-      ftpsState: 'Disabled'
     }
   }
 }
@@ -299,19 +300,19 @@ resource botIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-3
 
 resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   kind: 'azurebot'
-  name: botName
   location: 'global'
-  sku: {
-    name: 'S1'
-  }
+  name: botName
   properties: {
     displayName: botName
     // endpoint: 'https://${containerApp.properties.configuration.ingress.fqdn}/api/messages'
     endpoint: 'https://${webApp.properties.defaultHostName}/api/messages'
     msaAppId: botIdentity.properties.clientId
-    msaAppType: 'UserAssignedMSI'
     msaAppMSIResourceId: botIdentity.id
     msaAppTenantId: botIdentity.properties.tenantId
+    msaAppType: 'UserAssignedMSI'
+  }
+  sku: {
+    name: 'S1'
   }
 }
 
