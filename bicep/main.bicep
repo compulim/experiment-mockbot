@@ -20,20 +20,16 @@ param registryPassword string
 @description('Name of the User-assigned Managed Identity to run this Bicep.')
 param builderIdentityName string
 
-param botIdentityName string = '${deploymentFamilyName}-bot-identity'
-param botName string = '${deploymentFamilyName}-bot'
-param containerAppEnvName string = '${deploymentFamilyName}-env'
-param containerAppIdentityName string = '${deploymentFamilyName}-container-identity'
-param containerAppName string = '${deploymentFamilyName}-container'
 param deployTime string = utcNow()
-param keyVaultName string = '${deploymentFamilyName}-key'
-  // TODO: Temporarily setting KV to "westus".
+// TODO: Temporarily setting KV to "westus".
 param location string = 'westus'
 // param location string = resourceGroup().location
+
+param botName string = '${deploymentFamilyName}-bot'
+param containerAppName string = '${deploymentFamilyName}-container'
+param keyVaultName string = '${deploymentFamilyName}-key'
 param logAnalyticsName string = '${deploymentFamilyName}-log'
 param webAppName string = '${deploymentFamilyName}-app'
-param webAppPlanName string = '${deploymentFamilyName}-app-plan'
-param webAppIdentityName string = '${deploymentFamilyName}-app-identity'
 
 resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' existing = {
   name: builderIdentityName
@@ -51,7 +47,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-previ
 
 resource containerAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
-  name: containerAppIdentityName
+  name: '${containerAppName}-identity'
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
@@ -100,7 +96,7 @@ resource directLineExtensionKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' =
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.app/managedenvironments?pivots=deployment-language-bicep
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
-  name: containerAppEnvName
+  name: '${containerAppName}-env'
   location: location
   properties: {
     appLogsConfiguration: {
@@ -204,13 +200,12 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
 
 resource webAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
-  name: webAppIdentityName
+  name: '${webAppName}-identity'
 }
-
 
 resource webAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   location: location
-  name: webAppPlanName
+  name: '${webAppName}-plan'
   properties: {
     zoneRedundant: false
   }
@@ -238,37 +233,58 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
           name: 'WEBSITE_NODE_DEFAULT_VERSION'
           value: 'lts'
         }
-      ]
-      metadata: [
         {
-          name: 'CURRENT_STACK'
-          value: 'node'
+          name: 'DirectLineExtensionKey'
+          value: 'DUMMY'
+        }
+        {
+          name: 'DIRECTLINE_EXTENSION_VERSION'
+          value: 'latest'
         }
       ]
-      nodeVersion: '~20'
+      // metadata: [
+      //   {
+      //     name: 'CURRENT_STACK'
+      //     value: 'node'
+      //   }
+      // ]
+      // nodeVersion: '~20'
       alwaysOn: true
       ftpsState: 'Disabled'
     }
   }
 }
 
-resource websiteContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
-  scope: subscription()
-  name: 'de139f84-1756-47ae-9be6-808fbbe84772'
+resource webAppContainerDeployment 'Microsoft.Web/sites/sitecontainers@2023-12-01' = {
+  name: '${webAppName}-deployment'
+  parent: webApp
+  properties: {
+    authType: 'UserCredentials'
+    image: '${registryServer}/${imageName}'
+    isMain: true
+    passwordSecret: registryPassword
+    targetPort: '8080'
+    userName: registryUsername
+  }
 }
 
-resource webAppDeployRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: '${webAppName}-builder-rbac'
-  properties: {
-    principalId: builderIdentity.properties.principalId
-    roleDefinitionId: websiteContributorRoleDefinition.id
-  }
-  scope: webApp
-}
+// resource websiteContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+//   scope: subscription()
+//   name: 'de139f84-1756-47ae-9be6-808fbbe84772'
+// }
+
+// resource webAppDeployRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+//   name: '${webAppName}-builder-rbac'
+//   properties: {
+//     principalId: builderIdentity.properties.principalId
+//     roleDefinitionId: websiteContributorRoleDefinition.id
+//   }
+//   scope: webApp
+// }
 
 resource botIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
-  name: botIdentityName
+  name: '${botName}-identity'
 }
 
 resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
@@ -356,10 +372,3 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
     timeout: 'PT2M'
   }
 }
-
-output botIdentityName string = botIdentityName
-output botName string = botName
-output containerAppEnvName string = containerAppEnvName
-output containerAppIdentityName string = containerAppIdentityName
-output containerAppName string = containerAppName
-output keyVaultName string = keyVaultName
