@@ -259,6 +259,7 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
+      // /subscriptions/51fbc48d-04f1-449a-b50c-b40618411b9f/resourcegroups/hawo-mockbot4-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/hawo-mockbot4-builder
       '${builderIdentity.id}': {}
     }
   }
@@ -269,7 +270,7 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   name: 'saveSecretScript-${deployTime}'
   properties: {
     // arguments: '-botName \\"${bot.name}\\" -directLineExtensionKeySecretName \\"${directLineExtensionKey.name}\\" -directLineSecretSecretName \\"${directLineSecret.name}\\" -keyVaultName \\"${keyVault.name}\\" -resourceGroupName \\"${resourceGroup().name}\\"'
-    arguments: '\'${bot.name}\' \'${directLineExtensionKey.name}\' \'${directLineSecret.name}\' \'${keyVault.name}\' \'${resourceGroup().name}\''
+    arguments: '\\"${bot.name}\\" \\"${directLineExtensionKey.name}\\" \\"${directLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
     // arguments: '-botName \\"${bot.name}\\"'
     // azPowerShellVersion: '8.3'
     azCliVersion: '2.61.0'
@@ -301,6 +302,8 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
     //   az keyvault secret set --name $directLineSecretSecretName --value $directLineSecret --vault-name $keyVaultName
     // '''
     scriptContent: '''
+      set -eo pipefail
+
       BOT_NAME=$1
       DIRECT_LINE_EXTENSION_KEY_SECRET_NAME=$2
       DIRECT_LINE_SECRET_SECRET_NAME=$3
