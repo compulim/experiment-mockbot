@@ -159,7 +159,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
     template: {
       containers: [
         {
-          image: '${registryServer}/${imageName}-linux'
+          image: '${registryServer}/${imageName}'
           name: containerAppName
           resources: {
             #disable-next-line BCP036
@@ -210,8 +210,9 @@ resource webAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
     zoneRedundant: false
   }
   sku: {
-    family: '0' // 0 = Windows, 6 = Linux
+    family: 'S'
     name: 'S1'
+    size: 'S1'
     tier: 'Standard'
   }
 }
@@ -243,31 +244,31 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
           value: 'latest'
         }
       ]
-      // metadata: [
-      //   {
-      //     name: 'CURRENT_STACK'
-      //     value: 'node'
-      //   }
-      // ]
-      // nodeVersion: '~20'
-      // alwaysOn: true
+      metadata: [
+        {
+          name: 'CURRENT_STACK'
+          value: 'node'
+        }
+      ]
+      nodeVersion: '~20'
+      alwaysOn: true
       ftpsState: 'Disabled'
     }
   }
 }
 
-resource webAppContainerDeployment 'Microsoft.Web/sites/sitecontainers@2023-12-01' = {
-  name: '${webAppName}-deployment'
-  parent: webApp
-  properties: {
-    authType: 'UserCredentials'
-    image: '${registryServer}/${imageName}-windows'
-    isMain: true
-    passwordSecret: registryPassword
-    targetPort: '8080'
-    userName: registryUsername
-  }
-}
+// resource webAppContainerDeployment 'Microsoft.Web/sites/sitecontainers@2023-12-01' = {
+//   name: '${webAppName}-deployment'
+//   parent: webApp
+//   properties: {
+//     authType: 'UserCredentials'
+//     image: '${registryServer}/${imageName}-windows'
+//     isMain: true
+//     passwordSecret: registryPassword
+//     targetPort: '8080'
+//     userName: registryUsername
+//   }
+// }
 
 // resource websiteContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
 //   scope: subscription()
@@ -350,7 +351,7 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   #disable-next-line use-stable-resource-identifiers
   name: 'save-secret-script'
   properties: {
-    arguments: '\\"${bot.name}\\" \\"${directLineExtensionKey.name}\\" \\"${directLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
+    arguments: '\\"${bot.name}\\" \\"${directLineExtensionKey.name}\\" \\"${directLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\" \\"${webApp.name}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     forceUpdateTag: deployTime
@@ -363,13 +364,18 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
       DIRECT_LINE_SECRET_SECRET_NAME=$3
       KEY_VAULT_NAME=$4
       RESOURCE_GROUP_NAME=$5
+      WEB_APP_NAME=$6
 
       DIRECT_LINE_EXTENSION_KEY=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.extensionKey1")
       DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
 
       az keyvault secret set --name $DIRECT_LINE_EXTENSION_KEY_SECRET_NAME --output none --value $DIRECT_LINE_EXTENSION_KEY --vault-name $KEY_VAULT_NAME
       az keyvault secret set --name $DIRECT_LINE_SECRET_SECRET_NAME --output none --value $DIRECT_LINE_SECRET --vault-name $KEY_VAULT_NAME
+
+      az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $WEB_APP_NAME --output none --settings DIRECTLINE_EXTENSION_KEY=$DIRECT_LINE_EXTENSION_KEY
     '''
     timeout: 'PT2M'
   }
 }
+
+output webAppName string = webAppName

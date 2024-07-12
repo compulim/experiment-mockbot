@@ -43,7 +43,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Clean install
-        run: npm clean-install --install-strategy=nested
+        run: npm clean-install
 
       - name: Build
         run: npm run build
@@ -80,17 +80,42 @@ jobs:
           path: ./bicep
           retention-days: 1
 
+  convert-to-zip-deployment:
+    name: Convert to ZIP deployment
+    needs: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download tarball
+        uses: actions/download-artifact@v4
+        with:
+          name: bot-tarball
+
+      - name: Extract tarball
+        run: |
+          mkdir ./deploy
+          cd ./deploy
+          tar xvf ../*.tgz
+
+      - name: Compress as ZIP
+        run: zip ../bot.zip
+        working-directory: ./deploy
+
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          compression-level: 0
+          name: bot-zip
+          path: ./bot.zip
+          retention-days: 1
+
   publish:
     name: Publish
     needs: build
     permissions:
       contents: read
       packages: write
-    # runs-on: ubuntu-latest
-    runs-on: ${{ matrix.platform == 'windows' && 'windows-latest' || 'ubuntu-latest' }}
-    strategy:
-      matrix:
-        platform: [linux, window]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Download tarball
@@ -103,8 +128,10 @@ jobs:
         with:
           name: bot-node-modules
 
+      - run: mkdir ./deploy
+
       - name: Extract tarball
-        run: tar xvf ./*.tgz --strip-components=1
+        run: tar xvf ../*.tgz --strip-components=1
 
       - name: Extract node_modules
         run: unzip ./node_modules.zip
@@ -128,7 +155,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}-${{ matrix.platform }}
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -146,10 +173,12 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  deploy:
+  deploy-bicep:
     environment: azure
-    name: Deploy
+    name: Deploy Bicep
     needs: publish
+    outputs:
+      web-app-name: ${{ steps.deploy-to-azure.outputs.webAppName }}
     permissions:
       id-token: write
     runs-on: ubuntu-latest
@@ -175,6 +204,33 @@ jobs:
           parameters: 'builderIdentityName=${{ env.DEPLOYMENT_FAMILY_NAME }}-builder-identity deploymentFamilyName=${{ env.DEPLOYMENT_FAMILY_NAME }} imageName=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}:sha-${{ github.sha }} registryUsername=${{ vars.GH_USERNAME_READ_PACKAGES }} registryServer=${{ env.REGISTRY }} registryPassword=${{ secrets.GH_TOKEN_READ_PACKAGES }}'
           resourceGroupName: ${{ vars.RESOURCE_GROUP_NAME }}
           template: ./main.bicep
+
+  deploy-to-web-apps:
+    name: Deploy to Web Apps
+    needs:
+      - convert-to-zip-deployment
+      - deploy-bicep
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download tarball
+        uses: actions/download-artifact@v4
+        with:
+          name: bot-zip
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.BUILDER_CLIENT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ID }}
+          tenant-id: ${{ vars.TENANT_ID }}
+
+      - uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ jobs.deploy-bicep.outputs.web-app-name }}
+          package: ./bot.zip
 
   cleanup:
     name: Cleanup
