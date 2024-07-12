@@ -281,13 +281,10 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
       RESOURCE_GROUP_NAME=$5
 
       DIRECT_LINE_EXTENSION_KEY=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.extensionKey1")
-      echo "::add-mask::$DIRECT_LINE_EXTENSION_KEY"
-
       DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
-      echo "::add-mask::$DIRECT_LINE_SECRET"
 
-      az keyvault secret set --name $DIRECT_LINE_EXTENSION_KEY_SECRET_NAME --value $DIRECT_LINE_EXTENSION_KEY --vault-name $KEY_VAULT_NAME
-      az keyvault secret set --name $DIRECT_LINE_SECRET_SECRET_NAME --value $DIRECT_LINE_SECRET --vault-name $KEY_VAULT_NAME
+      az keyvault secret set --name $DIRECT_LINE_EXTENSION_KEY_SECRET_NAME --output none --value $DIRECT_LINE_EXTENSION_KEY --vault-name $KEY_VAULT_NAME
+      az keyvault secret set --name $DIRECT_LINE_SECRET_SECRET_NAME --output none --value $DIRECT_LINE_SECRET --vault-name $KEY_VAULT_NAME
     '''
     timeout: 'PT2M'
   }
