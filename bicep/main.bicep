@@ -159,7 +159,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
     template: {
       containers: [
         {
-          image: '${registryServer}/${imageName}'
+          image: '${registryServer}/${imageName}-linux'
           name: containerAppName
           resources: {
             #disable-next-line BCP036
@@ -210,8 +210,9 @@ resource webAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
     zoneRedundant: false
   }
   sku: {
-    family: 'B1'
-    tier: 'Basic'
+    family: '0' // 0 = Windows, 6 = Linux
+    name: 'S1'
+    tier: 'Standard'
   }
 }
 
@@ -249,7 +250,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       //   }
       // ]
       // nodeVersion: '~20'
-      alwaysOn: true
+      // alwaysOn: true
       ftpsState: 'Disabled'
     }
   }
@@ -260,7 +261,7 @@ resource webAppContainerDeployment 'Microsoft.Web/sites/sitecontainers@2023-12-0
   parent: webApp
   properties: {
     authType: 'UserCredentials'
-    image: '${registryServer}/${imageName}'
+    image: '${registryServer}/${imageName}-windows'
     isMain: true
     passwordSecret: registryPassword
     targetPort: '8080'

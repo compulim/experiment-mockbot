@@ -87,6 +87,9 @@ jobs:
       contents: read
       packages: write
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [linux, window]
 
     steps:
       - name: Download tarball
@@ -124,7 +127,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}-${{ matrix.platform }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
