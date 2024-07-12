@@ -97,8 +97,12 @@ jobs:
           cd ./deploy
           tar xvf ../*.tgz
 
+      - name: List directory
+        run: ls -laR
+        working-directory: ./deploy
+
       - name: Compress as ZIP
-        run: zip ../bot.zip ./**/*
+        run: zip ../bot.zip ./package/**/*
         working-directory: ./deploy
 
       - name: Upload ZIP
