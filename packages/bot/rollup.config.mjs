@@ -1,7 +1,7 @@
 import commonjs from '@rollup/plugin-commonjs';
-import inject from '@rollup/plugin-inject';
 import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
+import replace from '@rollup/plugin-replace';
 import typescript from '@rollup/plugin-typescript';
 
 export default {
@@ -12,7 +12,7 @@ export default {
     sourcemap: true
   },
   plugins: [
-    inject({
+    replace({
       BUILD_TIME: JSON.stringify(new Date().toISOString())
     }),
     resolve({
