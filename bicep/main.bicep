@@ -269,7 +269,7 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   name: 'saveSecretScript-${deployTime}'
   properties: {
     // arguments: '-botName \\"${bot.name}\\" -directLineExtensionKeySecretName \\"${directLineExtensionKey.name}\\" -directLineSecretSecretName \\"${directLineSecret.name}\\" -keyVaultName \\"${keyVault.name}\\" -resourceGroupName \\"${resourceGroup().name}\\"'
-    arguments: '-botName \\"${bot.name}\\" -directLineExtensionKeySecretName \\"${directLineExtensionKey.name}\\" -directLineSecretSecretName \\"${directLineSecret.name}\\" -keyVaultName \\"${keyVault.name}\\" -resourceGroupName \\"${resourceGroup().name}\\"'
+    arguments: '\'${bot.name}\' \'${directLineExtensionKey.name}\' \'${directLineSecret.name}\' \'${keyVault.name}\''
     // arguments: '-botName \\"${bot.name}\\"'
     // azPowerShellVersion: '8.3'
     azCliVersion: '2.61.0'
@@ -301,14 +301,19 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
     //   az keyvault secret set --name $directLineSecretSecretName --value $directLineSecret --vault-name $keyVaultName
     // '''
     scriptContent: '''
-      $directLineExtensionKey = $(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.extensionKey1")
+      BOT_NAME=$1
+      DIRECT_LINE_EXTENSION_KEY_SECRET_NAME=$2
+      DIRECT_LINE_SECRET_SECRET_NAME=$3
+      KEY_VAULT_NAME=$4
+
+      directLineExtensionKey=$(az bot directline update --name $BOT_NAME --output json --resource-group $resourceGroupName | jq -r ".properties.properties.extensionKey1")
       echo ::add-mask::$directLineExtensionKey
 
-      $directLineSecret = $(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.sites[0].key")
+      directLineSecret=$(az bot directline update --name $BOT_NAME --output json --resource-group $resourceGroupName | jq -r ".properties.properties.sites[0].key")
       echo ::add-mask::$directLineSecret
 
-      az keyvault secret set --name $directLineExtensionKeySecretName --value $directLineExtensionKey --vault-name $keyVaultName
-      az keyvault secret set --name $directLineSecretSecretName --value $directLineSecret --vault-name $keyVaultName
+      az keyvault secret set --name $DIRECT_LINE_EXTENSION_KEY_SECRET_NAME --value $directLineExtensionKey --vault-name $KEY_VAULT_NAME
+      az keyvault secret set --name $DIRECT_LINE_SECRET_SECRET_NAME --value $directLineSecret --vault-name $KEY_VAULT_NAME
     '''
     timeout: 'PT2M'
   }
