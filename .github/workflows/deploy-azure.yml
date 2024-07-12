@@ -4,7 +4,6 @@ name: '🚀 [Azure] Build and deploy'
 # - GH_TOKEN_READ_PACKAGES
 # Vars used in this GitHub workflow:
 # - BUILDER_CLIENT_ID
-# - BUILDER_OBJECT_ID
 # - GH_USERNAME_READ_PACKAGES
 # - RESOURCE_GROUP_NAME
 # - SUBSCRIPTION_ID
@@ -172,24 +171,6 @@ jobs:
           parameters: 'builderIdentityName=${{ env.DEPLOYMENT_FAMILY_NAME }}-builder deploymentFamilyName=${{ env.DEPLOYMENT_FAMILY_NAME }} imageName=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}:sha-${{ github.sha }} registryUsername=${{ vars.GH_USERNAME_READ_PACKAGES }} registryServer=${{ env.REGISTRY }} registryPassword=${{ secrets.GH_TOKEN_READ_PACKAGES }}'
           resourceGroupName: ${{ vars.RESOURCE_GROUP_NAME }}
           template: ./main.bicep
-
-      # - id: get-direct-line-secret
-      #   name: Get Direct Line secret
-      #   run: |
-      #      DIRECT_LINE_EXTENSION_KEY=$(az bot directline update --name ${{ steps.deploy-to-azure.outputs.botName }} --output json --resource-group ${{ vars.RESOURCE_GROUP_NAME }} | jq -r ".properties.properties.extensionKey1")
-      #      echo "::add-mask::$DIRECT_LINE_EXTENSION_KEY"
-
-      #      DIRECT_LINE_SECRET=$(az bot directline update --name ${{ steps.deploy-to-azure.outputs.botName }} --output json --resource-group ${{ vars.RESOURCE_GROUP_NAME }} | jq -r ".properties.properties.sites[0].key")
-      #      echo "::add-mask::$DIRECT_LINE_SECRET"
-
-      #      echo direct-line-extension-key=$DIRECT_LINE_EXTENSION_KEY | tee --append $GITHUB_OUTPUT
-      #      echo direct-line-secret=$DIRECT_LINE_SECRET | tee --append $GITHUB_OUTPUT
-
-      # - name: Save Direct Line secret to Key Vault
-      #   run: |
-      #     az keyvault secret set --name ${{ steps.deploy-to-azure.outputs.directLineExtensionKeySecretName }} --value ${{ steps.get-direct-line-secret.outputs.direct-line-extension-key }} --vault-name ${{ steps.deploy-to-azure.outputs.keyVaultName }}
-
-      #     az keyvault secret set --name ${{ steps.deploy-to-azure.outputs.directLineSecretSecretName }} --value ${{ steps.get-direct-line-secret.outputs.direct-line-secret }} --vault-name ${{ steps.deploy-to-azure.outputs.keyVaultName }}
 
   cleanup:
     name: Cleanup

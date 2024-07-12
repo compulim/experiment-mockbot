@@ -55,7 +55,6 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
   location: location
   properties: {
-    // enableRbacAuthorization: true // Use RBAC for Key Vault so the "builder" identity could update Key Vault secrets.
     accessPolicies: [
       {
         objectId: containerAppIdentity.properties.principalId
@@ -65,7 +64,6 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
         tenantId: tenant().tenantId
       }
       {
-        // objectId: builderObjectId
         objectId: builderIdentity.properties.principalId
         permissions: {
           secrets: ['set']
@@ -165,6 +163,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           image: '${registryServer}/${imageName}'
           name: containerAppName
           resources: {
+            #disable-next-line BCP036
             cpu: '0.25'
             memory: '0.5Gi'
           }
@@ -259,48 +258,18 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      // /subscriptions/51fbc48d-04f1-449a-b50c-b40618411b9f/resourcegroups/hawo-mockbot4-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/hawo-mockbot4-builder
       '${builderIdentity.id}': {}
     }
   }
-  // kind: 'AzurePowerShell'
   kind: 'AzureCLI'
   location: location
   #disable-next-line use-stable-resource-identifiers
   name: 'saveSecretScript-${deployTime}'
   properties: {
-    // arguments: '-botName \\"${bot.name}\\" -directLineExtensionKeySecretName \\"${directLineExtensionKey.name}\\" -directLineSecretSecretName \\"${directLineSecret.name}\\" -keyVaultName \\"${keyVault.name}\\" -resourceGroupName \\"${resourceGroup().name}\\"'
     arguments: '\\"${bot.name}\\" \\"${directLineExtensionKey.name}\\" \\"${directLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
-    // arguments: '-botName \\"${bot.name}\\"'
-    // azPowerShellVersion: '8.3'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     retentionInterval: 'P1D'
-    // scriptContent: '''
-    //   param(
-    //     [string] $botName
-    //   )
-
-    //   Write-Output 'Hello, World! $botName'
-    // '''
-    // scriptContent: '''
-    //   param(
-    //     [string] $botName,
-    //     [string] $directLineExtensionKeySecretName,
-    //     [string] $directLineSecretSecretName,
-    //     [string] $keyVaultName,
-    //     [string] $resourceGroupName
-    //   )
-
-    //   $directLineExtensionKey = @(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.extensionKey1")
-    //   Write-Output '::add-mask::{0}' -f $directLineExtensionKey
-
-    //   $directLineSecret = @(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.sites[0].key")
-    //   Write-Output '::add-mask::{0}' -f $directLineSecret
-
-    //   az keyvault secret set --name $directLineExtensionKeySecretName --value $directLineExtensionKey --vault-name $keyVaultName
-    //   az keyvault secret set --name $directLineSecretSecretName --value $directLineSecret --vault-name $keyVaultName
-    // '''
     scriptContent: '''
       set -eo pipefail
 
