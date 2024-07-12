@@ -11,6 +11,9 @@ export default {
     sourcemap: true
   },
   plugins: [
+    inject({
+      BUILD_TIME: JSON.stringify(new Date().toISOString())
+    }),
     resolve({
       preferBuiltins: true
     }),
