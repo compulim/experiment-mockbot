@@ -232,7 +232,7 @@ jobs:
           subscription-id: ${{ vars.SUBSCRIPTION_ID }}
           tenant-id: ${{ vars.TENANT_ID }}
 
-      - uses: azure/webapps-deploy@v2
+      - uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ needs.deploy-bicep.outputs.web-app-name }}
           package: ./bot.zip

@@ -228,10 +228,10 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
     serverFarmId: webAppPlan.id
     siteConfig: {
       appSettings: [
-        // {
-        //   name: 'WEBSITE_NODE_DEFAULT_VERSION'
-        //   value: '~20'
-        // }
+        {
+          name: 'WEBSITE_NODE_DEFAULT_VERSION'
+          value: '~20'
+        }
         {
           name: 'DIRECTLINE_EXTENSION_VERSION'
           value: 'latest'
@@ -263,7 +263,6 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
           value: 'node'
         }
       ]
-      nodeVersion: '~20'
       alwaysOn: true
       ftpsState: 'Disabled'
     }
