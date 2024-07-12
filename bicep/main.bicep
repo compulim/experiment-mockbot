@@ -237,6 +237,10 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
           value: 'lts'
         }
         {
+          name: 'WEBSITE_RUN_FROM_PACKAGE'
+          value: '1'
+        }
+        {
           name: 'DirectLineExtensionKey'
           value: 'DUMMY'
         }
