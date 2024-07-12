@@ -373,7 +373,7 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
       az keyvault secret set --name $DIRECT_LINE_EXTENSION_KEY_SECRET_NAME --output none --value $DIRECT_LINE_EXTENSION_KEY --vault-name $KEY_VAULT_NAME
       az keyvault secret set --name $DIRECT_LINE_SECRET_SECRET_NAME --output none --value $DIRECT_LINE_SECRET --vault-name $KEY_VAULT_NAME
 
-      az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $WEB_APP_NAME --output none --settings DIRECTLINE_EXTENSION_KEY=$DIRECT_LINE_EXTENSION_KEY
+      az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $WEB_APP_NAME --output none --settings DirectLineExtensionKey=$DIRECT_LINE_EXTENSION_KEY
     '''
     timeout: 'PT2M'
   }

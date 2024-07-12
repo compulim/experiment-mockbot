@@ -206,6 +206,7 @@ jobs:
           template: ./main.bicep
 
   deploy-to-web-apps:
+    environment: azure
     name: Deploy to Web Apps
     needs:
       - convert-to-zip-deployment
