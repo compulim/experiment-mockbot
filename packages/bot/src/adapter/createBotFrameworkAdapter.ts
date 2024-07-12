@@ -29,9 +29,9 @@ const onTurnErrorHandler: CloudAdapter['onTurnError'] = async (context: TurnCont
 };
 
 const envSchema = object({
-  MicrosoftAppId: string(),
-  MicrosoftAppTenantId: string(),
-  MicrosoftAppType: string()
+  MicrosoftAppId: string('"MicrosoftAppId" must be set in environment variable.'),
+  MicrosoftAppTenantId: string('"MicrosoftAppTenantId" must be set in environment variable.'),
+  MicrosoftAppType: string('"MicrosoftAppType" must be set in environment variable.')
 });
 
 export default function createBotFrameworkAdapter() {
