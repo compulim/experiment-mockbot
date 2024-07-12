@@ -264,12 +264,13 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   kind: 'AzureCLI'
   location: location
   #disable-next-line use-stable-resource-identifiers
-  name: 'saveSecretScript-${deployTime}'
+  name: 'saveSecretScript'
   properties: {
     arguments: '\\"${bot.name}\\" \\"${directLineExtensionKey.name}\\" \\"${directLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
-    retentionInterval: 'P1D'
+    forceUpdateTag: deployTime
+    retentionInterval: 'P0D'
     scriptContent: '''
       set -eo pipefail
 
