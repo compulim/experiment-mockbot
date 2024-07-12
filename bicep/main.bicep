@@ -262,14 +262,17 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
       '${builderIdentity.id}': {}
     }
   }
-  kind: 'AzurePowerShell'
+  // kind: 'AzurePowerShell'
+  kind: 'AzureCLI'
   location: location
   #disable-next-line use-stable-resource-identifiers
   name: 'saveSecretScript-${deployTime}'
   properties: {
+    // arguments: '-botName \\"${bot.name}\\" -directLineExtensionKeySecretName \\"${directLineExtensionKey.name}\\" -directLineSecretSecretName \\"${directLineSecret.name}\\" -keyVaultName \\"${keyVault.name}\\" -resourceGroupName \\"${resourceGroup().name}\\"'
     arguments: '-botName \\"${bot.name}\\" -directLineExtensionKeySecretName \\"${directLineExtensionKey.name}\\" -directLineSecretSecretName \\"${directLineSecret.name}\\" -keyVaultName \\"${keyVault.name}\\" -resourceGroupName \\"${resourceGroup().name}\\"'
     // arguments: '-botName \\"${bot.name}\\"'
-    azPowerShellVersion: '8.3'
+    // azPowerShellVersion: '8.3'
+    azCliVersion: '2.62.0'
     cleanupPreference: 'Always'
     retentionInterval: 'P1D'
     // scriptContent: '''
@@ -279,20 +282,30 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
 
     //   Write-Output 'Hello, World! $botName'
     // '''
+    // scriptContent: '''
+    //   param(
+    //     [string] $botName,
+    //     [string] $directLineExtensionKeySecretName,
+    //     [string] $directLineSecretSecretName,
+    //     [string] $keyVaultName,
+    //     [string] $resourceGroupName
+    //   )
+
+    //   $directLineExtensionKey = @(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.extensionKey1")
+    //   Write-Output '::add-mask::{0}' -f $directLineExtensionKey
+
+    //   $directLineSecret = @(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.sites[0].key")
+    //   Write-Output '::add-mask::{0}' -f $directLineSecret
+
+    //   az keyvault secret set --name $directLineExtensionKeySecretName --value $directLineExtensionKey --vault-name $keyVaultName
+    //   az keyvault secret set --name $directLineSecretSecretName --value $directLineSecret --vault-name $keyVaultName
+    // '''
     scriptContent: '''
-      param(
-        [string] $botName,
-        [string] $directLineExtensionKeySecretName,
-        [string] $directLineSecretSecretName,
-        [string] $keyVaultName,
-        [string] $resourceGroupName
-      )
+      $directLineExtensionKey = $(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.extensionKey1")
+      echo ::add-mask::$directLineExtensionKey
 
-      $directLineExtensionKey = @(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.extensionKey1")
-      Write-Output '::add-mask::{0}' -f $directLineExtensionKey
-
-      $directLineSecret = @(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.sites[0].key")
-      Write-Output '::add-mask::{0}' -f $directLineSecret
+      $directLineSecret = $(az bot directline update --name $botName --output json --resource-group $resourceGroupName | jq -r ".properties.properties.sites[0].key")
+      echo ::add-mask::$directLineSecret
 
       az keyvault secret set --name $directLineExtensionKeySecretName --value $directLineExtensionKey --vault-name $keyVaultName
       az keyvault secret set --name $directLineSecretSecretName --value $directLineSecret --vault-name $keyVaultName

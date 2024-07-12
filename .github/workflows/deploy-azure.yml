@@ -185,7 +185,7 @@ jobs:
       #      echo direct-line-extension-key=$DIRECT_LINE_EXTENSION_KEY | tee --append $GITHUB_OUTPUT
       #      echo direct-line-secret=$DIRECT_LINE_SECRET | tee --append $GITHUB_OUTPUT
 
-      # - name: Save Direct Line secret to Key Vaulit
+      # - name: Save Direct Line secret to Key Vault
       #   run: |
       #     az keyvault secret set --name ${{ steps.deploy-to-azure.outputs.directLineExtensionKeySecretName }} --value ${{ steps.get-direct-line-secret.outputs.direct-line-extension-key }} --vault-name ${{ steps.deploy-to-azure.outputs.keyVaultName }}
 
