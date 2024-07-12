@@ -269,7 +269,7 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   name: 'saveSecretScript-${deployTime}'
   properties: {
     // arguments: '-botName \\"${bot.name}\\" -directLineExtensionKeySecretName \\"${directLineExtensionKey.name}\\" -directLineSecretSecretName \\"${directLineSecret.name}\\" -keyVaultName \\"${keyVault.name}\\" -resourceGroupName \\"${resourceGroup().name}\\"'
-    arguments: '\'${bot.name}\' \'${directLineExtensionKey.name}\' \'${directLineSecret.name}\' \'${keyVault.name}\''
+    arguments: '\'${bot.name}\' \'${directLineExtensionKey.name}\' \'${directLineSecret.name}\' \'${keyVault.name}\' \'${resourceGroup().name}\''
     // arguments: '-botName \\"${bot.name}\\"'
     // azPowerShellVersion: '8.3'
     azCliVersion: '2.61.0'
@@ -305,11 +305,12 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
       DIRECT_LINE_EXTENSION_KEY_SECRET_NAME=$2
       DIRECT_LINE_SECRET_SECRET_NAME=$3
       KEY_VAULT_NAME=$4
+      RESOURCE_GROUP_NAME=$5
 
-      DIRECT_LINE_EXTENSION_KEY=$(az bot directline update --name $BOT_NAME --output json --resource-group $resourceGroupName | jq -r ".properties.properties.extensionKey1")
+      DIRECT_LINE_EXTENSION_KEY=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.extensionKey1")
       echo "::add-mask::$DIRECT_LINE_EXTENSION_KEY"
 
-      DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $resourceGroupName | jq -r ".properties.properties.sites[0].key")
+      DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
       echo "::add-mask::$DIRECT_LINE_SECRET"
 
       az keyvault secret set --name $DIRECT_LINE_EXTENSION_KEY_SECRET_NAME --value $DIRECT_LINE_EXTENSION_KEY --vault-name $KEY_VAULT_NAME
