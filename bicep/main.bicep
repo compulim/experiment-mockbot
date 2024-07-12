@@ -27,7 +27,9 @@ param containerAppIdentityName string = '${deploymentFamilyName}-app-user'
 param containerAppName string = '${deploymentFamilyName}-app'
 param deployTime string = utcNow()
 param keyVaultName string = '${deploymentFamilyName}-key'
-param location string = resourceGroup().location
+  // TODO: Temporarily setting KV to "westus".
+param location string = 'westus'
+// param location string = resourceGroup().location
 param logAnalyticsName string = '${deploymentFamilyName}-log'
 
 resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' existing = {
