@@ -23,14 +23,17 @@ param builderIdentityName string
 param botIdentityName string = '${deploymentFamilyName}-bot-identity'
 param botName string = '${deploymentFamilyName}-bot'
 param containerAppEnvName string = '${deploymentFamilyName}-env'
-param containerAppIdentityName string = '${deploymentFamilyName}-app-identity'
-param containerAppName string = '${deploymentFamilyName}-app'
+param containerAppIdentityName string = '${deploymentFamilyName}-container-identity'
+param containerAppName string = '${deploymentFamilyName}-container'
 param deployTime string = utcNow()
 param keyVaultName string = '${deploymentFamilyName}-key'
   // TODO: Temporarily setting KV to "westus".
 param location string = 'westus'
 // param location string = resourceGroup().location
 param logAnalyticsName string = '${deploymentFamilyName}-log'
+param webAppName string = '${deploymentFamilyName}-app'
+param webAppPlanName string = '${deploymentFamilyName}-app-plan'
+param webAppIdentityName string = '${deploymentFamilyName}-app-identity'
 
 resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' existing = {
   name: builderIdentityName
@@ -197,6 +200,70 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       }
     }
   }
+}
+
+resource webAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
+  location: location
+  name: webAppIdentityName
+}
+
+
+resource webAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
+  location: location
+  name: webAppPlanName
+  properties: {
+    zoneRedundant: false
+  }
+  sku: {
+    family: 'B1'
+    tier: 'Basic'
+  }
+}
+
+resource webApp 'Microsoft.Web/sites@2023-12-01' = {
+  location: location
+  name: webAppName
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${webAppIdentity.id}': {}
+    }
+  }
+  properties: {
+    clientAffinityEnabled: false
+    httpsOnly: true
+    siteConfig: {
+      appSettings: [
+        {
+          name: 'WEBSITE_NODE_DEFAULT_VERSION'
+          value: 'lts'
+        }
+      ]
+      metadata: [
+        {
+          name: 'CURRENT_STACK'
+          value: 'node'
+        }
+      ]
+      nodeVersion: '~20'
+      alwaysOn: true
+      ftpsState: 'Disabled'
+    }
+  }
+}
+
+resource websiteContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  name: 'de139f84-1756-47ae-9be6-808fbbe84772'
+}
+
+resource webAppDeployRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: '${webAppName}-builder-rbac'
+  properties: {
+    principalId: builderIdentity.properties.principalId
+    roleDefinitionId: websiteContributorRoleDefinition.id
+  }
+  scope: webApp
 }
 
 resource botIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {

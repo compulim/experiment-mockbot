@@ -7,7 +7,8 @@
   "files": [
     "./.dockerignore",
     "./dist/",
-    "./Dockerfile"
+    "./Dockerfile",
+    "./web.config"
   ],
   "private": true,
   "scripts": {
