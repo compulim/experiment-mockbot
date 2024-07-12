@@ -95,14 +95,14 @@ jobs:
         run: |
           mkdir ./deploy
           cd ./deploy
-          tar xvf ../*.tgz
+          tar xvf ../*.tgz --strip-components=1
 
       - name: List directory
         run: ls -laR
         working-directory: ./deploy
 
       - name: Compress as ZIP
-        run: zip ../bot.zip ./package/**/*
+        run: zip -r ../bot.zip .
         working-directory: ./deploy
 
       - name: Upload ZIP
