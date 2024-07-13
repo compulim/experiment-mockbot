@@ -6,7 +6,7 @@
   "license": "MIT",
   "workspaces": [
     "/packages/bot/",
-    "/packages/token/"
+    "/packages/token-service/"
   ],
   "scripts": {
     "build": "npm run build --if-present --workspaces"
