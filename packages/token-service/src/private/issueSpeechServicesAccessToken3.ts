@@ -30,7 +30,7 @@ export default async function issueSpeechServicesAccessToken3(): Promise<Readonl
   identityURL.searchParams.set('accept', 'application/json');
   identityURL.searchParams.set('api-version', '2019-08-01');
   identityURL.searchParams.set('client_id', AZURE_CLIENT_ID);
-  identityURL.searchParams.set('resource', 'https://cognitiveservices.azure.com/');
+  identityURL.searchParams.set('resource', 'https://cognitiveservices.azure.com');
 
   const res = await fetch(identityURL, { headers: { 'x-identity-header': IDENTITY_HEADER } });
 
