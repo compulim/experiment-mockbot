@@ -3,8 +3,8 @@ metadata description = 'Deploy to Azure'
 @description('Family name of the deployment.')
 param deploymentFamilyName string
 
-@description('Image name and tag.')
-param imageName string
+@description('Token service image name and tag.')
+param tokenServiceImageName string
 
 @description('Username to authenticate with private registry.')
 @secure()
@@ -26,11 +26,11 @@ param location string = 'westus'
 // param location string = resourceGroup().location
 
 param botName string = '${deploymentFamilyName}-bot'
-param containerAppName string = '${deploymentFamilyName}-container'
 param keyVaultName string = '${deploymentFamilyName}-key'
 param logAnalyticsName string = '${deploymentFamilyName}-log'
 param speechServicesName string = '${deploymentFamilyName}-speech'
-param webAppName string = '${deploymentFamilyName}-app'
+param tokenServiceAppName string = '${deploymentFamilyName}-token-app'
+param botAppName string = '${deploymentFamilyName}-bot-app'
 
 resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' existing = {
   name: builderIdentityName
@@ -114,9 +114,9 @@ resource speechServicesSubscriptionKey 'Microsoft.KeyVault/vaults/secrets@2023-0
 }
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.app/managedenvironments?pivots=deployment-language-bicep
-resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
+resource tokenServiceAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   location: location
-  name: '${containerAppName}-env'
+  name: '${tokenServiceAppName}-env'
   properties: {
     appLogsConfiguration: {
       destination: 'log-analytics'
@@ -128,16 +128,16 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' 
   }
 }
 
-resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
+resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${botIdentity.id}': {}
       '${containerAppIdentity.id}': {}
+      // TODO: Add speech identity
     }
   }
   location: location
-  name: containerAppName
+  name: tokenServiceAppName
   properties: {
     configuration: {
       ingress: {
@@ -172,14 +172,14 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'registry-password'
           value: registryPassword
         }
-        {
-          identity: containerAppIdentity.id
-          keyVaultUrl: speechServicesSubscriptionKey.properties.secretUri
-          name: 'speech-services-subscription-key'
-        }
+        // {
+        //   identity: containerAppIdentity.id
+        //   keyVaultUrl: speechServicesSubscriptionKey.properties.secretUri
+        //   name: 'speech-services-subscription-key'
+        // }
       ]
     }
-    managedEnvironmentId: containerAppEnvironment.id
+    managedEnvironmentId: tokenServiceAppEnvironment.id
     template: {
       containers: [
         {
@@ -188,21 +188,9 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               name: 'DIRECT_LINE_SECRET'
               secretRef: 'direct-line-secret'
             }
-            {
-              name: 'MicrosoftAppId'
-              value: botIdentity.properties.clientId
-            }
-            {
-              name: 'MicrosoftAppTenantId'
-              value: botIdentity.properties.tenantId
-            }
-            {
-              name: 'MicrosoftAppType'
-              value: 'UserAssignedMSI'
-            }
           ]
-          image: '${registryServer}/${imageName}'
-          name: containerAppName
+          image: '${registryServer}/${tokenServiceImageName}'
+          name: tokenServiceAppName
           resources: {
             #disable-next-line BCP036
             cpu: '0.25'
@@ -218,14 +206,14 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   }
 }
 
-resource webAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
+resource botAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
-  name: '${webAppName}-identity'
+  name: '${botAppName}-identity'
 }
 
-resource webAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
+resource botAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   location: location
-  name: '${webAppName}-plan'
+  name: '${botAppName}-plan'
   properties: {
     zoneRedundant: false
   }
@@ -237,20 +225,20 @@ resource webAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   }
 }
 
-resource webApp 'Microsoft.Web/sites@2023-12-01' = {
+resource botApp 'Microsoft.Web/sites@2023-12-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
       '${botIdentity.id}': {}
-      '${webAppIdentity.id}': {}
+      '${botAppIdentity.id}': {}
     }
   }
   location: location
-  name: webAppName
+  name: botAppName
   properties: {
     clientAffinityEnabled: false
     httpsOnly: true
-    serverFarmId: webAppPlan.id
+    serverFarmId: botAppPlan.id
     siteConfig: {
       alwaysOn: true
       appSettings: [
@@ -306,7 +294,7 @@ resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   properties: {
     displayName: botName
     // endpoint: 'https://${containerApp.properties.configuration.ingress.fqdn}/api/messages'
-    endpoint: 'https://${webApp.properties.defaultHostName}/api/messages'
+    endpoint: 'https://${botApp.properties.defaultHostName}/api/messages'
     msaAppId: botIdentity.properties.clientId
     msaAppMSIResourceId: botIdentity.id
     msaAppTenantId: botIdentity.properties.tenantId
@@ -362,7 +350,7 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   #disable-next-line use-stable-resource-identifiers
   name: 'save-secret-script'
   properties: {
-    arguments: '\\"${bot.name}\\" \\"${directLineExtensionKey.name}\\" \\"${directLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\" \\"${webApp.name}\\"'
+    arguments: '\\"${bot.name}\\" \\"${directLineExtensionKey.name}\\" \\"${directLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\" \\"${botApp.name}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     forceUpdateTag: deployTime
@@ -389,4 +377,4 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   }
 }
 
-output webAppName string = webAppName
+output botAppName string = botAppName
