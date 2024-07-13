@@ -26,7 +26,7 @@ export default async function issueDirectLineToken(): Promise<Readonly<{ token: 
     return Object.freeze({ token: parse(directLineIssueTokenResponse, JSON.parse(response.bodyAsText || '')) });
   }
 
-  console.log(response.bodyAsText);
+  console.error(response.bodyAsText);
 
   throw new Error(`Direct Line service returned ${response.status}.`);
 }
