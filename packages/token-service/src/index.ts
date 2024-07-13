@@ -10,10 +10,12 @@ const {
   env: { PORT = 8000 }
 } = process;
 
-function handleError(fn: RequestHandler): RequestHandler {
+function handleError<P, ResBody, ReqBody, ReqQuery, Locals extends Record<string, any> = Record<string, any>>(
+  fn: RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>
+): RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals> {
   return async (req, res, next) => {
     try {
-      await fn(req, res, next);
+      return await fn(req, res, next);
     } catch (error) {
       console.error(error);
 
@@ -32,17 +34,19 @@ app.get('/health.txt', (_, res) => {
 
 app.get(
   '/api/token/directline',
-  handleError(async (_, res) => res.json((await issueDirectLineToken()).token))
+  handleError(async (_, res) => res.json({ token: (await issueDirectLineToken()).token }))
 );
 
 app.get(
   '/api/token/speech/1',
-  handleError(async (_, res) => res.json((await issueSpeechServicesAccessToken()).token))
+  handleError(async (_, res) => res.json({ token: (await issueSpeechServicesAccessToken()).token }))
 );
 
 app.get(
   '/api/token/speech/2',
-  handleError(async (_, res) => res.json((await issueSpeechServicesAccessToken({ useManagedIdentity: true })).token))
+  handleError(async (_, res) =>
+    res.json({ token: (await issueSpeechServicesAccessToken({ useManagedIdentity: true })).token })
+  )
 );
 
 app.listen(PORT, () => console.log(`Token service listening to port ${PORT}.`));

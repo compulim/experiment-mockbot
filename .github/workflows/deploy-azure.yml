@@ -130,15 +130,13 @@ jobs:
         with:
           name: ${{ matrix.name }}-tarball
 
-      - run: mkdir ./deploy
-
       - name: Extract tarball
-        run: tar xvf ../*.tgz --strip-components=1
-        working-directory: ./deploy
+        run: |
+          tar xvf ../*.tgz --strip-components=1
+          rm ./*.tgz
 
       - name: List directory
         run: ls -la
-        working-directory: ./deploy
 
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
