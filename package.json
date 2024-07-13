@@ -5,7 +5,8 @@
   "author": "Microsoft Corporation",
   "license": "MIT",
   "workspaces": [
-    "/packages/bot/"
+    "/packages/bot/",
+    "/packages/token/"
   ],
   "scripts": {
     "build": "npm run build --if-present --workspaces"
