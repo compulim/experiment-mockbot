@@ -43,10 +43,10 @@ app.use(
             .map(origin => origin.trim())
             .includes(requestOrigin))
       ) {
-        return callback(null, requestOrigin);
+        return callback(null, true);
       }
 
-      callback(new Error('Request origin is not trusted.'));
+      callback(new Error('Not allowed by CORS'));
     }
   })
 );

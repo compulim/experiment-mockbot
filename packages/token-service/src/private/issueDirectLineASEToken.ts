@@ -13,7 +13,7 @@ export default async function issueDirectLineASEToken(): Promise<Readonly<{ toke
   const { BOT_APP_HOSTNAME, DIRECT_LINE_SECRET } = parse(envSchema, process.env);
 
   const client = new ServiceClient();
-  const url = new URL('https://dummy/v3/directline/tokens/generate');
+  const url = new URL('https://dummy/.bot/v3/directline/tokens/generate');
 
   url.hostname = BOT_APP_HOSTNAME;
 
