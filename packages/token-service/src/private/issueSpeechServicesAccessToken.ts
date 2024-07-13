@@ -47,5 +47,7 @@ export default async function issueSpeechServicesAccessToken(
     return parse(speechServicesIssueTokenResponse, JSON.parse(response.bodyAsText || ''));
   }
 
-  throw new Error('Speech Services returned non-200.');
+  console.log(response.bodyAsText);
+
+  throw new Error(`Speech Services returned ${response.status}.`);
 }

@@ -26,5 +26,7 @@ export default async function issueDirectLineToken(): Promise<Readonly<{ token: 
     return { token: parse(directLineIssueTokenResponse, JSON.parse(response.bodyAsText || '')) };
   }
 
-  throw new Error('Direct Line service returned non-200.');
+  console.log(response.bodyAsText);
+
+  throw new Error(`Direct Line service returned ${response.status}.`);
 }
