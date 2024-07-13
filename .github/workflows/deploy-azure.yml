@@ -205,7 +205,7 @@ jobs:
               "registryPassword": "${{ secrets.GH_TOKEN_READ_PACKAGES }}",
               "registryServer": "${{ env.REGISTRY }}",
               "registryUsername": "${{ vars.GH_USERNAME_READ_PACKAGES }}",
-              "tokenServiceImageName": "${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}-token:sha-${{ github.sha }}"
+              "tokenServiceImageName": "${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}-token-service:sha-${{ github.sha }}"
             }
           EOF
           ) | jq -r '. | to_entries | map(.key + "=" + (.value | tostring)) | join(" ")') | tee --append $GITHUB_OUTPUT
