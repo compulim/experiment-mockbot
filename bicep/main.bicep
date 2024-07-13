@@ -233,6 +233,7 @@ resource botApp 'Microsoft.Web/sites@2023-12-01' = {
           value: 'node'
         }
       ]
+      webSocketsEnabled: true
     }
   }
 }

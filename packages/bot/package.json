@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "botbuilder": "^4.22.3",
+    "botframework-connector": "^4.22.3",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "valibot": "^0.36.0"
