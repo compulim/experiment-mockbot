@@ -25,12 +25,12 @@ param deployTime string = utcNow()
 param location string = 'westus'
 // param location string = resourceGroup().location
 
+param botAppName string = '${deploymentFamilyName}-bot-app'
 param botName string = '${deploymentFamilyName}-bot'
 param keyVaultName string = '${deploymentFamilyName}-key'
 param logAnalyticsName string = '${deploymentFamilyName}-log'
 param speechServicesName string = '${deploymentFamilyName}-speech'
 param tokenServiceAppName string = '${deploymentFamilyName}-token-app'
-param botAppName string = '${deploymentFamilyName}-bot-app'
 
 resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' existing = {
   name: builderIdentityName
@@ -46,9 +46,9 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-previ
   }
 }
 
-resource containerAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
+resource tokenServiceAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
-  name: '${containerAppName}-identity'
+  name: '${tokenServiceAppName}-identity'
 }
 
 resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
@@ -59,6 +59,8 @@ resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview
   sku: {
     name: 'S0'
   }
+
+  // TODO: Should add role assignment for "tokenServiceAppIdentity".
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
@@ -67,7 +69,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   properties: {
     accessPolicies: [
       {
-        objectId: containerAppIdentity.properties.principalId
+        objectId: tokenServiceAppIdentity.properties.principalId
         permissions: {
           secrets: ['get']
         }
@@ -132,7 +134,7 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${containerAppIdentity.id}': {}
+      '${tokenServiceAppIdentity.id}': {}
       // TODO: Add speech identity
     }
   }
@@ -159,12 +161,7 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
       ]
       secrets: [
         {
-          identity: containerAppIdentity.id
-          keyVaultUrl: directLineExtensionKey.properties.secretUri
-          name: 'direct-line-extension-key'
-        }
-        {
-          identity: containerAppIdentity.id
+          identity: tokenServiceAppIdentity.id
           keyVaultUrl: directLineSecret.properties.secretUri
           name: 'direct-line-secret'
         }
@@ -172,11 +169,11 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'registry-password'
           value: registryPassword
         }
-        // {
-        //   identity: containerAppIdentity.id
-        //   keyVaultUrl: speechServicesSubscriptionKey.properties.secretUri
-        //   name: 'speech-services-subscription-key'
-        // }
+        {
+          identity: tokenServiceAppIdentity.id
+          keyVaultUrl: speechServicesSubscriptionKey.properties.secretUri
+          name: 'speech-services-subscription-key'
+        }
       ]
     }
     managedEnvironmentId: tokenServiceAppEnvironment.id
@@ -187,6 +184,10 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'DIRECT_LINE_SECRET'
               secretRef: 'direct-line-secret'
+            }
+            {
+              name: 'SPEECH_SERVICES_SUBSCRIPTION_KEY'
+              secretRef: 'speech-services-subscription-key'
             }
           ]
           image: '${registryServer}/${tokenServiceImageName}'
@@ -229,8 +230,8 @@ resource botApp 'Microsoft.Web/sites@2023-12-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${botIdentity.id}': {}
       '${botAppIdentity.id}': {}
+      '${botIdentity.id}': {}
     }
   }
   location: location
@@ -252,7 +253,7 @@ resource botApp 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'DirectLineExtensionKey'
-          value: 'DUMMY'
+          value: 'DUMMY' // Will set extension key (via DeploymentScript) after bot registration is up.
         }
         {
           name: 'MicrosoftAppId'
@@ -368,13 +369,27 @@ resource saveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
       DIRECT_LINE_EXTENSION_KEY=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.extensionKey1")
       DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
 
-      az keyvault secret set --name $DIRECT_LINE_EXTENSION_KEY_SECRET_NAME --output none --value $DIRECT_LINE_EXTENSION_KEY --vault-name $KEY_VAULT_NAME
-      az keyvault secret set --name $DIRECT_LINE_SECRET_SECRET_NAME --output none --value $DIRECT_LINE_SECRET --vault-name $KEY_VAULT_NAME
+      az keyvault secret set \
+        --name $DIRECT_LINE_EXTENSION_KEY_SECRET_NAME \
+        --output none \
+        --value $DIRECT_LINE_EXTENSION_KEY \
+        --vault-name $KEY_VAULT_NAME
 
-      az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $WEB_APP_NAME --output none --settings DirectLineExtensionKey=$DIRECT_LINE_EXTENSION_KEY
+      az keyvault secret set \
+        --name $DIRECT_LINE_SECRET_SECRET_NAME \
+        --output none \
+        --value $DIRECT_LINE_SECRET \
+        --vault-name $KEY_VAULT_NAME
+
+      az webapp config appsettings set \
+        --resource-group $RESOURCE_GROUP_NAME \
+        --name $WEB_APP_NAME \
+        --output none \
+        --settings DirectLineExtensionKey=$DIRECT_LINE_EXTENSION_KEY
     '''
     timeout: 'PT2M'
   }
 }
 
+// Output "botAppName" for ZIP deployment later.
 output botAppName string = botAppName
