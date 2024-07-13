@@ -37,6 +37,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Upload Bicep templates
+        uses: actions/upload-artifact@v4
+        with:
+          compression-level: 0
+          name: bicep
+          path: ./bicep
+          retention-days: 1
+
       - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
@@ -52,7 +60,7 @@ jobs:
         run: npm pack
         working-directory: ./packages/bot
 
-      - name: Upload tarball
+      - name: Upload bot tarball
         uses: actions/upload-artifact@v4
         with:
           compression-level: 0
@@ -60,16 +68,20 @@ jobs:
           path: ./packages/bot/*.tgz
           retention-days: 1
 
-      - name: Upload Bicep templates
+      - name: Pack token service
+        run: npm pack
+        working-directory: ./packages/token-service
+
+      - name: Upload token service tarball
         uses: actions/upload-artifact@v4
         with:
           compression-level: 0
-          name: bicep
-          path: ./bicep
+          name: token-service-tarball
+          path: ./packages/token-service/*.tgz
           retention-days: 1
 
-  convert-to-zip-deployment:
-    name: Convert to ZIP deployment
+  convert-bot-deployment:
+    name: Convert bot tarball to ZIP deployment
     needs: Build
     runs-on: ubuntu-latest
 
@@ -101,19 +113,22 @@ jobs:
           path: ./bot.zip
           retention-days: 1
 
-  publish:
-    name: Publish
+  publish-containers:
+    name: Publish containers
     needs: build
     permissions:
       contents: read
       packages: write
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        name: [bot, token-service]
 
     steps:
       - name: Download tarball
         uses: actions/download-artifact@v4
         with:
-          name: bot-tarball
+          name: ${{ matrix.name }}-tarball
 
       - run: mkdir ./deploy
 
@@ -139,7 +154,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}-${{ matrix.name }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -160,9 +175,9 @@ jobs:
   deploy-bicep:
     environment: azure
     name: Deploy Bicep
-    needs: publish
+    needs: publish-containers
     outputs:
-      web-app-name: ${{ steps.deploy-to-azure.outputs.webAppName }}
+      bot-app-name: ${{ steps.deploy-to-azure.outputs.botAppName }}
     permissions:
       id-token: write
     runs-on: ubuntu-latest
@@ -180,12 +195,27 @@ jobs:
           subscription-id: ${{ vars.SUBSCRIPTION_ID }}
           tenant-id: ${{ vars.TENANT_ID }}
 
+      - id: prepare
+        name: Prepare parameters
+        run: |
+          echo PARAMETERS=$((cat <<EOF
+            {
+              "builderIdentityName": "${{ env.DEPLOYMENT_FAMILY_NAME }}-builder-identity",
+              "deploymentFamilyName": "${{ env.DEPLOYMENT_FAMILY_NAME }}",
+              "registryPassword": "${{ secrets.GH_TOKEN_READ_PACKAGES }}",
+              "registryServer": "${{ env.REGISTRY }}",
+              "registryUsername": "${{ vars.GH_USERNAME_READ_PACKAGES }}",
+              "tokenServiceImageName": "${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}-token:sha-${{ github.sha }}"
+            }
+          EOF
+          ) | jq -r '. | to_entries | map(.key + "=" + (.value | tostring)) | join(" ")') | tee --append $GITHUB_OUTPUT
+
       - id: deploy-to-azure
         name: Deploy to Azure
         uses: azure/arm-deploy@v2
         with:
           failOnStdErr: false
-          parameters: 'builderIdentityName=${{ env.DEPLOYMENT_FAMILY_NAME }}-builder-identity deploymentFamilyName=${{ env.DEPLOYMENT_FAMILY_NAME }} imageName=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}:sha-${{ github.sha }} registryUsername=${{ vars.GH_USERNAME_READ_PACKAGES }} registryServer=${{ env.REGISTRY }} registryPassword=${{ secrets.GH_TOKEN_READ_PACKAGES }}'
+          parameters: ${{ steps.prepare.outputs.PARAMETERS }}
           resourceGroupName: ${{ vars.RESOURCE_GROUP_NAME }}
           template: ./main.bicep
 
@@ -193,7 +223,7 @@ jobs:
     environment: azure
     name: Deploy to Web Apps
     needs:
-      - convert-to-zip-deployment
+      - convert-bot-deployment
       - deploy-bicep
     permissions:
       id-token: write
@@ -214,22 +244,25 @@ jobs:
 
       - uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ needs.deploy-bicep.outputs.web-app-name }}
+          app-name: ${{ needs.deploy-bicep.outputs.bot-app-name }}
           package: ./bot.zip
 
   cleanup:
     name: Cleanup
     continue-on-error: true
-    needs: publish
+    needs: publish-containers
     permissions:
       packages: write
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        name: [bot, token-service]
 
     steps:
       - name: Delete obsoleted images
         continue-on-error: true
         uses: actions/delete-package-versions@v5
         with:
-          package-name: ${{ env.IMAGE_NAME_WITHOUT_OWNER }}
+          package-name: ${{ env.IMAGE_NAME_WITHOUT_OWNER }}-${{ matrix.name }}
           package-type: container
           min-versions-to-keep: 5
