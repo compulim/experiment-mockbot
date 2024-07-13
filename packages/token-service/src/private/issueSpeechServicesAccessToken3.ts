@@ -19,7 +19,7 @@ const managedIdentityTokenSchema = object({
 // });
 
 export default async function issueSpeechServicesAccessToken3(): Promise<Readonly<{ token: string }>> {
-  const { IDENTITY_ENDPOINT, IDENTITY_HEADER, SPEECH_SERVICES_REGION, SPEECH_SERVICES_RESOURCE_ID } = parse(
+  const { AZURE_CLIENT_ID, IDENTITY_ENDPOINT, IDENTITY_HEADER, SPEECH_SERVICES_REGION, SPEECH_SERVICES_RESOURCE_ID } = parse(
     envSchema,
     process.env
   );
@@ -28,6 +28,7 @@ export default async function issueSpeechServicesAccessToken3(): Promise<Readonl
   const identityURL = new URL(IDENTITY_ENDPOINT);
 
   identityURL.searchParams.set('api-version', '2019-08-01');
+  identityURL.searchParams.set('client_id', AZURE_CLIENT_ID);
   identityURL.searchParams.set('resource', 'https://vault.azure.net');
 
   const res = await fetch(identityURL, { headers: { 'x-identity-header': IDENTITY_HEADER } });
