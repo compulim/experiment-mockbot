@@ -59,8 +59,7 @@ resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview
   sku: {
     name: 'S0'
   }
-
-  // TODO: Should add role assignment for "tokenServiceAppIdentity".
+  // TODO: Should add role assignment for "tokenServiceAppIdentity" or a new "speechUser" identity.
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
@@ -118,9 +117,7 @@ resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   name: botName
   properties: {
     displayName: botName
-    // endpoint: 'https://${containerApp.properties.configuration.ingress.fqdn}/api/messages'
-    // endpoint: 'https://${botApp.properties.defaultHostName}/api/messages'
-    endpoint: 'https://dummy.localhost/api/messages' // To be set later.
+    endpoint: 'https://dummy.localhost/api/messages' // Chicken-and-egg problem, we will set it later.
     msaAppId: botIdentity.properties.clientId
     msaAppMSIResourceId: botIdentity.id
     msaAppTenantId: botIdentity.properties.tenantId
@@ -298,6 +295,7 @@ resource keyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08
       KEY_VAULT_NAME=$3
       RESOURCE_GROUP_NAME=$4
 
+      # Direct Line secret can only be retrieved via HTTP POST call, thus, "update" command is required.
       DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
 
       az keyvault secret set \
