@@ -37,10 +37,11 @@ app.use(
   cors({
     origin(requestOrigin, callback) {
       if (
-        requestOrigin &&
-        TRUSTED_ORIGINS?.split(',')
-          .map(origin => origin.trim())
-          .includes(requestOrigin)
+        !TRUSTED_ORIGINS ||
+        (requestOrigin &&
+          TRUSTED_ORIGINS?.split(',')
+            .map(origin => origin.trim())
+            .includes(requestOrigin))
       ) {
         return callback(null, requestOrigin);
       }

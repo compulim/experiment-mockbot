@@ -13,6 +13,7 @@ export default async function issueDirectLineToken(): Promise<Readonly<{ token: 
 
   const client = new ServiceClient();
 
+  // TODO: This should use Managed Identity instead of Direct Line secret.
   const response = await client.sendRequest({
     headers: createHttpHeaders({ authorization: `Bearer ${DIRECT_LINE_SECRET}` }),
     method: 'POST',
