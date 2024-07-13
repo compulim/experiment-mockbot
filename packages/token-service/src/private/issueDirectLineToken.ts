@@ -1,6 +1,6 @@
 import { ServiceClient } from '@azure/core-client';
 import { createHttpHeaders } from '@azure/core-rest-pipeline';
-import { object, parse, string, type InferOutput } from 'valibot';
+import { object, parse, string } from 'valibot';
 
 const envSchema = object({
   DIRECT_LINE_SECRET: string()
