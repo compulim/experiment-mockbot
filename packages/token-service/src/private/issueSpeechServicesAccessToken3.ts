@@ -27,6 +27,7 @@ export default async function issueSpeechServicesAccessToken3(): Promise<Readonl
 
   const identityURL = new URL(IDENTITY_ENDPOINT);
 
+  identityURL.searchParams.set('accept', 'application/json');
   identityURL.searchParams.set('api-version', '2019-08-01');
   identityURL.searchParams.set('client_id', AZURE_CLIENT_ID);
   identityURL.searchParams.set('resource', 'https://vault.azure.net');
