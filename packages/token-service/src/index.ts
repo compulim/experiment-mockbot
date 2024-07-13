@@ -1,4 +1,6 @@
+import cors from 'cors';
 import express, { json, type RequestHandler } from 'express';
+import { object, optional, parse, string } from 'valibot';
 import issueDirectLineASEToken from './private/issueDirectLineASEToken';
 import issueDirectLineToken from './private/issueDirectLineToken';
 import issueSpeechServicesAccessToken from './private/issueSpeechServicesAccessToken';
@@ -7,9 +9,13 @@ declare global {
   var BUILD_TIME: string;
 }
 
-const {
-  env: { PORT = 8000 }
-} = process;
+const { PORT, TRUSTED_ORIGINS } = parse(
+  object({
+    PORT: optional(string()),
+    TRUSTED_ORIGINS: string()
+  }),
+  process.env
+);
 
 function handleError<P, ResBody, ReqBody, ReqQuery, Locals extends Record<string, any> = Record<string, any>>(
   fn: RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>
@@ -27,6 +33,22 @@ function handleError<P, ResBody, ReqBody, ReqQuery, Locals extends Record<string
 
 const app = express();
 
+app.use(
+  cors({
+    origin(requestOrigin, callback) {
+      if (
+        requestOrigin &&
+        TRUSTED_ORIGINS?.split(',')
+          .map(origin => origin.trim())
+          .includes(requestOrigin)
+      ) {
+        return callback(null, requestOrigin);
+      }
+
+      callback(new Error('Request origin is not trusted.'));
+    }
+  })
+);
 app.use(json());
 
 app.get('/health.txt', (_, res) => {

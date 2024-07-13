@@ -408,6 +408,10 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
               name: 'SPEECH_SERVICES_SUBSCRIPTION_KEY'
               secretRef: 'speech-services-subscription-key'
             }
+            {
+              name: 'TRUSTED_ORIGINS'
+              value: 'https://compulim.github.io,https://localhost'
+            }
           ]
           image: '${registryServer}/${tokenServiceImageName}'
           name: tokenServiceAppName
