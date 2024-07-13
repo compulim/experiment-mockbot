@@ -1,6 +1,5 @@
 import { AuthenticationConstants } from 'botframework-connector';
 import express, { json } from 'express';
-import { createServer } from 'http';
 import { platform } from 'node:os';
 import { object, optional, parse, string } from 'valibot';
 import createBotFrameworkAdapter from './adapter/createBotFrameworkAdapter';
@@ -30,18 +29,6 @@ app.get('/health.txt', (_, res) => {
 const adapter = createBotFrameworkAdapter();
 const bot = new EchoBot();
 
-// Listen for incoming requests.
-app.post('/api/messages', (req, res, _) => {
-  console.log('POST /api/messages', req.body);
-
-  adapter.process(req, res, async context => {
-    // Route to main dialog.
-    await bot.run(context);
-  });
-});
-
-const server = createServer(app);
-
 // Enable Direct Line App Service Extension
 // See https://docs.microsoft.com/en-us/azure/bot-service/bot-service-channel-directline-extension-node-bot?view=azure-bot-service-4.0
 platform() === 'win32' &&
@@ -52,4 +39,14 @@ platform() === 'win32' &&
     AuthenticationConstants.ToChannelFromBotOAuthScope
   );
 
-server.listen(PORT, () => console.log(`Bot listening to port ${PORT}.`));
+// Listen for incoming requests.
+app.post('/api/messages', (req, res, _) => {
+  console.log('POST /api/messages', req.body);
+
+  adapter.process(req, res, async context => {
+    // Route to main dialog.
+    await bot.run(context);
+  });
+});
+
+app.listen(PORT, () => console.log(`Bot listening to port ${PORT}.`));
