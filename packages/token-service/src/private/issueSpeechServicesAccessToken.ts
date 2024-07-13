@@ -14,7 +14,7 @@ const speechServicesIssueTokenResponse = object({
 
 export default async function issueSpeechServicesAccessToken(
   init: { useManagedIdentity?: boolean | undefined } = {}
-): Promise<InferOutput<typeof speechServicesIssueTokenResponse>> {
+): Promise<Readonly<{ token: string }>> {
   const { SPEECH_SERVICES_REGION, SPEECH_SERVICES_SUBSCRIPTION_KEY } = parse(envSchema, process.env);
   let authorization;
 
@@ -39,7 +39,7 @@ export default async function issueSpeechServicesAccessToken(
     method: 'POST',
     requestId: '',
     timeout: 15_000,
-    url: 'https://${SPEECH_SERVICES_REGION}.api.cognitive.microsoft.com/sts/v1.0/issueToken',
+    url: `https://${SPEECH_SERVICES_REGION}.api.cognitive.microsoft.com/sts/v1.0/issueToken`,
     withCredentials: false
   });
 
