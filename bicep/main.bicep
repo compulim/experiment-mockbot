@@ -186,6 +186,10 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
               secretRef: 'direct-line-secret'
             }
             {
+              name: 'SPEECH_SERVICES_REGION'
+              value: location
+            }
+            {
               name: 'SPEECH_SERVICES_SUBSCRIPTION_KEY'
               secretRef: 'speech-services-subscription-key'
             }
