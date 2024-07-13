@@ -95,7 +95,7 @@ resource directLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: 'direct-line-secret'
   parent: keyVault
   properties: {
-    value: 'DUMMY' // Creates an empty slot and we will fill it out later.
+    value: 'PLACEHOLDER' // Creates an empty slot and we will fill it out later.
   }
 }
 
@@ -103,7 +103,7 @@ resource directLineExtensionKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' =
   name: 'direct-line-extension-key'
   parent: keyVault
   properties: {
-    value: 'DUMMY' // Creates an empty slot and we will fill it out later.
+    value: 'PLACEHOLDER' // Creates an empty slot and we will fill it out later.
   }
 }
 
@@ -297,7 +297,6 @@ resource keyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08
   #disable-next-line use-stable-resource-identifiers
   name: '${keyVaultName}-script'
   properties: {
-    // arguments: '\\"${bot.name}\\" \\"${directLineExtensionKey.name}\\" \\"${directLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\" \\"${botApp.name}\\"'
     arguments: '\\"${bot.name}\\" \\"${directLineExtensionKey.name}\\" \\"${directLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
@@ -311,7 +310,6 @@ resource keyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08
       DIRECT_LINE_SECRET_SECRET_NAME=$3
       KEY_VAULT_NAME=$4
       RESOURCE_GROUP_NAME=$5
-      # WEB_APP_NAME=$6
 
       DIRECT_LINE_EXTENSION_KEY=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.extensionKey1")
       DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
@@ -327,12 +325,6 @@ resource keyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08
         --output none \
         --value $DIRECT_LINE_SECRET \
         --vault-name $KEY_VAULT_NAME
-
-      # az webapp config appsettings set \
-      #   --resource-group $RESOURCE_GROUP_NAME \
-      #   --name $WEB_APP_NAME \
-      #   --output none \
-      #   --settings DirectLineExtensionKey=$DIRECT_LINE_EXTENSION_KEY
     '''
     timeout: 'PT2M'
   }
@@ -359,6 +351,8 @@ resource botAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
 
 resource botApp 'Microsoft.Web/sites@2023-12-01' = {
   dependsOn: [
+    // This Bicep doesn't implicitly talks about botApp depends on keyVaultSaveSecretScript.
+    // When the Container Apps is up, it may retrieve the placeholder value instead of the actual because of the deployment order.
     keyVaultSaveSecretScript
   ]
   identity: {
@@ -388,7 +382,6 @@ resource botApp 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'DirectLineExtensionKey'
           value: botDirectLineChannel.properties.properties.extensionKey1
-          // value: 'DUMMY' // Will set extension key (via DeploymentScript) after bot registration is up.
         }
         {
           name: 'MicrosoftAppId'
