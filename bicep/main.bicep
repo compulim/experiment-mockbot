@@ -55,6 +55,7 @@ resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview
   kind: 'SpeechServices'
   location: location
   name: speechServicesName
+  properties: {}
   sku: {
     name: 'S0'
   }
