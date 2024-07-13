@@ -132,7 +132,7 @@ jobs:
 
       - name: Extract tarball
         run: |
-          tar xvf ../*.tgz --strip-components=1
+          tar xvf ./*.tgz --strip-components=1
           rm ./*.tgz
 
       - name: List directory
