@@ -10,9 +10,9 @@ const envSchema = object({
   SPEECH_SERVICES_SUBSCRIPTION_KEY: string()
 });
 
-const speechServicesIssueTokenResponse = object({
-  token: string()
-});
+// const speechServicesIssueTokenResponse = object({
+//   token: string()
+// });
 
 export default async function issueSpeechServicesAccessToken(
   init: { useManagedIdentity?: boolean | undefined } = {}
@@ -47,7 +47,8 @@ export default async function issueSpeechServicesAccessToken(
   });
 
   if (response.status === 200) {
-    return parse(speechServicesIssueTokenResponse, JSON.parse(response.bodyAsText || ''));
+    // return parse(speechServicesIssueTokenResponse, JSON.parse(response.bodyAsText || ''));
+    return Object.freeze({ token: response.bodyAsText || '' });
   }
 
   console.log(response.bodyAsText);

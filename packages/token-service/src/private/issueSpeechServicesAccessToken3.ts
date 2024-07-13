@@ -1,31 +1,52 @@
 import { ServiceClient } from '@azure/core-client';
 import { createHttpHeaders } from '@azure/core-rest-pipeline';
-import { DefaultAzureCredential } from '@azure/identity';
 import { object, parse, string } from 'valibot';
 
 const envSchema = object({
   AZURE_CLIENT_ID: string(),
-  SPEECH_SERVICES_REGION: string()
+  IDENTITY_ENDPOINT: string(),
+  IDENTITY_HEADER: string(),
+  SPEECH_SERVICES_REGION: string(),
+  SPEECH_SERVICES_RESOURCE_ID: string()
+});
+
+const managedIdentityTokenSchema = object({
+  access_token: string()
 });
 
 // const speechServicesIssueTokenResponse = object({
 //   token: string()
 // });
 
-export default async function issueSpeechServicesAccessToken2(): Promise<Readonly<{ token: string }>> {
-  const { SPEECH_SERVICES_REGION } = parse(envSchema, process.env);
+export default async function issueSpeechServicesAccessToken3(): Promise<Readonly<{ token: string }>> {
+  const { IDENTITY_ENDPOINT, IDENTITY_HEADER, SPEECH_SERVICES_REGION, SPEECH_SERVICES_RESOURCE_ID } = parse(
+    envSchema,
+    process.env
+  );
   // https://github.com/MicrosoftDocs/azure-docs/blob/main/articles/ai-services/speech-service/includes/cognitive-services-speech-service-rest-auth.md
-  const credential = new DefaultAzureCredential();
+
+  const identityURL = new URL(IDENTITY_ENDPOINT);
+
+  const res = await fetch(identityURL, { headers: { 'x-identity-header': IDENTITY_HEADER } });
+
+  if (!res.ok) {
+    throw new Error('Failed to get token for managed identity.');
+  }
+
+  const token = parse(managedIdentityTokenSchema, await res.json()).access_token;
+
+  // const credential = new DefaultAzureCredential();
   // const credential = new ManagedIdentityCredential({ clientId: AZURE_CLIENT_ID });
 
-  const accessToken = await credential.getToken([]);
+  console.log(token);
 
-  console.log(accessToken.token);
+  const client = new ServiceClient();
+  const headers = createHttpHeaders();
 
-  const client = new ServiceClient({ credential });
+  headers.set('authorization', `Bearer aad#${SPEECH_SERVICES_RESOURCE_ID}#${token}`);
 
   const response = await client.sendRequest({
-    headers: createHttpHeaders(),
+    headers,
     method: 'POST',
     requestId: '',
     timeout: 15_000,

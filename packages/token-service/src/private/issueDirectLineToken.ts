@@ -23,7 +23,7 @@ export default async function issueDirectLineToken(): Promise<Readonly<{ token: 
   });
 
   if (response.status === 200) {
-    return { token: parse(directLineIssueTokenResponse, JSON.parse(response.bodyAsText || '')) };
+    return Object.freeze({ token: parse(directLineIssueTokenResponse, JSON.parse(response.bodyAsText || '')) });
   }
 
   console.log(response.bodyAsText);

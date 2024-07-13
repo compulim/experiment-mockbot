@@ -2,6 +2,7 @@ import express, { json, type RequestHandler } from 'express';
 import issueDirectLineToken from './private/issueDirectLineToken';
 import issueSpeechServicesAccessToken from './private/issueSpeechServicesAccessToken';
 import issueSpeechServicesAccessToken2 from './private/issueSpeechServicesAccessToken2';
+import issueSpeechServicesAccessToken3 from './private/issueSpeechServicesAccessToken3';
 
 declare global {
   var BUILD_TIME: string;
@@ -53,6 +54,11 @@ app.get(
 app.get(
   '/api/token/speech/3',
   handleError(async (_, res) => res.json({ token: (await issueSpeechServicesAccessToken2()).token }))
+);
+
+app.get(
+  '/api/token/speech/4',
+  handleError(async (_, res) => res.json({ token: (await issueSpeechServicesAccessToken3()).token }))
 );
 
 app.listen(PORT, () => console.log(`Token service listening to port ${PORT}.`));
