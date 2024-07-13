@@ -115,6 +115,218 @@ resource speechServicesSubscriptionKey 'Microsoft.KeyVault/vaults/secrets@2023-0
   }
 }
 
+resource botIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
+  location: location
+  name: '${botName}-identity'
+}
+
+resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
+  kind: 'azurebot'
+  location: 'global'
+  name: botName
+  properties: {
+    displayName: botName
+    // endpoint: 'https://${containerApp.properties.configuration.ingress.fqdn}/api/messages'
+    // endpoint: 'https://${botApp.properties.defaultHostName}/api/messages'
+    endpoint: 'https://dummy.localhost/api/messages' // To be set later.
+    msaAppId: botIdentity.properties.clientId
+    msaAppMSIResourceId: botIdentity.id
+    msaAppTenantId: botIdentity.properties.tenantId
+    msaAppType: 'UserAssignedMSI'
+  }
+  sku: {
+    name: 'S1'
+  }
+}
+
+resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+  name: 'DirectLineChannel'
+  parent: bot
+  properties: {
+    channelName: 'DirectLineChannel'
+    properties: {
+      sites: [
+        {
+          isEnabled: true
+          isSecureSiteEnabled: true
+          isV1Enabled: false
+          isV3Enabled: true
+          siteName: 'Default Site'
+          trustedOrigins: [
+            'https://compulim.github.io'
+          ]
+        }
+      ]
+    }
+  }
+}
+
+resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+  name: 'WebChatChannel'
+  parent: bot
+  properties: {
+    channelName: 'WebChatChannel'
+    properties: {
+      sites: [] // Remove all sites
+    }
+  }
+}
+
+resource botAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
+  location: location
+  name: '${botAppName}-identity'
+}
+
+resource botAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
+  location: location
+  name: '${botAppName}-plan'
+  properties: {
+    zoneRedundant: false
+  }
+  sku: {
+    family: 'S'
+    name: 'S1'
+    size: 'S1'
+    tier: 'Standard'
+  }
+}
+
+resource botApp 'Microsoft.Web/sites@2023-12-01' = {
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${botAppIdentity.id}': {}
+      '${botIdentity.id}': {}
+    }
+  }
+  location: location
+  name: botAppName
+  properties: {
+    clientAffinityEnabled: false
+    httpsOnly: true
+    serverFarmId: botAppPlan.id
+    siteConfig: {
+      alwaysOn: true
+      appSettings: [
+        {
+          name: 'WEBSITE_NODE_DEFAULT_VERSION'
+          value: '~20'
+        }
+        {
+          name: 'DIRECTLINE_EXTENSION_VERSION'
+          value: 'latest'
+        }
+        {
+          name: 'DirectLineExtensionKey'
+          value: botDirectLineChannel.properties.properties.extensionKey1
+        }
+        {
+          name: 'MicrosoftAppId'
+          value: botIdentity.properties.clientId
+        }
+        {
+          name: 'MicrosoftAppTenantId'
+          value: botIdentity.properties.tenantId
+        }
+        {
+          name: 'MicrosoftAppType'
+          value: 'UserAssignedMSI'
+        }
+        {
+          name: 'WEBSITE_RUN_FROM_PACKAGE'
+          value: '1'
+        }
+      ]
+      ftpsState: 'Disabled'
+      metadata: [
+        {
+          name: 'CURRENT_STACK'
+          value: 'node'
+        }
+      ]
+    }
+  }
+}
+
+resource botReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${builderIdentity.id}': {}
+    }
+  }
+  kind: 'AzureCLI'
+  location: location
+  #disable-next-line use-stable-resource-identifiers
+  name: '${bot.name}-script'
+  properties: {
+    arguments: '\\"${botApp.properties.defaultHostName}\\" \\"${bot.name}\\" \\"${resourceGroup().name}\\"'
+    azCliVersion: '2.61.0'
+    cleanupPreference: 'Always'
+    forceUpdateTag: deployTime
+    retentionInterval: 'PT1H' // Minimal retention is 1 hour.
+    scriptContent: '''
+      set -eo pipefail
+
+      BOT_APP_NAME=$1
+      BOT_NAME=$2
+      RESOURCE_GROUP_NAME=$3
+
+      az bot update \
+        --name $BOT_NAME \
+        --resource-group $RESOURCE_GROUP_NAME \
+        --endpoint https://$BOT_APP_NAME/api/messages
+    '''
+    timeout: 'PT2M'
+  }
+}
+
+resource keyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${builderIdentity.id}': {}
+    }
+  }
+  kind: 'AzureCLI'
+  location: location
+  #disable-next-line use-stable-resource-identifiers
+  name: '${keyVaultName}-script'
+  properties: {
+    // arguments: '\\"${bot.name}\\" \\"${directLineExtensionKey.name}\\" \\"${directLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
+    arguments: '\\"${bot.name}\\" \\"${directLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
+    azCliVersion: '2.61.0'
+    cleanupPreference: 'Always'
+    forceUpdateTag: deployTime
+    retentionInterval: 'PT1H' // Minimal retention is 1 hour.
+    scriptContent: '''
+      set -eo pipefail
+
+      BOT_NAME=$1
+      # DIRECT_LINE_EXTENSION_KEY_SECRET_NAME=$2
+      DIRECT_LINE_SECRET_SECRET_NAME=$2
+      KEY_VAULT_NAME=$3
+      RESOURCE_GROUP_NAME=$4
+
+      # DIRECT_LINE_EXTENSION_KEY=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.extensionKey1")
+      DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
+
+      # az keyvault secret set \
+      #   --name $DIRECT_LINE_EXTENSION_KEY_SECRET_NAME \
+      #   --output none \
+      #   --value $DIRECT_LINE_EXTENSION_KEY \
+      #   --vault-name $KEY_VAULT_NAME
+
+      az keyvault secret set \
+        --name $DIRECT_LINE_SECRET_SECRET_NAME \
+        --output none \
+        --value $DIRECT_LINE_SECRET \
+        --vault-name $KEY_VAULT_NAME
+    '''
+    timeout: 'PT2M'
+  }
+}
+
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.app/managedenvironments?pivots=deployment-language-bicep
 resource tokenServiceAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   location: location
@@ -131,6 +343,11 @@ resource tokenServiceAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-0
 }
 
 resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
+  dependsOn: [
+    // This Bicep doesn't implicitly talks about botApp depends on keyVaultSaveSecretScript.
+    // When the Container Apps is up, it may retrieve the placeholder value instead of the actual because of the deployment order.
+    keyVaultSaveSecretScript
+  ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -225,222 +442,6 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
         minReplicas: 0
       }
     }
-  }
-}
-
-resource botIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
-  location: location
-  name: '${botName}-identity'
-}
-
-resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
-  kind: 'azurebot'
-  location: 'global'
-  name: botName
-  properties: {
-    displayName: botName
-    // endpoint: 'https://${containerApp.properties.configuration.ingress.fqdn}/api/messages'
-    // endpoint: 'https://${botApp.properties.defaultHostName}/api/messages'
-    endpoint: 'https://dummy.localhost/api/messages' // To be set later.
-    msaAppId: botIdentity.properties.clientId
-    msaAppMSIResourceId: botIdentity.id
-    msaAppTenantId: botIdentity.properties.tenantId
-    msaAppType: 'UserAssignedMSI'
-  }
-  sku: {
-    name: 'S1'
-  }
-}
-
-resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
-  name: 'DirectLineChannel'
-  parent: bot
-  properties: {
-    channelName: 'DirectLineChannel'
-    properties: {
-      sites: [
-        {
-          isEnabled: true
-          isSecureSiteEnabled: true
-          isV1Enabled: false
-          isV3Enabled: true
-          siteName: 'Default Site'
-          trustedOrigins: [
-            'https://compulim.github.io'
-          ]
-        }
-      ]
-    }
-  }
-}
-
-resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
-  name: 'WebChatChannel'
-  parent: bot
-  properties: {
-    channelName: 'WebChatChannel'
-    properties: {
-      sites: [] // Remove all sites
-    }
-  }
-}
-
-resource keyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${builderIdentity.id}': {}
-    }
-  }
-  kind: 'AzureCLI'
-  location: location
-  #disable-next-line use-stable-resource-identifiers
-  name: '${keyVaultName}-script'
-  properties: {
-    arguments: '\\"${bot.name}\\" \\"${directLineExtensionKey.name}\\" \\"${directLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
-    azCliVersion: '2.61.0'
-    cleanupPreference: 'Always'
-    forceUpdateTag: deployTime
-    retentionInterval: 'PT1H' // Minimal retention is 1 hour.
-    scriptContent: '''
-      set -eo pipefail
-
-      BOT_NAME=$1
-      DIRECT_LINE_EXTENSION_KEY_SECRET_NAME=$2
-      DIRECT_LINE_SECRET_SECRET_NAME=$3
-      KEY_VAULT_NAME=$4
-      RESOURCE_GROUP_NAME=$5
-
-      DIRECT_LINE_EXTENSION_KEY=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.extensionKey1")
-      DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
-
-      az keyvault secret set \
-        --name $DIRECT_LINE_EXTENSION_KEY_SECRET_NAME \
-        --output none \
-        --value $DIRECT_LINE_EXTENSION_KEY \
-        --vault-name $KEY_VAULT_NAME
-
-      az keyvault secret set \
-        --name $DIRECT_LINE_SECRET_SECRET_NAME \
-        --output none \
-        --value $DIRECT_LINE_SECRET \
-        --vault-name $KEY_VAULT_NAME
-    '''
-    timeout: 'PT2M'
-  }
-}
-
-resource botAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
-  location: location
-  name: '${botAppName}-identity'
-}
-
-resource botAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
-  location: location
-  name: '${botAppName}-plan'
-  properties: {
-    zoneRedundant: false
-  }
-  sku: {
-    family: 'S'
-    name: 'S1'
-    size: 'S1'
-    tier: 'Standard'
-  }
-}
-
-resource botApp 'Microsoft.Web/sites@2023-12-01' = {
-  dependsOn: [
-    // This Bicep doesn't implicitly talks about botApp depends on keyVaultSaveSecretScript.
-    // When the Container Apps is up, it may retrieve the placeholder value instead of the actual because of the deployment order.
-    keyVaultSaveSecretScript
-  ]
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${botAppIdentity.id}': {}
-      '${botIdentity.id}': {}
-    }
-  }
-  location: location
-  name: botAppName
-  properties: {
-    clientAffinityEnabled: false
-    httpsOnly: true
-    serverFarmId: botAppPlan.id
-    siteConfig: {
-      alwaysOn: true
-      appSettings: [
-        {
-          name: 'WEBSITE_NODE_DEFAULT_VERSION'
-          value: '~20'
-        }
-        {
-          name: 'DIRECTLINE_EXTENSION_VERSION'
-          value: 'latest'
-        }
-        {
-          name: 'DirectLineExtensionKey'
-          value: botDirectLineChannel.properties.properties.extensionKey1
-        }
-        {
-          name: 'MicrosoftAppId'
-          value: botIdentity.properties.clientId
-        }
-        {
-          name: 'MicrosoftAppTenantId'
-          value: botIdentity.properties.tenantId
-        }
-        {
-          name: 'MicrosoftAppType'
-          value: 'UserAssignedMSI'
-        }
-        {
-          name: 'WEBSITE_RUN_FROM_PACKAGE'
-          value: '1'
-        }
-      ]
-      ftpsState: 'Disabled'
-      metadata: [
-        {
-          name: 'CURRENT_STACK'
-          value: 'node'
-        }
-      ]
-    }
-  }
-}
-
-resource botReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${builderIdentity.id}': {}
-    }
-  }
-  kind: 'AzureCLI'
-  location: location
-  #disable-next-line use-stable-resource-identifiers
-  name: '${bot.name}-script'
-  properties: {
-    arguments: '\\"${botApp.properties.defaultHostName}\\" \\"${bot.name}\\" \\"${resourceGroup().name}\\"'
-    azCliVersion: '2.61.0'
-    cleanupPreference: 'Always'
-    forceUpdateTag: deployTime
-    retentionInterval: 'PT1H' // Minimal retention is 1 hour.
-    scriptContent: '''
-      set -eo pipefail
-
-      BOT_APP_NAME=$1
-      BOT_NAME=$2
-      RESOURCE_GROUP_NAME=$3
-
-      az bot update \
-        --name $BOT_NAME \
-        --resource-group $RESOURCE_GROUP_NAME \
-        --endpoint https://$BOT_APP_NAME/api/messages
-    '''
-    timeout: 'PT2M'
   }
 }
 
