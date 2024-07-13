@@ -200,6 +200,15 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
           ]
           image: '${registryServer}/${tokenServiceImageName}'
           name: tokenServiceAppName
+          probes: [
+            {
+              httpGet: {
+                path: '/health.txt'
+                port: 8080
+              }
+              type: 'Liveness'
+            }
+          ]
           resources: {
             #disable-next-line BCP036
             cpu: '0.25'
