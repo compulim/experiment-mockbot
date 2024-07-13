@@ -24,7 +24,7 @@ export default async function issueSpeechServicesAccessToken2(): Promise<Readonl
 
   console.log(accessToken.token);
 
-  const client = new ServiceClient({ credential: credential });
+  const client = new ServiceClient({ credential });
 
   const response = await client.sendRequest({
     headers: createHttpHeaders(),

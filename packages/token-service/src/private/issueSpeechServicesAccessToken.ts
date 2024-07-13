@@ -27,7 +27,7 @@ export default async function issueSpeechServicesAccessToken(
       clientId: AZURE_CLIENT_ID
     });
 
-    const accessToken = await tokenCredential.getToken('https://vault.azure.net');
+    const accessToken = await tokenCredential.getToken('https://cognitiveservices.azure.com/');
 
     console.log(accessToken.token);
 
