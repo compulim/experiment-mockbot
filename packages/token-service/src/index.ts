@@ -19,6 +19,9 @@ app.get('/health.txt', (_, res) => {
 });
 
 app.get('/api/token/directline', async (_, res) => res.json((await issueDirectLineToken()).token));
-app.get('/api/token/speech', async (_, res) => res.json((await issueSpeechServicesAccessToken()).token));
+app.get('/api/token/speech/1', async (_, res) => res.json((await issueSpeechServicesAccessToken()).token));
+app.get('/api/token/speech/2', async (_, res) =>
+  res.json((await issueSpeechServicesAccessToken({ useManagedIdentity: true })).token)
+);
 
 app.listen(PORT, () => console.log(`Token service listening to port ${PORT}.`));

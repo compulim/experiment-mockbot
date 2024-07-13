@@ -182,6 +182,10 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
         {
           env: [
             {
+              name: 'AZURE_CLIENT_ID'
+              value: tokenServiceAppIdentity.properties.clientId
+            }
+            {
               name: 'DIRECT_LINE_SECRET'
               secretRef: 'direct-line-secret'
             }
