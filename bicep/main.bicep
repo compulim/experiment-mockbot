@@ -427,8 +427,8 @@ resource botReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01'
       RESOURCE_GROUP_NAME=$3
 
       az bot update \
-        --name $BOT_NAME
-        --resource-group $RESOURCE_GROUP_NAME
+        --name $BOT_NAME \
+        --resource-group $RESOURCE_GROUP_NAME \
         --endpoint https://$BOT_APP_NAME/api/messages
     '''
     timeout: 'PT2M'
