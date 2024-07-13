@@ -133,10 +133,12 @@ jobs:
       - run: mkdir ./deploy
 
       - name: Extract tarball
-        run: tar xvf ./*.tgz --strip-components=1
+        run: tar xvf ../*.tgz --strip-components=1
+        working-directory: ./deploy
 
       - name: List directory
         run: ls -la
+        working-directory: ./deploy
 
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
@@ -154,6 +156,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
+          context: ./deploy
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}-${{ matrix.name }}
           tags: |
             type=semver,pattern={{version}}
@@ -167,7 +170,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: ./ # Required
+          context: ./deploy
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
