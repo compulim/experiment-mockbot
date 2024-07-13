@@ -19,11 +19,12 @@ export default async function issueSpeechServicesAccessToken2(): Promise<Readonl
     managedIdentityClientId: AZURE_CLIENT_ID
   });
 
-  const accessToken = await credential.getToken('https://vault.azure.net');
+  // const accessToken = await managedIdentityCredential.getToken('https://vault.azure.net');
+  const accessToken = await credential.getToken('https://cognitiveservices.azure.com/');
 
   console.log(accessToken.token);
 
-  const client = new ServiceClient({ credential });
+  const client = new ServiceClient({ credential: credential });
 
   const response = await client.sendRequest({
     headers: createHttpHeaders(),

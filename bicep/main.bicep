@@ -411,10 +411,6 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
               secretRef: 'direct-line-secret'
             }
             {
-              name: 'IDENTITY_SERVER_THUMBPRINT'
-              value: 'DUMMY' // Related to https://github.com/Azure/azure-sdk-for-js/issues/30403
-            }
-            {
               name: 'SPEECH_SERVICES_REGION'
               value: location
             }
