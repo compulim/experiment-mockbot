@@ -33,7 +33,9 @@ export default async function issueSpeechServicesAccessToken3(): Promise<Readonl
   const res = await fetch(identityURL, { headers: { 'x-identity-header': IDENTITY_HEADER } });
 
   if (!res.ok) {
-    throw new Error('Failed to get token for managed identity.');
+    console.error(await res.text());
+
+    throw new Error(`Failed to get token for managed identity, server returned ${res.status}.`);
   }
 
   const token = parse(managedIdentityTokenSchema, await res.json()).access_token;

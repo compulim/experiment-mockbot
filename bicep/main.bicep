@@ -403,6 +403,10 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: tokenServiceAppIdentity.properties.clientId
             }
             {
+              name: 'DEBUG'
+              value: 'identity'
+            }
+            {
               name: 'DIRECT_LINE_SECRET'
               secretRef: 'direct-line-secret'
             }
