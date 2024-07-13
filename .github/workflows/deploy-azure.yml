@@ -156,7 +156,6 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          context: ./deploy
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}-${{ matrix.name }}
           tags: |
             type=semver,pattern={{version}}

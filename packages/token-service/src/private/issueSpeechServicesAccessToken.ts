@@ -1,7 +1,7 @@
 import { ServiceClient } from '@azure/core-client';
 import { createHttpHeaders } from '@azure/core-rest-pipeline';
 import { ManagedIdentityCredential } from '@azure/identity';
-import { object, parse, string, type InferOutput } from 'valibot';
+import { object, parse, string } from 'valibot';
 
 const envSchema = object({
   SPEECH_SERVICES_REGION: string(),
