@@ -11,8 +11,8 @@ declare global {
 
 const { APPSETTING_WEBSITE_SITE_NAME, MicrosoftAppId, PORT } = parse(
   object({
-    MicrosoftAppId: string(),
-    APPSETTING_WEBSITE_SITE_NAME: string(),
+    APPSETTING_WEBSITE_SITE_NAME: optional(string()),
+    MicrosoftAppId: optional(string()),
     PORT: optional(string(), '3978')
   }),
   process.env
@@ -31,7 +31,9 @@ const bot = new EchoBot();
 
 // Enable Direct Line App Service Extension
 // See https://docs.microsoft.com/en-us/azure/bot-service/bot-service-channel-directline-extension-node-bot?view=azure-bot-service-4.0
-platform() === 'win32' &&
+APPSETTING_WEBSITE_SITE_NAME &&
+  MicrosoftAppId &&
+  platform() === 'win32' &&
   adapter.connectNamedPipe(
     `${APPSETTING_WEBSITE_SITE_NAME}.directline`,
     context => bot.run(context),
