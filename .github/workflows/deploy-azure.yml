@@ -122,7 +122,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        name: [bot, token-service]
+        name: [token-service]
 
     steps:
       - name: Download tarball
@@ -256,7 +256,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        name: [bot, token-service]
+        name: [token-service]
 
     steps:
       - name: Delete obsoleted images
