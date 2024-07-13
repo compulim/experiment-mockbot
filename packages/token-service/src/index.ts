@@ -38,12 +38,12 @@ app.get(
 );
 
 app.get(
-  '/api/token/speech/1',
+  '/api/token/speech',
   handleError(async (_, res) => res.json({ token: (await issueSpeechServicesAccessToken()).token }))
 );
 
 app.get(
-  '/api/token/speech/2',
+  '/api/token/speech?type=msi',
   handleError(async (_, res) =>
     res.json({ token: (await issueSpeechServicesAccessToken({ useManagedIdentity: true })).token })
   )
