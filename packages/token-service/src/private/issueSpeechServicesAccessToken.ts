@@ -24,7 +24,7 @@ export default async function issueSpeechServicesAccessToken(
   if (init.useManagedIdentity) {
     const tokenCredential = new ManagedIdentityCredential();
 
-    const accessToken = await tokenCredential.getToken([]);
+    const accessToken = await tokenCredential.getToken('');
 
     console.log(accessToken.token);
 

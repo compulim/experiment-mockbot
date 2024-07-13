@@ -16,7 +16,7 @@ export default async function issueSpeechServicesAccessToken2(): Promise<Readonl
   // https://github.com/MicrosoftDocs/azure-docs/blob/main/articles/ai-services/speech-service/includes/cognitive-services-speech-service-rest-auth.md
   const credential = new DefaultAzureCredential();
 
-  const accessToken = await credential.getToken([]);
+  const accessToken = await credential.getToken('');
 
   console.log(accessToken.token);
 
