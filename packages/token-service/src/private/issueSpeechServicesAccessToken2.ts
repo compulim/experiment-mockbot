@@ -19,7 +19,7 @@ export default async function issueSpeechServicesAccessToken2(): Promise<Readonl
     managedIdentityClientId: AZURE_CLIENT_ID
   });
 
-  const accessToken = await credential.getToken('');
+  const accessToken = await credential.getToken('https://vault.azure.net');
 
   console.log(accessToken.token);
 
