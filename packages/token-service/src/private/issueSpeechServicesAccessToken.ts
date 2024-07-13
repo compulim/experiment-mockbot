@@ -30,7 +30,7 @@ export default async function issueSpeechServicesAccessToken(
     authorization = `Bearer ${SPEECH_SERVICES_SUBSCRIPTION_KEY}`;
   }
 
-  const client = new ServiceClient({ endpoint: `https://${SPEECH_SERVICES_REGION}.api.cognitive.microsoft.com/` });
+  const client = new ServiceClient();
 
   // https://github.com/MicrosoftDocs/azure-docs/blob/main/articles/ai-services/speech-service/includes/cognitive-services-speech-service-rest-auth.md
   const response = await client.sendRequest({
@@ -39,7 +39,7 @@ export default async function issueSpeechServicesAccessToken(
     method: 'POST',
     requestId: '',
     timeout: 15_000,
-    url: 'sts/v1.0/issueToken',
+    url: 'https://${SPEECH_SERVICES_REGION}.api.cognitive.microsoft.com/sts/v1.0/issueToken',
     withCredentials: false
   });
 

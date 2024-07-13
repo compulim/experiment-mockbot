@@ -13,14 +13,14 @@ const directLineIssueTokenResponse = object({
 export default async function issueDirectLineToken(): Promise<InferOutput<typeof directLineIssueTokenResponse>> {
   const { DIRECT_LINE_SECRET } = parse(envSchema, process.env);
 
-  const client = new ServiceClient({ endpoint: 'https://directline.botframework.com/' });
+  const client = new ServiceClient();
 
   const response = await client.sendRequest({
     headers: createHttpHeaders({ authorization: `Bearer ${DIRECT_LINE_SECRET}` }),
     method: 'POST',
     requestId: '',
     timeout: 15_000,
-    url: 'api/tokens/conversation',
+    url: 'https://directline.botframework.com/api/tokens/conversation',
     withCredentials: false
   });
 
