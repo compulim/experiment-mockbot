@@ -12,7 +12,7 @@ declare global {
 const { PORT, TRUSTED_ORIGINS } = parse(
   object({
     PORT: optional(string()),
-    TRUSTED_ORIGINS: string()
+    TRUSTED_ORIGINS: optional(string())
   }),
   process.env
 );
