@@ -5,6 +5,7 @@ import { object, parse, string } from 'valibot';
 
 const envSchema = object({
   SPEECH_SERVICES_REGION: string(),
+  SPEECH_SERVICES_RESOURCE_ID: string(),
   SPEECH_SERVICES_SUBSCRIPTION_KEY: string()
 });
 
@@ -15,9 +16,13 @@ const speechServicesIssueTokenResponse = object({
 export default async function issueSpeechServicesAccessToken(
   init: { useManagedIdentity?: boolean | undefined } = {}
 ): Promise<Readonly<{ token: string }>> {
-  const { SPEECH_SERVICES_REGION, SPEECH_SERVICES_SUBSCRIPTION_KEY } = parse(envSchema, process.env);
-  let authorization;
+  const { SPEECH_SERVICES_REGION, SPEECH_SERVICES_RESOURCE_ID, SPEECH_SERVICES_SUBSCRIPTION_KEY } = parse(
+    envSchema,
+    process.env
+  );
+  const headers = createHttpHeaders();
 
+  // https://github.com/MicrosoftDocs/azure-docs/blob/main/articles/ai-services/speech-service/includes/cognitive-services-speech-service-rest-auth.md
   if (init.useManagedIdentity) {
     const tokenCredential = new ManagedIdentityCredential({});
 
@@ -25,17 +30,16 @@ export default async function issueSpeechServicesAccessToken(
 
     console.log(accessToken.token);
 
-    authorization = `Bearer ${accessToken.token}`;
+    // headers.set('authorization', `Bearer ${accessToken.token}`);
+    headers.set('authorization', `Bearer aad#${SPEECH_SERVICES_RESOURCE_ID}#${accessToken.token}`);
   } else {
-    authorization = `Bearer ${SPEECH_SERVICES_SUBSCRIPTION_KEY}`;
+    headers.set('ocp-apim-subscription-key', `Bearer ${SPEECH_SERVICES_SUBSCRIPTION_KEY}`);
   }
 
   const client = new ServiceClient();
 
-  // https://github.com/MicrosoftDocs/azure-docs/blob/main/articles/ai-services/speech-service/includes/cognitive-services-speech-service-rest-auth.md
   const response = await client.sendRequest({
-    // headers: createHttpHeaders({ authorization: `#aad#` }),
-    headers: createHttpHeaders({ authorization }),
+    headers,
     method: 'POST',
     requestId: '',
     timeout: 15_000,

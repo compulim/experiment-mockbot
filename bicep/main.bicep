@@ -194,6 +194,10 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: location
             }
             {
+              name: 'SPEECH_SERVICES_RESOURCE_ID'
+              value: speechServices.id
+            }
+            {
               name: 'SPEECH_SERVICES_SUBSCRIPTION_KEY'
               secretRef: 'speech-services-subscription-key'
             }
@@ -354,6 +358,9 @@ resource botAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
 }
 
 resource botApp 'Microsoft.Web/sites@2023-12-01' = {
+  dependsOn: [
+    keyVaultSaveSecretScript
+  ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
