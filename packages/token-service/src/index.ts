@@ -15,6 +15,8 @@ function handleError(fn: RequestHandler): RequestHandler {
     try {
       await fn(req, res, next);
     } catch (error) {
+      console.error(error);
+
       next(error);
     }
   };
