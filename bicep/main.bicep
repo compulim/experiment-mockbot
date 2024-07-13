@@ -403,8 +403,8 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: tokenServiceAppIdentity.properties.clientId
             }
             {
-              name: 'DEBUG'
-              value: 'identity'
+              name: 'AZURE_LOG_LEVEL'
+              value: 'verbose'
             }
             {
               name: 'DIRECT_LINE_SECRET'
