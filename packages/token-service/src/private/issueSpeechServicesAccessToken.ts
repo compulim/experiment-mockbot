@@ -32,7 +32,7 @@ export default async function issueSpeechServicesAccessToken(
     // headers.set('authorization', `Bearer ${accessToken.token}`);
     headers.set('authorization', `Bearer aad#${SPEECH_SERVICES_RESOURCE_ID}#${accessToken.token}`);
   } else {
-    headers.set('ocp-apim-subscription-key', `Bearer ${SPEECH_SERVICES_SUBSCRIPTION_KEY}`);
+    headers.set('ocp-apim-subscription-key', SPEECH_SERVICES_SUBSCRIPTION_KEY);
   }
 
   const client = new ServiceClient();

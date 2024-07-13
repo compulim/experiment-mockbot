@@ -1,6 +1,6 @@
 import { ServiceClient } from '@azure/core-client';
 import { createHttpHeaders } from '@azure/core-rest-pipeline';
-import { ManagedIdentityCredential } from '@azure/identity';
+import { DefaultAzureCredential } from '@azure/identity';
 import { object, parse, string } from 'valibot';
 
 const envSchema = object({
@@ -15,7 +15,8 @@ const speechServicesIssueTokenResponse = object({
 export default async function issueSpeechServicesAccessToken2(): Promise<Readonly<{ token: string }>> {
   const { AZURE_CLIENT_ID, SPEECH_SERVICES_REGION } = parse(envSchema, process.env);
   // https://github.com/MicrosoftDocs/azure-docs/blob/main/articles/ai-services/speech-service/includes/cognitive-services-speech-service-rest-auth.md
-  const credential = new ManagedIdentityCredential({ clientId: AZURE_CLIENT_ID });
+  const credential = new DefaultAzureCredential({ managedIdentityClientId: AZURE_CLIENT_ID });
+  // const credential = new ManagedIdentityCredential({ clientId: AZURE_CLIENT_ID });
 
   const accessToken = await credential.getToken([]);
 
