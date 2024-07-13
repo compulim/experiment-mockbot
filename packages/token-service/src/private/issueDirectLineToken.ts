@@ -6,11 +6,9 @@ const envSchema = object({
   DIRECT_LINE_SECRET: string()
 });
 
-const directLineIssueTokenResponse = object({
-  token: string()
-});
+const directLineIssueTokenResponse = string();
 
-export default async function issueDirectLineToken(): Promise<InferOutput<typeof directLineIssueTokenResponse>> {
+export default async function issueDirectLineToken(): Promise<Readonly<{ token: string }>> {
   const { DIRECT_LINE_SECRET } = parse(envSchema, process.env);
 
   const client = new ServiceClient();
@@ -25,7 +23,7 @@ export default async function issueDirectLineToken(): Promise<InferOutput<typeof
   });
 
   if (response.status === 200) {
-    return parse(directLineIssueTokenResponse, JSON.parse(response.bodyAsText || ''));
+    return { token: parse(directLineIssueTokenResponse, JSON.parse(response.bodyAsText || '')) };
   }
 
   throw new Error('Direct Line service returned non-200.');
