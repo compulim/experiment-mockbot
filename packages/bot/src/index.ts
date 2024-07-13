@@ -53,6 +53,8 @@ platform() === 'win32' &&
   namedPipeAdapter.useNamedPipe(context => bot.run(context), `${APPSETTING_WEBSITE_SITE_NAME}.directline`);
 
 server.on('upgrade', (req: WebRequest, socket: INodeSocket, head: INodeBuffer) => {
+  console.log('UPGRADE', req.headers);
+
   namedPipeAdapter.useWebSocket(req, socket, head, context => bot.run(context));
 });
 
