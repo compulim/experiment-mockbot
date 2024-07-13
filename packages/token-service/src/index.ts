@@ -1,4 +1,5 @@
 import express, { json, type RequestHandler } from 'express';
+import issueDirectLineASEToken from './private/issueDirectLineASEToken';
 import issueDirectLineToken from './private/issueDirectLineToken';
 import issueSpeechServicesAccessToken from './private/issueSpeechServicesAccessToken';
 
@@ -38,12 +39,17 @@ app.get(
 );
 
 app.get(
+  '/api/token/directlinease',
+  handleError(async (_, res) => res.json({ token: (await issueDirectLineASEToken()).token }))
+);
+
+app.get(
   '/api/token/speech',
   handleError(async (_, res) => res.json({ token: (await issueSpeechServicesAccessToken()).token }))
 );
 
 app.get(
-  '/api/token/speech?type=msi',
+  '/api/token/speech/msi',
   handleError(async (_, res) =>
     res.json({ token: (await issueSpeechServicesAccessToken({ useManagedIdentity: true })).token })
   )

@@ -389,6 +389,10 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
             //   value: 'verbose'
             // }
             {
+              name: 'BOT_APP_HOSTNAME'
+              secretRef: botApp.properties.defaultHostName
+            }
+            {
               name: 'DIRECT_LINE_SECRET'
               secretRef: 'direct-line-secret'
             }
