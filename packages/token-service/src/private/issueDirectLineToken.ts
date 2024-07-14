@@ -1,21 +1,38 @@
 import { ServiceClient } from '@azure/core-client';
 import { createHttpHeaders } from '@azure/core-rest-pipeline';
+import { ManagedIdentityCredential } from '@azure/identity';
 import { object, parse, string } from 'valibot';
 
 const envSchema = object({
+  AZURE_CLIENT_ID: string(),
   DIRECT_LINE_SECRET: string()
 });
 
 const directLineIssueTokenResponse = string();
 
-export default async function issueDirectLineToken(): Promise<Readonly<{ token: string }>> {
-  const { DIRECT_LINE_SECRET } = parse(envSchema, process.env);
+export default async function issueDirectLineToken(
+  init: { useManagedIdentity?: boolean | undefined } = {}
+): Promise<Readonly<{ token: string }>> {
+  const { AZURE_CLIENT_ID, DIRECT_LINE_SECRET } = parse(envSchema, process.env);
 
   const client = new ServiceClient();
+  const headers = createHttpHeaders();
+
+  if (init.useManagedIdentity) {
+    const tokenCredential = new ManagedIdentityCredential({ clientId: AZURE_CLIENT_ID });
+
+    const accessToken = await tokenCredential.getToken('https://directline.botframework.com/');
+
+    console.log('managed identity token\n\n', accessToken);
+
+    headers.set('authorization', `Bearer ${accessToken}`);
+  } else {
+    headers.set('authorization', `Bearer ${DIRECT_LINE_SECRET}`);
+  }
 
   // TODO: This should use Managed Identity instead of Direct Line secret.
   const response = await client.sendRequest({
-    headers: createHttpHeaders({ authorization: `Bearer ${DIRECT_LINE_SECRET}` }),
+    headers,
     method: 'POST',
     requestId: '',
     timeout: 15_000,

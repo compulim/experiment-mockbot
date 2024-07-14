@@ -62,6 +62,11 @@ app.get(
 );
 
 app.get(
+  '/api/token/directline/msi',
+  handleError(async (_, res) => res.json({ token: (await issueDirectLineToken({ useManagedIdentity: true })).token }))
+);
+
+app.get(
   '/api/token/directlinease',
   handleError(async (_, res) => res.json({ token: (await issueDirectLineASEToken()).token }))
 );
