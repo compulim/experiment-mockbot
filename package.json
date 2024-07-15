@@ -5,8 +5,8 @@
   "author": "Microsoft Corporation",
   "license": "MIT",
   "workspaces": [
-    "/packages/bot-app/",
     "/packages/bot-logic/",
+    "/packages/bot-app/",
     "/packages/token-service/",
     "/packages/pages/"
   ],
