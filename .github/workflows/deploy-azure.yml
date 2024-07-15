@@ -68,6 +68,18 @@ jobs:
           path: ./packages/bot/*.tgz
           retention-days: 1
 
+      - name: Pack GitHub Pages
+        run: npm pack
+        working-directory: ./packages/pages
+
+      - name: Upload GitHub Pages tarball
+        uses: actions/upload-artifact@v4
+        with:
+          compression-level: 0
+          name: pages-tarball
+          path: ./packages/pages/*.tgz
+          retention-days: 1
+
       - name: Pack token service
         run: npm pack
         working-directory: ./packages/token-service
@@ -82,7 +94,7 @@ jobs:
 
   convert-bot-deployment:
     name: Convert bot tarball to ZIP deployment
-    needs: Build
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -112,6 +124,32 @@ jobs:
           name: bot-zip
           path: ./bot.zip
           retention-days: 1
+
+  convert-pages:
+    name: Convert pages tarball to GitHub Pages artifact
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download tarball
+        uses: actions/download-artifact@v4
+        with:
+          name: pages-tarball
+
+      - name: Extract tarball
+        run: |
+          mkdir ./pages
+          cd ./pages
+          tar xvf ../*.tgz --strip-components=1
+
+      - name: List directory
+        run: ls -laR
+        working-directory: ./pages
+
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./pages
 
   publish-containers:
     name: Publish containers
@@ -173,11 +211,13 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   deploy-bicep:
-    environment: azure
+    environment:
+      name: azure
+      url: ${{ steps.arm-deploy.outputs.botEndpointURL }}
     name: Deploy Bicep
     needs: publish-containers
     outputs:
-      bot-app-name: ${{ steps.deploy-to-azure.outputs.botAppName }}
+      bot-app-name: ${{ steps.arm-deploy.outputs.botAppName }}
     permissions:
       id-token: write
     runs-on: ubuntu-latest
@@ -210,7 +250,7 @@ jobs:
           EOF
           ) | jq -r '. | to_entries | map(.key + "=" + (.value | tostring)) | join(" ")') | tee --append $GITHUB_OUTPUT
 
-      - id: deploy-to-azure
+      - id: arm-deploy
         name: Deploy to Azure
         uses: azure/arm-deploy@v2
         with:
@@ -220,7 +260,9 @@ jobs:
           template: ./main.bicep
 
   deploy-to-web-apps:
-    environment: azure
+    environment:
+      name: azure
+      url: ${{ steps.webapps-deploy.outputs.webapp-url }}
     name: Deploy to Web Apps
     needs:
       - convert-bot-deployment
@@ -242,10 +284,26 @@ jobs:
           subscription-id: ${{ vars.SUBSCRIPTION_ID }}
           tenant-id: ${{ vars.TENANT_ID }}
 
-      - uses: azure/webapps-deploy@v3
+      - id: webapps-deploy
+        uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ needs.deploy-bicep.outputs.bot-app-name }}
           package: ./bot.zip
+
+  publish-pages:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    name: Publish to GitHub Pages
+    needs: convert-pages
+    permissions:
+      pages: write
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - id: deployment
+        name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@main
 
   cleanup:
     name: Cleanup

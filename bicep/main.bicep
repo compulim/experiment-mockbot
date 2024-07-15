@@ -442,3 +442,6 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
 
 // Output "botAppName" for ZIP deployment later.
 output botAppName string = botAppName
+
+// Output "botEndpointURL" for display in GitHub deployment.
+output botEndpointURL string = bot.properties.endpoint
