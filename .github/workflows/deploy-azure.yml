@@ -80,16 +80,16 @@ jobs:
           path: ./packages/pages/*.tgz
           retention-days: 1
 
-      - name: Pack token service
+      - name: Pack token-app
         run: npm pack
-        working-directory: ./packages/token-service
+        working-directory: ./packages/token-app
 
-      - name: Upload token service tarball
+      - name: Upload token-app tarball
         uses: actions/upload-artifact@v4
         with:
           compression-level: 0
-          name: token-service-tarball
-          path: ./packages/token-service/*.tgz
+          name: token-app-tarball
+          path: ./packages/token-app/*.tgz
           retention-days: 1
 
   convert-bot-app-artifact:
@@ -134,7 +134,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        name: [token-service]
+        name: [token-app]
 
     steps:
       - name: Download tarball
@@ -220,7 +220,7 @@ jobs:
               "registryPassword": "${{ secrets.GH_TOKEN_READ_PACKAGES }}",
               "registryServer": "${{ env.REGISTRY }}",
               "registryUsername": "${{ vars.GH_USERNAME_READ_PACKAGES }}",
-              "tokenServiceImageName": "${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}-token-service:sha-${{ github.sha }}"
+              "tokenAppImageName": "${{ github.repository_owner }}/${{ env.IMAGE_NAME_WITHOUT_OWNER }}-token-app:sha-${{ github.sha }}"
             }
           EOF
           ) | jq -r '. | to_entries | map(.key + "=" + (.value | tostring)) | join(" ")') | tee --append $GITHUB_OUTPUT
@@ -320,7 +320,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        name: [token-service]
+        name: [token-app]
 
     steps:
       - name: Delete obsoleted images

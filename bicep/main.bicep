@@ -4,7 +4,7 @@ metadata description = 'Deploy to Azure'
 param deploymentFamilyName string
 
 @description('Token service image name and tag.')
-param tokenServiceImageName string
+param tokenAppImageName string
 
 @description('Username to authenticate with private registry.')
 @secure()
@@ -30,7 +30,7 @@ param botName string = '${deploymentFamilyName}-bot'
 param keyVaultName string = '${deploymentFamilyName}-key'
 param logAnalyticsName string = '${deploymentFamilyName}-log'
 param speechServicesName string = '${deploymentFamilyName}-speech'
-param tokenServiceAppName string = '${deploymentFamilyName}-token-app'
+param tokenAppName string = '${deploymentFamilyName}-token-app'
 
 resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' existing = {
   name: builderIdentityName
@@ -46,9 +46,9 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-previ
   }
 }
 
-resource tokenServiceAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
+resource tokenAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
-  name: '${tokenServiceAppName}-identity'
+  name: '${tokenAppName}-identity'
 }
 
 resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
@@ -59,7 +59,7 @@ resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview
   sku: {
     name: 'S0'
   }
-  // TODO: Should add role assignment for "tokenServiceAppIdentity" or a new "speechUser" identity.
+  // TODO: Should add role assignment for "tokenAppIdentity" or a new "speechUser" identity.
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
@@ -68,7 +68,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   properties: {
     accessPolicies: [
       {
-        objectId: tokenServiceAppIdentity.properties.principalId
+        objectId: tokenAppIdentity.properties.principalId
         permissions: {
           secrets: ['get']
         }
@@ -310,9 +310,9 @@ resource keyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08
 }
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.app/managedenvironments?pivots=deployment-language-bicep
-resource tokenServiceAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
+resource tokenAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   location: location
-  name: '${tokenServiceAppName}-env'
+  name: '${tokenAppName}-env'
   properties: {
     appLogsConfiguration: {
       destination: 'log-analytics'
@@ -324,7 +324,7 @@ resource tokenServiceAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-0
   }
 }
 
-resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
+resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
   dependsOn: [
     // This Bicep doesn't implicitly talks about botApp depends on keyVaultSaveSecretScript.
     // When the Container Apps is up, it may retrieve the placeholder value instead of the actual because of the deployment order.
@@ -333,12 +333,12 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${tokenServiceAppIdentity.id}': {}
+      '${tokenAppIdentity.id}': {}
       // TODO: Add speech identity
     }
   }
   location: location
-  name: tokenServiceAppName
+  name: tokenAppName
   properties: {
     configuration: {
       ingress: {
@@ -360,7 +360,7 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
       ]
       secrets: [
         {
-          identity: tokenServiceAppIdentity.id
+          identity: tokenAppIdentity.id
           keyVaultUrl: directLineSecret.properties.secretUri
           name: 'direct-line-secret'
         }
@@ -369,20 +369,20 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
           value: registryPassword
         }
         {
-          identity: tokenServiceAppIdentity.id
+          identity: tokenAppIdentity.id
           keyVaultUrl: speechServicesSubscriptionKey.properties.secretUri
           name: 'speech-services-subscription-key'
         }
       ]
     }
-    managedEnvironmentId: tokenServiceAppEnvironment.id
+    managedEnvironmentId: tokenAppEnvironment.id
     template: {
       containers: [
         {
           env: [
             {
               name: 'AZURE_CLIENT_ID'
-              value: tokenServiceAppIdentity.properties.clientId
+              value: tokenAppIdentity.properties.clientId
             }
             // {
             //   name: 'AZURE_LOG_LEVEL'
@@ -414,8 +414,8 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
               // value: 'https://compulim.github.io,https://localhost'
             }
           ]
-          image: '${registryServer}/${tokenServiceImageName}'
-          name: tokenServiceAppName
+          image: '${registryServer}/${tokenAppImageName}'
+          name: tokenAppName
           probes: [
             {
               httpGet: {
@@ -447,4 +447,4 @@ output botAppName string = botAppName
 output botEndpointURL string = 'https://${botApp.properties.defaultHostName}/health.txt'
 
 // Output "tokenAppURL" for GitHub Pages.
-output tokenAppURL string = tokenServiceApp.properties.configuration.ingress.fqdn
+output tokenAppURL string = tokenApp.properties.configuration.ingress.fqdn

@@ -7,7 +7,7 @@
   "workspaces": [
     "/packages/bot-logic/",
     "/packages/bot-app/",
-    "/packages/token-service/",
+    "/packages/token-app/",
     "/packages/pages/"
   ],
   "scripts": {
