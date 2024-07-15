@@ -445,3 +445,6 @@ output botAppName string = botAppName
 
 // Output "botEndpointURL" for display in GitHub deployment.
 output botEndpointURL string = 'https://${botApp.properties.defaultHostName}/health.txt'
+
+// Output "tokenAppURL" for GitHub Pages.
+output tokenAppURL string = tokenServiceApp.properties.configuration.ingress.fqdn

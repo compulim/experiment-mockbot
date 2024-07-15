@@ -125,32 +125,6 @@ jobs:
           path: ./bot-app.zip
           retention-days: 1
 
-  convert-pages:
-    name: Convert pages tarball to GitHub Pages artifact
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download tarball
-        uses: actions/download-artifact@v4
-        with:
-          name: pages-tarball
-
-      - name: Extract tarball
-        run: |
-          mkdir ./pages
-          cd ./pages
-          tar xvf ../*.tgz --strip-components=1
-
-      - name: List directory
-        run: ls -laR
-        working-directory: ./pages
-
-      - name: Upload pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./pages/public/
-
   publish-containers:
     name: Publish containers
     needs: build
@@ -218,6 +192,7 @@ jobs:
     needs: publish-containers
     outputs:
       bot-app-name: ${{ steps.arm-deploy.outputs.botAppName }}
+      token-app-url: ${{ steps.arm-deploy.outputs.tokenAppURL }}
     permissions:
       id-token: write
     runs-on: ubuntu-latest
@@ -290,16 +265,47 @@ jobs:
           app-name: ${{ needs.deploy-bicep.outputs.bot-app-name }}
           package: ./bot-app.zip
 
+  build-pages:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Clean install
+        run: npm clean-install
+
+      - name: Build
+        run: npm run build
+
+      - name: List directory
+        run: ls -laR
+        working-directory: ./packages/pages/public
+
+      - env:
+          TOKEN_APP_URL: needs.deploy-bicep.outputs.token-app-url
+        name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./packages/pages/public/
+
   publish-pages:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     name: Publish to GitHub Pages
-    needs: convert-pages
+    needs: build-pages
     permissions:
       pages: write
       id-token: write
     runs-on: ubuntu-latest
+
     steps:
       - id: deployment
         name: Deploy to GitHub Pages

@@ -7,7 +7,7 @@
     "./public/"
   ],
   "scripts": {
-    "build": "esbuild --bundle --entry-names=[name]/[ext]/main --jsx=automatic --minify --outdir=./public/static/ --sourcemap app=./src/app/index.tsx",
+    "build": "esbuild --bundle --define:TOKEN_APP_URL=\\\"$TOKEN_APP_URL\\\" --entry-names=[name]/[ext]/main --jsx=automatic --minify --outdir=./public/static/ --sourcemap app=./src/app/index.tsx",
     "bump": "npm run bump:prod && npm run bump:dev && npm run bump:auditfix",
     "bump:auditfix": "npm audit fix || exit 0",
     "bump:dev": "PACKAGES_TO_BUMP=$(cat package.json | jq -r '(.pinDependencies // {}) as $P | (.localPeerDependencies // {}) as $L | (.devDependencies // {}) | to_entries | map(select(.key as $K | $L | has($K) | not)) | map(.key + \"@\" + ($P[.key] // [\"latest\"])[0]) | join(\" \")') && [ ! -z \"$PACKAGES_TO_BUMP\" ] && npm install $PACKAGES_TO_BUMP || true",
@@ -25,6 +25,7 @@
   "dependencies": {
     "botframework-webchat": "^4.18.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "valibot": "^0.36.0"
   }
 }

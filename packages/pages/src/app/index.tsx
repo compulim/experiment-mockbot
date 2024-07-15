@@ -1,5 +1,12 @@
 import { createRoot } from 'react-dom/client';
+import App from './App';
+import AppProvider from './data/AppProvider';
 
 const main = document.querySelector('main');
 
-main && createRoot(main).render(<h1>Hello, World!</h1>);
+main &&
+  createRoot(main).render(
+    <AppProvider>
+      <App />
+    </AppProvider>
+  );
