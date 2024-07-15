@@ -444,4 +444,4 @@ resource tokenServiceApp 'Microsoft.App/containerApps@2024-03-01' = {
 output botAppName string = botAppName
 
 // Output "botEndpointURL" for display in GitHub deployment.
-output botEndpointURL string = bot.properties.endpoint
+output botEndpointURL string = 'https://${botApp.properties.defaultHostName}/health.txt'
