@@ -1,3 +1,4 @@
+// @ts-expect-error we will turn everything into CJS
 import { EchoBot } from '@microsoft/botframework-mockbot-bot-logic';
 import { AuthenticationConstants } from 'botframework-connector';
 import express, { json } from 'express';
