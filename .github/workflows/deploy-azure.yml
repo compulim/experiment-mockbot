@@ -267,6 +267,7 @@ jobs:
 
   build-pages:
     name: Build
+    needs: deploy-bicep
     runs-on: ubuntu-latest
 
     steps:
