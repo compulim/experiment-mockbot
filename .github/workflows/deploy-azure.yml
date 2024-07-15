@@ -283,7 +283,7 @@ jobs:
         run: npm clean-install
 
       - env:
-          TOKEN_APP_URL: needs.deploy-bicep.outputs.token-app-url
+          TOKEN_APP_URL: ${{ needs.deploy-bicep.outputs.token-app-url }}
         name: Build
         run: npm run build
 
