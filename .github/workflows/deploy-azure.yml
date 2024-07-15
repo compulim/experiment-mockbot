@@ -56,16 +56,16 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Pack bot
+      - name: Pack bot-app
         run: npm pack
-        working-directory: ./packages/bot
+        working-directory: ./packages/bot-app
 
-      - name: Upload bot tarball
+      - name: Upload bot-app tarball
         uses: actions/upload-artifact@v4
         with:
           compression-level: 0
-          name: bot-tarball
-          path: ./packages/bot/*.tgz
+          name: bot-app-tarball
+          path: ./packages/bot-app/*.tgz
           retention-days: 1
 
       - name: Pack GitHub Pages
@@ -92,8 +92,8 @@ jobs:
           path: ./packages/token-service/*.tgz
           retention-days: 1
 
-  convert-bot-deployment:
-    name: Convert bot tarball to ZIP deployment
+  convert-bot-app-artifact:
+    name: Convert bot-app tarball to ZIP deployment
     needs: build
     runs-on: ubuntu-latest
 
@@ -101,28 +101,28 @@ jobs:
       - name: Download tarball
         uses: actions/download-artifact@v4
         with:
-          name: bot-tarball
+          name: bot-app-tarball
 
       - name: Extract tarball
         run: |
-          mkdir ./deploy
-          cd ./deploy
+          mkdir ./bot-app
+          cd ./bot-app
           tar xvf ../*.tgz --strip-components=1
 
       - name: List directory
         run: ls -laR
-        working-directory: ./deploy
+        working-directory: ./bot-app
 
       - name: Compress as ZIP
-        run: zip -r ../bot.zip .
-        working-directory: ./deploy
+        run: zip -r ../bot-app.zip .
+        working-directory: ./bot-app
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
           compression-level: 0
-          name: bot-zip
-          path: ./bot.zip
+          name: bot-app-zip
+          path: ./bot-app.zip
           retention-days: 1
 
   convert-pages:
@@ -259,13 +259,13 @@ jobs:
           resourceGroupName: ${{ vars.RESOURCE_GROUP_NAME }}
           template: ./main.bicep
 
-  deploy-to-web-apps:
+  publish-bot-app:
     environment:
       name: azure
       url: ${{ steps.webapps-deploy.outputs.webapp-url }}
-    name: Deploy to Web Apps
+    name: Publish bot-app to Web Apps
     needs:
-      - convert-bot-deployment
+      - convert-bot-app-artifact
       - deploy-bicep
     permissions:
       id-token: write
@@ -275,7 +275,7 @@ jobs:
       - name: Download tarball
         uses: actions/download-artifact@v4
         with:
-          name: bot-zip
+          name: bot-app-zip
 
       - name: Azure login
         uses: azure/login@v2
@@ -288,7 +288,7 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ needs.deploy-bicep.outputs.bot-app-name }}
-          package: ./bot.zip
+          package: ./bot-app.zip
 
   publish-pages:
     environment:

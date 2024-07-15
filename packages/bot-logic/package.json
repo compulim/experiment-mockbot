@@ -1,0 +1,38 @@
+{
+  "name": "@microsoft/botframework-mockbot-bot-logic",
+  "version": "0.0.0-0",
+  "license": "MIT",
+  "private": true,
+  "files": [
+    "./dist/"
+  ],
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "typings": "./dist/index.d.mts",
+  "scripts": {
+    "build": "tsup",
+    "bump": "npm run bump:prod && npm run bump:dev && npm run bump:auditfix",
+    "bump:auditfix": "npm audit fix || exit 0",
+    "bump:dev": "PACKAGES_TO_BUMP=$(cat package.json | jq -r '(.pinDependencies // {}) as $P | (.localPeerDependencies // {}) as $L | (.devDependencies // {}) | to_entries | map(select(.key as $K | $L | has($K) | not)) | map(.key + \"@\" + ($P[.key] // [\"latest\"])[0]) | join(\" \")') && [ ! -z \"$PACKAGES_TO_BUMP\" ] && npm install $PACKAGES_TO_BUMP || true",
+    "bump:prod": "PACKAGES_TO_BUMP=$(cat package.json | jq -r '(.pinDependencies // {}) as $P | (.localPeerDependencies // {}) as $L | (.dependencies // {}) | to_entries | map(select(.key as $K | $L | has($K) | not)) | map(.key + \"@\" + ($P[.key] // [\"latest\"])[0]) | join(\" \")') && [ ! -z \"$PACKAGES_TO_BUMP\" ] && npm install $PACKAGES_TO_BUMP || true",
+    "precommit": "npm run precommit:typescript",
+    "precommit:typescript": "tsc --project ./src/tsconfig.json",
+    "start": "tsup --onSuccess \"node .\" --watch"
+  },
+  "dependencies": {
+    "botbuilder": "^4.22.3",
+    "botframework-connector": "^4.22.3",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "valibot": "^0.36.0"
+  },
+  "devDependencies": {
+    "@tsconfig/strictest": "^2.0.5",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.10",
+    "tslib": "^2.6.3",
+    "tsup": "^8.1.0",
+    "typescript": "^5.5.3"
+  }
+}

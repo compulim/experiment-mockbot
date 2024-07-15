@@ -1,9 +1,9 @@
+import { EchoBot } from '@microsoft/botframework-mockbot-bot-logic';
 import { AuthenticationConstants } from 'botframework-connector';
 import express, { json } from 'express';
 import { platform } from 'node:os';
 import { object, optional, parse, string } from 'valibot';
-import createBotFrameworkAdapter from './adapter/createBotFrameworkAdapter';
-import EchoBot from './bot/EchoBot';
+import createBotFrameworkAdapter from './adapter/createBotFrameworkAdapter.js';
 
 declare global {
   var BUILD_TIME: string;
