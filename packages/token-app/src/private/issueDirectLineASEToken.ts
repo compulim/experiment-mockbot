@@ -38,7 +38,7 @@ export default async function issueDirectLineASEToken(
   // TODO: This should use Managed Identity instead of Direct Line secret.
   const response = await client.sendRequest({
     body: JSON.stringify({
-      User: { Id: `dl_${crypto.randomUUID}` }
+      User: { Id: `dl_${crypto.randomUUID()}` }
     }),
     headers,
     method: 'POST',
