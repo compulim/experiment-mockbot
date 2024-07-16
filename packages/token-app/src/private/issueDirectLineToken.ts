@@ -16,14 +16,14 @@ export default async function issueDirectLineToken(
   const { AZURE_CLIENT_ID, DIRECT_LINE_SECRET } = parse(envSchema, process.env);
 
   const client = new ServiceClient();
-  const headers = createHttpHeaders();
+  const headers = createHttpHeaders({ 'content-type': 'application/json' });
 
   if (init.useManagedIdentity) {
     const tokenCredential = new ManagedIdentityCredential({ clientId: AZURE_CLIENT_ID });
 
     const accessToken = await tokenCredential.getToken('https://directline.botframework.com/');
 
-    console.log('managed identity token\n\n', accessToken);
+    // console.log('managed identity token\n\n', accessToken);
 
     headers.set('authorization', `Bearer ${accessToken}`);
   } else {
@@ -32,6 +32,9 @@ export default async function issueDirectLineToken(
 
   // TODO: This should use Managed Identity instead of Direct Line secret.
   const response = await client.sendRequest({
+    body: JSON.stringify({
+      User: { Id: `dl_${crypto.randomUUID}` }
+    }),
     headers,
     method: 'POST',
     requestId: '',
