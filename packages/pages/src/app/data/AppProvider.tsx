@@ -1,4 +1,4 @@
-import { createBotAsChatAdapter } from '@microsoft/botframework-mockbot-pages-bot-as-chat-adapter';
+import { createBotAsChatAdapter } from '@microsoft/botframework-mockbot-pages-bot-bundle-as-chat-adapter';
 import { createDirectLine, createDirectLineAppServiceExtension } from 'botframework-webchat';
 import {
   createHalfDuplexChatAdapter,

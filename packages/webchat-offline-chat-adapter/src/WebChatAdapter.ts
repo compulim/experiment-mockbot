@@ -55,6 +55,8 @@ export default class WebChatAdapter extends BotAdapter {
       this.#connectionStatusDeferred.next(0 satisfies ConnectionStatusUninitialized);
       this.#connectionStatusDeferred.next(1 satisfies ConnectionStatusConnecting);
       this.#connectionStatusDeferred.next(2 satisfies ConnectionStatusOnline);
+
+      // TODO: Should send conversationStart to the bot.
     });
 
     this.#botConnection = {

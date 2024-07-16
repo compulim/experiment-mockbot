@@ -11,7 +11,7 @@
     "/packages/bot-app/",
     "/packages/token-app/",
     "/packages/webchat-offline-chat-adapter/",
-    "/packages/pages-bot-as-chat-adapter/",
+    "/packages/pages-bot-bundle-as-chat-adapter/",
     "/packages/pages/"
   ],
   "scripts": {
