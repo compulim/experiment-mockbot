@@ -30,6 +30,7 @@ export default memo(function AppProvider({ children }: Props) {
   useEffect(() => {
     const abortController = new AbortController();
 
+    setChatAdapter(undefined);
     setToken(undefined);
 
     (async (protocol, signal) => {
