@@ -156,7 +156,7 @@ resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2
   properties: {
     channelName: 'DirectLineSpeechChannel'
     properties: {
-      cognitiveServiceRegion: speechServices.location
+      cognitiveServiceRegion: location // `speechServices.location` seems empty.
       cognitiveServiceResourceId: speechServices.id
       cognitiveServiceSubscriptionKey: speechServices.listKeys().key1
       // customSpeechModelId: ''
