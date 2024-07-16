@@ -49,13 +49,13 @@ export default memo(function AppProvider({ children }: Props) {
         case 'direct line ase':
           ({ token } = await fetchJSON(new URL('api/token/directlinease', TOKEN_APP_URL), { signal }));
 
+          const chatAdapter = (await createDirectLineAppServiceExtension({
+            domain: new URL('/.bot/v3/directline', BOT_APP_URL).toString(),
+            token
+          })) as unknown as DirectLineJSBotConnection;
+
           if (!signal.aborted) {
-            setChatAdapter(
-              createDirectLineAppServiceExtension({
-                domain: new URL('/.bot/v3/directline', BOT_APP_URL).toString(),
-                token
-              }) as unknown as DirectLineJSBotConnection
-            );
+            setChatAdapter(chatAdapter);
             setToken(token);
           }
 
