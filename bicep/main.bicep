@@ -151,7 +151,7 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09
 }
 
 resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
-  location: 'global'
+  location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
   name: 'DirectLineSpeechChannel'
   parent: bot
   properties: {
