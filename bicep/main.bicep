@@ -151,12 +151,13 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09
 }
 
 resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+  location: location
   name: 'DirectLineSpeechChannel'
   parent: bot
   properties: {
     channelName: 'DirectLineSpeechChannel'
     properties: {
-      cognitiveServiceRegion: location // `speechServices.location` seems empty.
+      cognitiveServiceRegion: speechServices.location
       cognitiveServiceResourceId: speechServices.id
       cognitiveServiceSubscriptionKey: speechServices.listKeys().key1
       // customSpeechModelId: ''
