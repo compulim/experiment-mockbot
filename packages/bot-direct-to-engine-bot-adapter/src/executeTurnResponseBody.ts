@@ -14,8 +14,8 @@ import {
 
 const executeTurnResponseBodySchema = object({
   action: union([
-    pipe(string(), value('continue')) as BaseSchema<string, 'continue', StringIssue>,
-    pipe(string(), value('waiting')) as BaseSchema<string, 'continue', StringIssue>
+    pipe(string() as BaseSchema<string, 'continue', StringIssue>, value('continue')),
+    pipe(string() as BaseSchema<string, 'waiting', StringIssue>, value('waiting'))
   ]),
   activities: array(objectWithRest({}, unknown())),
   conversationId: string()
