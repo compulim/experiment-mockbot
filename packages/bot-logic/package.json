@@ -7,8 +7,8 @@
     "./dist/"
   ],
   "type": "module",
-  "main": "./dist/index.mjs",
-  "typings": "./dist/index.d.mts",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup",
     "bump": "npm run bump:prod && npm run bump:dev && npm run bump:auditfix",
