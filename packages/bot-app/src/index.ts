@@ -69,9 +69,11 @@ server.on('upgrade', async (req, socket, head) => {
   // Create an adapter scoped to this WebSocket connection to allow storing session data.
   const streamingAdapter = createBotFrameworkAdapter();
 
+  console.log({ head });
+
   await streamingAdapter.process(
     {
-      body: head,
+      body: {},
       headers: req.headers,
       method: req.method || 'GET'
     },
