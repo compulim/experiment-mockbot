@@ -74,7 +74,12 @@ app.get(
 
 app.get(
   '/api/token/speech',
-  handleError(async (_, res) => res.json({ token: (await issueSpeechServicesAccessToken()).token }))
+  handleError(async (_, res) =>
+    res.json({
+      region: SPEECH_SERVICES_REGION,
+      token: (await issueSpeechServicesAccessToken()).token
+    })
+  )
 );
 
 app.get(
