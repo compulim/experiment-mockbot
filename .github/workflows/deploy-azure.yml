@@ -187,11 +187,12 @@ jobs:
   deploy-bicep:
     environment:
       name: azure
-      url: ${{ steps.arm-deploy.outputs.botEndpointURL }}
+      url: ${{ steps.arm-deploy.outputs.botAppURL }}health.txt
     name: Deploy Bicep
     needs: publish-containers
     outputs:
       bot-app-name: ${{ steps.arm-deploy.outputs.botAppName }}
+      bot-app-url: ${{ steps.arm-deploy.outputs.botAppURL }}
       token-app-url: ${{ steps.arm-deploy.outputs.tokenAppURL }}
     permissions:
       id-token: write
@@ -283,6 +284,7 @@ jobs:
         run: npm clean-install
 
       - env:
+          BOT_APP_URL: ${{ needs.deploy-bicep.outputs.bot-app-url }}
           TOKEN_APP_URL: ${{ needs.deploy-bicep.outputs.token-app-url }}
         name: Build
         run: npm run build

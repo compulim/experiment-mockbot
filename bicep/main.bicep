@@ -443,8 +443,8 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
 // Output "botAppName" for ZIP deployment later.
 output botAppName string = botAppName
 
-// Output "botEndpointURL" for display in GitHub deployment.
-output botEndpointURL string = 'https://${botApp.properties.defaultHostName}/health.txt'
+// Output "botAppURL" for display in GitHub deployment.
+output botAppURL string = 'https://${botApp.properties.defaultHostName}/'
 
 // Output "tokenAppURL" for GitHub Pages.
 output tokenAppURL string = 'https://${tokenApp.properties.configuration.ingress.fqdn}/'
