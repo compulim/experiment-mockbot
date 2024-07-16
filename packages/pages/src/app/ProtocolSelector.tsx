@@ -49,7 +49,18 @@ export default memo(function ProtocolSelector() {
             type="radio"
             value="direct to engine"
           />
-          Direct-to-Engine (experimental)
+          Direct-to-Engine (Auto)
+        </label>
+      </div>
+      <div>
+        <label>
+          <input
+            checked={protocol === 'direct to engine'}
+            onChange={handleChange}
+            type="radio"
+            value="direct to engine rest"
+          />
+          Direct-to-Engine (REST only)
         </label>
       </div>
     </Fragment>

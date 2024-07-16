@@ -94,6 +94,7 @@ export default memo(function AppProvider({ children }: Props) {
           break;
 
         case 'direct to engine':
+        case 'direct to engine rest':
           setWebChatAdapters({
             directLine: toDirectLineJS(
               createHalfDuplexChatAdapter(
@@ -104,7 +105,7 @@ export default memo(function AppProvider({ children }: Props) {
                     return 'DUMMY';
                   },
                   islandURI: new URL('.', BOT_APP_URL),
-                  transport: 'auto'
+                  transport: protocol === 'direct to engine rest' ? 'rest' : 'auto'
                 })
               )
             )
