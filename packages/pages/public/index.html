@@ -6,6 +6,14 @@
   </head>
   <body>
     <main></main>
+    <script>
+      window.global = window;
+
+      window.process = {
+        env: {},
+        version: ''
+      };
+    </script>
     <script crossorigin="anonymous" src="./static/app/js/main.js"></script>
   </body>
 </html>

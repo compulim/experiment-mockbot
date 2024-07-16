@@ -3,14 +3,10 @@ import { defineConfig } from 'tsup';
 import { fileURLToPath } from 'url';
 
 const nodeResolvePlugin = {
-  name: 'browserify',
+  name: 'bot-builder-bundled',
   setup(build) {
-    build.onResolve({ filter: /^(child_process|fs|net|tls)$/ }, args => ({
-      path: join(fileURLToPath(import.meta.url), `../esbuild/${args.path}-mock.cjs`)
-    }));
-
-    build.onResolve({ filter: /^botframework-connector$/ }, () => ({
-      path: join(fileURLToPath(import.meta.url), '../../../node_modules/botframework-connector/src/index.ts')
+    build.onResolve({ filter: /^botbuilder$/ }, () => ({
+      path: join(fileURLToPath(import.meta.url), '../../external-bot-builder-bundled/dist/index.js')
     }));
   }
 };
@@ -23,13 +19,9 @@ export default defineConfig([
     },
     dts: true,
     entry: { index: './src/index.ts' },
-    esbuildOptions(options) {
-      options.keepNames = true;
-    },
     esbuildPlugins: [nodeResolvePlugin],
     format: ['esm'],
-    inject: ['./esbuild/global-shim.cjs'],
-    external: ['fs', 'tls'],
+    // noExternal: ['botbuilder', 'iter-fest', 'math-random'],
     platform: 'browser',
     sourcemap: true
   }

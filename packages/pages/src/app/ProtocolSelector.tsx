@@ -55,12 +55,23 @@ export default memo(function ProtocolSelector() {
       <div>
         <label>
           <input
-            checked={protocol === 'direct to engine'}
+            checked={protocol === 'direct to engine rest'}
             onChange={handleChange}
             type="radio"
             value="direct to engine rest"
           />
           Direct-to-Engine (REST only)
+        </label>
+      </div>
+      <div>
+        <label>
+          <input
+            checked={protocol === 'offline'}
+            onChange={handleChange}
+            type="radio"
+            value="offline"
+          />
+          Offline
         </label>
       </div>
     </Fragment>

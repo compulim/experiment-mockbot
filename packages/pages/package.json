@@ -23,6 +23,7 @@
     "esbuild": "^0.23.0"
   },
   "dependencies": {
+    "@microsoft/botframework-mockbot-pages-bot-as-chat-adapter": "^0.0.0-0",
     "botframework-webchat": "^4.18.0",
     "copilot-studio-direct-to-engine-chat-adapter": "^0.0.0-main.20240702-213245.f263309",
     "react": "^18.3.1",
