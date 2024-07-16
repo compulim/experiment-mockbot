@@ -9,9 +9,10 @@ declare global {
   var BUILD_TIME: string;
 }
 
-const { PORT, TRUSTED_ORIGINS } = parse(
+const { PORT, SPEECH_SERVICES_REGION, TRUSTED_ORIGINS } = parse(
   object({
     PORT: optional(string()),
+    SPEECH_SERVICES_REGION: string(),
     TRUSTED_ORIGINS: optional(string())
   }),
   process.env
@@ -79,7 +80,10 @@ app.get(
 app.get(
   '/api/token/speech/msi',
   handleError(async (_, res) =>
-    res.json({ token: (await issueSpeechServicesAccessToken({ useManagedIdentity: true })).token })
+    res.json({
+      region: SPEECH_SERVICES_REGION,
+      token: (await issueSpeechServicesAccessToken({ useManagedIdentity: true })).token
+    })
   )
 );
 

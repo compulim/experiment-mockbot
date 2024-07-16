@@ -1,11 +1,11 @@
-import type { DirectLineJSBotConnection } from 'copilot-studio-direct-to-engine-chat-adapter';
 import { createContext, useContext, type Dispatch, type SetStateAction } from 'react';
 import type { Protocol } from '../../types/Protocol';
+import type { WebChatAdapters } from '../../types/WebChatAdapters';
 
 type AppContextType = {
-  chatAdapterState: readonly [DirectLineJSBotConnection] | readonly never[];
   protocolState: readonly [Protocol, Dispatch<SetStateAction<Protocol>>];
   tokenState: readonly [string] | readonly never[];
+  webChatAdaptersState: readonly [WebChatAdapters] | readonly never[];
 };
 
 const AppContext = createContext<AppContextType>(

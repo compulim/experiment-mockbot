@@ -1,10 +1,10 @@
 import ReactWebChat from 'botframework-webchat';
 import { memo, useMemo } from 'react';
-import useChatAdapter from './data/useChatAdapter';
+import useWebChatAdapters from './data/useWebChatAdapters';
 
 export default memo(function WebChat() {
-  const [chatAdapter] = useChatAdapter();
-  const key = useMemo(() => Date.now(), [chatAdapter]);
+  const [webChatAdapters] = useWebChatAdapters();
+  const key = useMemo(() => Date.now(), [webChatAdapters]);
 
-  return chatAdapter && <ReactWebChat directLine={chatAdapter} key={key} />;
+  return webChatAdapters && <ReactWebChat {...webChatAdapters} key={key} />;
 });

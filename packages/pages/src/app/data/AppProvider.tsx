@@ -6,7 +6,9 @@ import {
   toDirectLineJS
 } from 'copilot-studio-direct-to-engine-chat-adapter';
 import { memo, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { object, parse, string } from 'valibot';
 import { Protocol } from '../types/Protocol';
+import type { WebChatAdapters } from '../types/WebChatAdapters';
 import { AppContext, AppContextType } from './private/AppContext';
 import fetchJSON from './private/fetchJSON';
 
@@ -20,51 +22,78 @@ type Props = {
 };
 
 export default memo(function AppProvider({ children }: Props) {
-  const [chatAdapter, setChatAdapter] = useState<DirectLineJSBotConnection | undefined>(undefined);
+  const [webChatAdapters, setWebChatAdapters] = useState<WebChatAdapters | undefined>(undefined);
   const [token, setToken] = useState<string | undefined>(undefined);
   const protocolState = Object.freeze(useState<Protocol>('direct line'));
 
-  const chatAdapterState = useMemo(() => Object.freeze(chatAdapter ? ([chatAdapter] as const) : []), [chatAdapter]);
+  const webChatAdaptersState = useMemo(
+    () => Object.freeze(webChatAdapters ? ([webChatAdapters] as const) : []),
+    [webChatAdapters]
+  );
   const tokenState = useMemo(() => Object.freeze(token ? ([token] as const) : []), [token]);
 
   useEffect(() => {
     const abortController = new AbortController();
 
-    setChatAdapter(undefined);
+    setWebChatAdapters(undefined);
     setToken(undefined);
 
     (async (protocol, signal) => {
-      let token: string;
-
       switch (protocol) {
         case 'direct line':
-          ({ token } = await fetchJSON(new URL('api/token/directline', TOKEN_APP_URL), { signal }));
+          {
+            const { token } = await fetchJSON(new URL('api/token/directline', TOKEN_APP_URL), { signal });
 
-          if (!signal.aborted) {
-            setChatAdapter(createDirectLine({ token }) as unknown as DirectLineJSBotConnection);
-            setToken(token);
+            if (!signal.aborted) {
+              setWebChatAdapters({ directLine: createDirectLine({ token }) as unknown as DirectLineJSBotConnection });
+              setToken(token);
+            }
           }
 
           break;
 
         case 'direct line ase':
-          ({ token } = await fetchJSON(new URL('api/token/directlinease', TOKEN_APP_URL), { signal }));
+          {
+            const { token } = await fetchJSON(new URL('api/token/directlinease', TOKEN_APP_URL), { signal });
 
-          const chatAdapter = (await createDirectLineAppServiceExtension({
-            domain: new URL('/.bot/v3/directline', BOT_APP_URL).toString(),
-            token
-          })) as unknown as DirectLineJSBotConnection;
+            const directLine = (await createDirectLineAppServiceExtension({
+              domain: new URL('/.bot/v3/directline', BOT_APP_URL).toString(),
+              token
+            })) as unknown as DirectLineJSBotConnection;
+
+            if (!signal.aborted) {
+              setWebChatAdapters({ directLine });
+              setToken(token);
+            }
+          }
+
+          break;
+
+        case 'direct line speech':
+          const adapters = await (window as any).WebChat.createDirectLineSpeechAdapters({
+            fetchCredentials: async () => {
+              const { region, token } = parse(
+                object({
+                  region: string(),
+                  token: string()
+                }),
+                await fetchJSON(new URL('api/token/speech', TOKEN_APP_URL), { signal })
+              );
+
+              return { authorizationToken: token, region };
+            }
+          });
 
           if (!signal.aborted) {
-            setChatAdapter(chatAdapter);
+            setWebChatAdapters(adapters);
             setToken(token);
           }
 
           break;
 
         case 'direct to engine':
-          setChatAdapter(
-            toDirectLineJS(
+          setWebChatAdapters({
+            directLine: toDirectLineJS(
               createHalfDuplexChatAdapter(
                 new TestCanvasBotStrategy({
                   botId: 'DUMMY',
@@ -77,7 +106,7 @@ export default memo(function AppProvider({ children }: Props) {
                 })
               )
             )
-          );
+          });
 
           break;
 
@@ -92,11 +121,11 @@ export default memo(function AppProvider({ children }: Props) {
   const context = useMemo<AppContextType>(
     () =>
       Object.freeze({
-        chatAdapterState,
         protocolState,
-        tokenState
+        tokenState,
+        webChatAdaptersState
       }),
-    [chatAdapterState, protocolState, tokenState]
+    [protocolState, tokenState, webChatAdaptersState]
   );
 
   return <AppContext.Provider value={context}>{children}</AppContext.Provider>;
