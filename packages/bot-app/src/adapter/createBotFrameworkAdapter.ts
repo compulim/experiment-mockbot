@@ -1,7 +1,6 @@
 // Import required bot services.
 // See https://aka.ms/bot-services to learn more about the different parts of a bot.
 import {
-  BotFrameworkAdapter,
   CloudAdapter,
   ConfigurationBotFrameworkAuthentication,
   ConfigurationServiceClientCredentialFactory,

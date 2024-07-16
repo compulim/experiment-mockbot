@@ -1,7 +1,11 @@
+import 'dotenv/config';
+
 // @ts-expect-error we will turn everything into CJS
 import { DirectToEngineBotAdapter } from '@microsoft/botframework-mockbot-bot-direct-to-engine-bot-adapter';
+// @ts-expect-error we will turn everything into CJS
 import { EchoBot } from '@microsoft/botframework-mockbot-bot-logic';
 import { AuthenticationConstants } from 'botframework-connector';
+import cors from 'cors';
 import express, { json } from 'express';
 import { createServer } from 'http';
 import { platform } from 'node:os';
@@ -22,15 +26,17 @@ const { APPSETTING_WEBSITE_SITE_NAME, MicrosoftAppId, PORT } = parse(
 );
 
 const app = express();
+const bot = new EchoBot();
 
+app.use(cors());
 app.use(json());
+app.use(new DirectToEngineBotAdapter({ bot }).createExpressRouter());
 
 app.get('/health.txt', (_, res) => {
   res.setHeader('content-type', 'text/plain').send(`ok\n\n${BUILD_TIME}`);
 });
 
 const adapter = createBotFrameworkAdapter();
-const bot = new EchoBot();
 
 // Enable Direct Line App Service Extension
 // See https://docs.microsoft.com/en-us/azure/bot-service/bot-service-channel-directline-extension-node-bot?view=azure-bot-service-4.0
@@ -53,8 +59,6 @@ app.post('/api/messages', (req, res, _) => {
     await bot.run(context);
   });
 });
-
-app.use(new DirectToEngineBotAdapter({ bot }).createExpressRouter());
 
 const server = createServer(app);
 
