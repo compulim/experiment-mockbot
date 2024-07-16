@@ -1,3 +1,4 @@
+// import { createBotAsChatAdapter } from '@microsoft/botframework-mockbot-pages-bot-as-chat-adapter';
 import { createDirectLine, createDirectLineAppServiceExtension } from 'botframework-webchat';
 import {
   createHalfDuplexChatAdapter,
@@ -112,6 +113,13 @@ export default memo(function AppProvider({ children }: Props) {
           });
 
           break;
+
+        // case 'offline':
+        //   setWebChatAdapters({
+        //     directLine: createBotAsChatAdapter()
+        //   });
+
+        //   break;
 
         default:
           throw new Error('To be implemented.');

@@ -152,6 +152,25 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09
   }
 }
 
+// Direct Line Speech is not working with `disableLocalAuth`, need investigations.
+// resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+//   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
+//   name: 'DirectLineSpeechChannel'
+//   parent: bot
+//   properties: {
+//     channelName: 'DirectLineSpeechChannel'
+//     properties: {
+//       cognitiveServiceRegion: speechServices.location
+//       cognitiveServiceResourceId: speechServices.id
+//       cognitiveServiceSubscriptionKey: speechServices.listKeys().key1
+//       // customSpeechModelId: ''
+//       // customVoiceDeploymentId: ''
+//       isEnabled: true
+//     }
+//   }
+// }
+
+// Disable Direct Line Speech for now.
 resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
   name: 'DirectLineSpeechChannel'
@@ -159,12 +178,7 @@ resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2
   properties: {
     channelName: 'DirectLineSpeechChannel'
     properties: {
-      cognitiveServiceRegion: speechServices.location
-      cognitiveServiceResourceId: speechServices.id
-      cognitiveServiceSubscriptionKey: speechServices.listKeys().key1
-      // customSpeechModelId: ''
-      // customVoiceDeploymentId: ''
-      isEnabled: true
+      isEnabled: false
     }
   }
 }

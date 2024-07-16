@@ -6,7 +6,8 @@ const protocolSchema = () =>
     pipe(string() as BaseSchema<string, 'direct line ase', StringIssue>, value('direct line ase')),
     pipe(string() as BaseSchema<string, 'direct line speech', StringIssue>, value('direct line speech')),
     pipe(string() as BaseSchema<string, 'direct to engine', StringIssue>, value('direct to engine')),
-    pipe(string() as BaseSchema<string, 'direct to engine rest', StringIssue>, value('direct to engine rest'))
+    pipe(string() as BaseSchema<string, 'direct to engine rest', StringIssue>, value('direct to engine rest')),
+    pipe(string() as BaseSchema<string, 'offline', StringIssue>, value('offline'))
   ]);
 
 export { protocolSchema };
