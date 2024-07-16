@@ -5,6 +5,7 @@
   "author": "Microsoft Corporation",
   "license": "MIT",
   "workspaces": [
+    "/packages/bot-direct-to-engine-bot-adapter",
     "/packages/bot-logic/",
     "/packages/bot-app/",
     "/packages/token-app/",

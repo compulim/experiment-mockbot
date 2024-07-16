@@ -98,12 +98,12 @@ export default memo(function AppProvider({ children }: Props) {
             directLine: toDirectLineJS(
               createHalfDuplexChatAdapter(
                 new TestCanvasBotStrategy({
-                  botId: 'DUMMY',
-                  environmentId: 'DUMMY',
+                  botId: '--dummy--',
+                  environmentId: '--dummy--',
                   async getToken() {
                     return 'DUMMY';
                   },
-                  islandURI: new URL('/api/testcanvas', BOT_APP_URL),
+                  islandURI: new URL('.', BOT_APP_URL),
                   transport: 'auto'
                 })
               )

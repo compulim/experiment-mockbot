@@ -1,4 +1,5 @@
 // @ts-expect-error we will turn everything into CJS
+import { DirectToEngineBotAdapter } from '@microsoft/botframework-mockbot-bot-direct-to-engine-bot-adapter';
 import { EchoBot } from '@microsoft/botframework-mockbot-bot-logic';
 import { AuthenticationConstants } from 'botframework-connector';
 import express, { json } from 'express';
@@ -53,23 +54,13 @@ app.post('/api/messages', (req, res, _) => {
   });
 });
 
-const server = createServer(app);
+app.use(new DirectToEngineBotAdapter({ bot }).createExpressRouter());
 
-// server.on('upgrade', (req, socket, head) => {
-//   // TODO: Fix the incompatibility between NodeJS.Duplex and INodeSocket.
-//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//   adapter.useWebSocket(req, socket as any, head, async context => {
-//     // After connecting via WebSocket, run this logic for every request sent over
-//     // the WebSocket connection.
-//     await bot.run(context);
-//   });
-// });
+const server = createServer(app);
 
 server.on('upgrade', async (req, socket, head) => {
   // Create an adapter scoped to this WebSocket connection to allow storing session data.
   const streamingAdapter = createBotFrameworkAdapter();
-
-  console.log({ head });
 
   await streamingAdapter.process(
     {
