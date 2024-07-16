@@ -151,7 +151,7 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09
 }
 
 resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
-  location: location
+  location: 'global'
   name: 'DirectLineSpeechChannel'
   parent: bot
   properties: {
