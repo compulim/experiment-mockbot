@@ -150,6 +150,22 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09
   }
 }
 
+resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+  name: 'DirectLineSpeechChannel'
+  parent: bot
+  properties: {
+    channelName: 'DirectLineSpeechChannel'
+    properties: {
+      cognitiveServiceRegion: speechServices.location
+      cognitiveServiceResourceId: speechServices.id
+      cognitiveServiceSubscriptionKey: speechServices.listKeys().key1
+      // customSpeechModelId: ''
+      // customVoiceDeploymentId: ''
+      isEnabled: true
+    }
+  }
+}
+
 resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
   name: 'WebChatChannel'
   parent: bot
