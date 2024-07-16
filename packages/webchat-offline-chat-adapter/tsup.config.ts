@@ -1,15 +1,4 @@
-import { join } from 'path';
 import { defineConfig } from 'tsup';
-import { fileURLToPath } from 'url';
-
-const nodeResolvePlugin = {
-  name: 'bot-builder-bundled',
-  setup(build) {
-    build.onResolve({ filter: /^botbuilder$/ }, () => ({
-      path: join(fileURLToPath(import.meta.url), '../../external-bot-builder-bundled/dist/index.js')
-    }));
-  }
-};
 
 export default defineConfig([
   {
@@ -19,10 +8,7 @@ export default defineConfig([
     },
     dts: true,
     entry: { index: './src/index.ts' },
-    esbuildPlugins: [nodeResolvePlugin],
     format: ['esm'],
-    // noExternal: ['@microsoft/botframework-mockbot-bot-logic', '@microsoft/botframework-mockbot-webchat-offline-chat-adapter'],
-    platform: 'browser',
     sourcemap: true
   }
 ]);

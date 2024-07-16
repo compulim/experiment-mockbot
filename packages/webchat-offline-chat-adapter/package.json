@@ -19,16 +19,15 @@
     "precommit:typescript": "tsc --project ./src/tsconfig.json",
     "start": "tsup --onSuccess \"node .\" --watch"
   },
-  "dependencies": {},
+  "dependencies": {
+    "botbuilder": "^4.22.3"
+  },
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.5",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
-    "@types/math-random": "^1.0.2",
     "@types/node": "^20.14.10",
-    "botbuilder": "npm:@microsoft/botframework-mockbot-external-bot-builder-bundled",
     "iter-fest": "^0.2.1",
-    "math-random": "^2.0.1",
     "tslib": "^2.6.3",
     "tsup": "^8.1.0",
     "typescript": "^5.5.3"

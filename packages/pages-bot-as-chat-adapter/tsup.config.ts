@@ -21,7 +21,6 @@ export default defineConfig([
     entry: { index: './src/index.ts' },
     esbuildPlugins: [nodeResolvePlugin],
     format: ['esm'],
-    // noExternal: ['botbuilder', 'iter-fest', 'math-random'],
     platform: 'browser',
     sourcemap: true
   }

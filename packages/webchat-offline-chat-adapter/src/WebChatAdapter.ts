@@ -1,6 +1,5 @@
 import { BotAdapter, TurnContext, type Activity, type ConversationReference } from 'botbuilder';
 import { Observable } from 'iter-fest/observable';
-import random from 'math-random';
 
 import { type LogicHandler } from './LogicHandler.js';
 import DeferredObservable from './private/DeferredObservable.js';
@@ -47,7 +46,7 @@ export default class WebChatAdapter extends BotAdapter {
   constructor() {
     super();
 
-    this.#conversationId = `c_${random().toString(36).substring(2, 7)}`;
+    this.#conversationId = `c_${crypto.randomUUID()}`;
     this.#logic = () => Promise.resolve();
 
     this.#connectionStatusDeferred = new DeferredObservable<number>();

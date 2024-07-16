@@ -115,9 +115,7 @@ export default memo(function AppProvider({ children }: Props) {
           break;
 
         case 'offline':
-          setWebChatAdapters({
-            directLine: createBotAsChatAdapter()
-          });
+          setWebChatAdapters({ directLine: createBotAsChatAdapter() as any });
 
           break;
 
