@@ -6,7 +6,7 @@ import {
   toDirectLineJS
 } from 'copilot-studio-direct-to-engine-chat-adapter';
 import { memo, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { object, parse, string } from 'valibot';
+import { object, optional, parse, string } from 'valibot';
 import { Protocol } from '../types/Protocol';
 import type { WebChatAdapters } from '../types/WebChatAdapters';
 import { AppContext, AppContextType } from './private/AppContext';
@@ -74,11 +74,13 @@ export default memo(function AppProvider({ children }: Props) {
             fetchCredentials: async () => {
               const { region, token } = parse(
                 object({
-                  region: string(),
+                  region: optional(string(), 'westus'),
                   token: string()
                 }),
                 await fetchJSON(new URL('api/token/speech', TOKEN_APP_URL), { signal })
               );
+
+              signal.aborted || setToken(token);
 
               return { authorizationToken: token, region };
             }

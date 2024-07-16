@@ -2,6 +2,7 @@
 import { EchoBot } from '@microsoft/botframework-mockbot-bot-logic';
 import { AuthenticationConstants } from 'botframework-connector';
 import express, { json } from 'express';
+import { createServer } from 'http';
 import { platform } from 'node:os';
 import { object, optional, parse, string } from 'valibot';
 import createBotFrameworkAdapter from './adapter/createBotFrameworkAdapter.js';
@@ -52,4 +53,32 @@ app.post('/api/messages', (req, res, _) => {
   });
 });
 
-app.listen(PORT, () => console.log(`Bot listening to port ${PORT}.`));
+const server = createServer(app);
+
+// server.on('upgrade', (req, socket, head) => {
+//   // TODO: Fix the incompatibility between NodeJS.Duplex and INodeSocket.
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   adapter.useWebSocket(req, socket as any, head, async context => {
+//     // After connecting via WebSocket, run this logic for every request sent over
+//     // the WebSocket connection.
+//     await bot.run(context);
+//   });
+// });
+
+server.on('upgrade', async (req, socket, head) => {
+  // Create an adapter scoped to this WebSocket connection to allow storing session data.
+  const streamingAdapter = createBotFrameworkAdapter();
+
+  await streamingAdapter.process(
+    {
+      body: head,
+      headers: req.headers,
+      method: req.method || 'GET'
+    },
+    socket as any,
+    head,
+    context => bot.run(context)
+  );
+});
+
+server.listen(PORT, () => console.log(`Bot listening to port ${PORT}.`));
