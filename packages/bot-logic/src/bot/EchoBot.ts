@@ -2,14 +2,13 @@ import {
   ActivityHandler,
   MessageFactory,
   TurnContext,
-  // type CloudAdapter,
   type ConversationState,
   type UserState
 } from 'botbuilder';
 import sleep from './private/sleep.js';
 
 type BotInit = {
-  // adapter?: CloudAdapter;
+  botAppId: string;
   conversationState?: ConversationState;
   userState?: UserState;
 };
@@ -19,7 +18,7 @@ const TOKENS =
   'Alfa Bravo Charlie Delta Echo Foxtrot Golf Hotel India Juliett Kilo Lima Mike November Oscar Papa Quebec Romeo Sierra Tango Uniform Victor Whiskey Xray Yankee Zulu';
 
 export default class EchoBot extends ActivityHandler {
-  constructor({ conversationState, userState }: BotInit = {}) {
+  constructor({ botAppId, conversationState, userState }: BotInit) {
     super();
 
     // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
@@ -31,7 +30,7 @@ export default class EchoBot extends ActivityHandler {
         'willContinue' in adapter && (adapter as { willContinue: (context: TurnContext) => {} }).willContinue(context);
 
         setTimeout(() => {
-          adapter.continueConversation(conversationReference, async context => {
+          adapter.continueConversationAsync(botAppId, conversationReference, async context => {
             await context.sendActivity('Proactive done.');
           });
         }, 1000);
@@ -54,7 +53,7 @@ export default class EchoBot extends ActivityHandler {
         'willContinue' in adapter && (adapter as { willContinue: (context: TurnContext) => {} }).willContinue(context);
 
         (async () => {
-          adapter.continueConversation(conversationReference, async context => {
+          adapter.continueConversationAsync(botAppId, conversationReference, async context => {
             let match: RegExpMatchArray | null;
             let pattern = /\s/gu;
 

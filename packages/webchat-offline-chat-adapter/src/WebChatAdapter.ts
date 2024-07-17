@@ -1,9 +1,4 @@
-import {
-  BotAdapter,
-  TurnContext,
-  type Activity,
-  type ConversationReference
-} from 'botbuilder';
+import { BotAdapter, TurnContext, type Activity, type ConversationReference } from 'botbuilder';
 import { Observable } from 'iter-fest/observable';
 
 import { type LogicHandler } from './LogicHandler.js';
@@ -127,6 +122,19 @@ export default class WebChatAdapter extends BotAdapter {
     const context = new TurnContext(this, activity);
 
     await this.runMiddleware(context, logic);
+  }
+
+  override continueConversationAsync(
+    _claimsIdentity: unknown,
+    reference: Partial<ConversationReference>,
+    audience: unknown,
+    logic?: unknown
+  ): Promise<void> {
+    if (typeof audience !== 'string') {
+      return this.continueConversation(reference, audience as (context: TurnContext) => Promise<void>);
+    } else {
+      return this.continueConversation(reference, logic as (context: TurnContext) => Promise<void>);
+    }
   }
 
   override async deleteActivity(): Promise<never> {

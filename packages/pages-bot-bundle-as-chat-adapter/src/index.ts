@@ -7,7 +7,7 @@ export function createBotAsChatAdapter() {
   const conversationState = new ConversationState(memory);
   const userState = new UserState(memory);
 
-  const bot = new EchoBot({ conversationState, userState });
+  const bot = new EchoBot({ botAppId: '', conversationState, userState });
 
   return createDirectLine({ bot });
 }

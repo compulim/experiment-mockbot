@@ -27,7 +27,7 @@ const { APPSETTING_WEBSITE_SITE_NAME, MicrosoftAppId, PORT } = parse(
 );
 
 const app = express();
-const bot = new EchoBot();
+const bot = new EchoBot({ botAppId: MicrosoftAppId || '' });
 const directToEngineAdapter = new DirectToEngineBotAdapter({ bot });
 
 app.use(cors());

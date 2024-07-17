@@ -216,6 +216,8 @@ export default class DirectToEngineBotAdapter extends BotAdapter {
   ): Promise<void> {
     if (!conversation) {
       throw new Error('Invalid ConversationReference.');
+    } else if (typeof logic === 'string') {
+      throw new Error('Not supported.');
     }
 
     const { id: conversationId } = conversation;
@@ -230,6 +232,19 @@ export default class DirectToEngineBotAdapter extends BotAdapter {
     await logic(new TurnContext(this, turn.currentActivity));
 
     turn.markAsUserTurn();
+  }
+
+  override continueConversationAsync(
+    _claimsIdentity: unknown,
+    reference: Partial<ConversationReference>,
+    audience: unknown,
+    logic?: unknown
+  ): Promise<void> {
+    if (typeof audience !== 'string') {
+      return this.continueConversation(reference, audience as (context: TurnContext) => Promise<void>);
+    } else {
+      return this.continueConversation(reference, logic as (context: TurnContext) => Promise<void>);
+    }
   }
 
   createExpressRouter(): express.Router {
