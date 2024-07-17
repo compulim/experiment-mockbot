@@ -21,6 +21,11 @@ export default class EchoBot extends ActivityHandler {
 
       if (context.activity.text === 'proactive') {
         const conversationReference = TurnContext.getConversationReference(context.activity);
+
+        console.log('proactive', conversationReference);
+
+        conversationReference.activityId = context.activity.id || '';
+
         const { adapter } = context;
 
         'willContinue' in adapter && (adapter as { willContinue: (context: TurnContext) => {} }).willContinue(context);
@@ -30,7 +35,6 @@ export default class EchoBot extends ActivityHandler {
         setTimeout(() => {
           adapter.continueConversationAsync(botAppId, conversationReference, async context => {
             await context.sendActivity({
-              replyToId: response?.id || '',
               text: 'Proactive done.',
               type: 'message'
             });
@@ -40,6 +44,11 @@ export default class EchoBot extends ActivityHandler {
         return;
       } else if (context.activity.text === 'livestreaming') {
         const conversationReference = TurnContext.getConversationReference(context.activity);
+
+        console.log('livestreaming', conversationReference);
+
+        conversationReference.activityId = context.activity.id || '';
+
         const { adapter } = context;
 
         const firstActivity = await context.sendActivity({
@@ -69,7 +78,6 @@ export default class EchoBot extends ActivityHandler {
 
               await context.sendActivity({
                 channelData: { streamId, streamSequence: ++streamSequence, streamType: 'streaming' },
-                replyToId: streamId,
                 text,
                 type: 'typing'
               });
@@ -79,7 +87,6 @@ export default class EchoBot extends ActivityHandler {
 
             await context.sendActivity({
               channelData: { streamId, streamType: 'streaming' },
-              replyToId: streamId,
               text: TOKENS,
               type: 'message'
             });
