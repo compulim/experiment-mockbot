@@ -17,6 +17,8 @@ export default class EchoBot extends ActivityHandler {
 
     // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
     this.onMessage(async (context, next) => {
+      const replyToId = context.activity.id;
+
       console.log('onMessage', context.activity);
 
       if (context.activity.text === 'proactive') {
@@ -30,16 +32,18 @@ export default class EchoBot extends ActivityHandler {
 
         'willContinue' in adapter && (adapter as { willContinue: (context: TurnContext) => {} }).willContinue(context);
 
-        const response = await context.sendActivity('Proactive kicked off.');
-
         setTimeout(() => {
           adapter.continueConversationAsync(botAppId, conversationReference, async context => {
+            context.activity.id = replyToId || ''; // HACK: `replyToId` is a random UUID.
+
             await context.sendActivity({
               text: 'Proactive done.',
               type: 'message'
             });
           });
         }, 1000);
+
+        await context.sendActivity('Proactive kicked off.');
 
         return;
       } else if (context.activity.text === 'livestreaming') {
@@ -69,6 +73,8 @@ export default class EchoBot extends ActivityHandler {
 
         (async () => {
           adapter.continueConversationAsync(botAppId, conversationReference, async context => {
+            context.activity.id = replyToId || ''; // HACK: `replyToId` is a random UUID.
+
             let match: RegExpMatchArray | null;
             let pattern = /\s/gu;
             let streamSequence = 0;
