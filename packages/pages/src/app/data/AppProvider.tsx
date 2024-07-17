@@ -22,7 +22,10 @@ type Props = {
   children?: ReactNode | undefined;
 };
 
+const DEFAULT_BOT_APP_URL = 'http://localhost:3978';
+
 export default memo(function AppProvider({ children }: Props) {
+  const botAppURL = useMemo(() => BOT_APP_URL || DEFAULT_BOT_APP_URL, []);
   const [webChatAdapters, setWebChatAdapters] = useState<WebChatAdapters | undefined>(undefined);
   const [token, setToken] = useState<string | undefined>(undefined);
   const protocolState = Object.freeze(useState<Protocol>('direct line'));
@@ -58,7 +61,7 @@ export default memo(function AppProvider({ children }: Props) {
             const { token } = await fetchJSON(new URL('api/token/directlinease', TOKEN_APP_URL), { signal });
 
             const directLine = (await createDirectLineAppServiceExtension({
-              domain: new URL('/.bot/v3/directline', BOT_APP_URL).toString(),
+              domain: new URL('/.bot/v3/directline', botAppURL).toString(),
               token
             })) as unknown as DirectLineJSBotConnection;
 
@@ -105,7 +108,7 @@ export default memo(function AppProvider({ children }: Props) {
                   async getToken() {
                     return 'DUMMY';
                   },
-                  islandURI: new URL('.', BOT_APP_URL),
+                  islandURI: new URL('.', botAppURL),
                   transport: protocol === 'direct to engine rest' ? 'rest' : 'auto'
                 })
               )

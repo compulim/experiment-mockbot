@@ -1,4 +1,9 @@
-import { BotAdapter, TurnContext, type Activity, type ConversationReference } from 'botbuilder';
+import {
+  BotAdapter,
+  TurnContext,
+  type Activity,
+  type ConversationReference
+} from 'botbuilder';
 import { Observable } from 'iter-fest/observable';
 
 import { type LogicHandler } from './LogicHandler.js';
@@ -42,12 +47,14 @@ export default class WebChatAdapter extends BotAdapter {
   #botConnection: ChatAdapter;
   #conversationId: LocalConversationId;
   #logic: LogicHandler;
+  #userId: string;
 
   constructor() {
     super();
 
     this.#conversationId = `c_${crypto.randomUUID()}`;
     this.#logic = () => Promise.resolve();
+    this.#userId = `dl_${crypto.randomUUID()}`;
 
     this.#connectionStatusDeferred = new DeferredObservable<number>();
 
@@ -56,7 +63,14 @@ export default class WebChatAdapter extends BotAdapter {
       this.#connectionStatusDeferred.next(1 satisfies ConnectionStatusConnecting);
       this.#connectionStatusDeferred.next(2 satisfies ConnectionStatusOnline);
 
-      // TODO: Should send conversationStart to the bot.
+      setTimeout(() => {
+        this.onReceive(
+          Object.freeze({
+            membersAdded: [Object.freeze({ id: this.#userId, name: 'User', role: 'user' })],
+            type: 'conversationUpdate'
+          })
+        );
+      }, 100);
     });
 
     this.#botConnection = {
@@ -69,7 +83,7 @@ export default class WebChatAdapter extends BotAdapter {
       postActivity: (activity: Activity) => {
         const now = dateNow();
         const timestamp = new Date(now).toISOString();
-        const id = now + Math.random().toString(36);
+        const id = `a_${crypto.randomUUID()}`;
 
         return new Observable<string>(observer => {
           const serviceActivity: ServiceActivity = {
@@ -187,10 +201,29 @@ export default class WebChatAdapter extends BotAdapter {
    * Runs the bot's middleware pipeline in addition to any business logic, if `this.logic` is found.
    * @param {Activity} activity
    */
-  onReceive(activity: ServiceActivity) {
+  onReceive(activity: Readonly<Partial<ServiceActivity>>) {
     const context = new TurnContext(this, {
+      callerId: '',
+      channelId: 'offline',
+      conversation: Object.freeze({
+        id: this.#conversationId,
+        isGroup: false,
+        conversationType: '',
+        name: ''
+      }),
+      // @ts-expect-error okay to be overriden
+      from: { id: this.#userId },
+      id: `a_${crypto.randomUUID()}`,
+      label: '',
+      listenFor: [],
+      localTimezone: new Date().toISOString(),
+      recipient: { id: 'bot', name: '' },
+      serviceUrl: '',
+      text: '',
+      type: '',
+      valueType: '',
       ...activity,
-      timestamp: new Date(activity.timestamp)
+      timestamp: activity.timestamp ? new Date(activity.timestamp) : new Date()
     });
 
     // Runs the middleware pipeline followed by any registered business logic.

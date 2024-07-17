@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
     "lib": ["ESNext"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "skipLibCheck": true,
     "target": "ESNext",
-    "types": ["node"]
+    "types": []
   },
   "extends": "@tsconfig/strictest"
 }
