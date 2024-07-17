@@ -11,6 +11,7 @@ import { createServer } from 'http';
 import { platform } from 'node:os';
 import { object, optional, parse, string } from 'valibot';
 import createBotFrameworkAdapter from './adapter/createBotFrameworkAdapter.js';
+import handleError from './private/handleError.js';
 
 declare global {
   var BUILD_TIME: string;
@@ -52,29 +53,38 @@ APPSETTING_WEBSITE_SITE_NAME &&
   );
 
 // Listen for incoming requests.
-app.post('/api/messages', (req, res, _) => {
-  adapter.process(req, res, async context => {
-    // Route to main dialog.
-    await bot.run(context);
-  });
-});
+app.post(
+  '/api/messages',
+  handleError((req, res, _) => {
+    adapter.process(req as any, res, async context => {
+      // Route to main dialog.
+      await bot.run(context);
+    });
+  })
+);
 
 const server = createServer(app);
 
 server.on('upgrade', async (req, socket, head) => {
   // Create an adapter scoped to this WebSocket connection to allow storing session data.
-  const streamingAdapter = createBotFrameworkAdapter();
+  try {
+    const streamingAdapter = createBotFrameworkAdapter();
 
-  await streamingAdapter.process(
-    {
-      body: {},
-      headers: req.headers,
-      method: req.method || 'GET'
-    },
-    socket as any,
-    head,
-    context => bot.run(context)
-  );
+    await streamingAdapter.process(
+      {
+        body: {},
+        headers: req.headers,
+        method: req.method || 'GET'
+      },
+      socket as any,
+      head,
+      context => bot.run(context)
+    );
+  } catch (error) {
+    console.error(error);
+
+    socket.end();
+  }
 });
 
 server.listen(PORT, () => console.log(`Bot listening to port ${PORT}.`));
