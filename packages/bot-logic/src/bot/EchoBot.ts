@@ -25,20 +25,30 @@ export default class EchoBot extends ActivityHandler {
 
         'willContinue' in adapter && (adapter as { willContinue: (context: TurnContext) => {} }).willContinue(context);
 
+        const response = await context.sendActivity('Proactive kicked off.');
+
         setTimeout(() => {
           adapter.continueConversationAsync(botAppId, conversationReference, async context => {
-            await context.sendActivity('Proactive done.');
+            await context.sendActivity({
+              replyToId: response?.id || '',
+              text: 'Proactive done.',
+              type: 'message'
+            });
           });
         }, 1000);
-
-        await context.sendActivity('Proactive kicked off.');
 
         return;
       } else if (context.activity.text === 'livestreaming') {
         const conversationReference = TurnContext.getConversationReference(context.activity);
         const { adapter } = context;
 
-        const firstActivity = await context.sendActivity({ text: '...', type: 'typing' });
+        const firstActivity = await context.sendActivity({
+          channelData: {
+            streamType: 'streaming'
+          },
+          text: '...',
+          type: 'typing'
+        });
 
         if (!firstActivity) {
           throw new Error('Failed to send first typing activity.');
@@ -59,6 +69,7 @@ export default class EchoBot extends ActivityHandler {
 
               await context.sendActivity({
                 channelData: { streamId, streamSequence: ++streamSequence, streamType: 'streaming' },
+                replyToId: streamId,
                 text,
                 type: 'typing'
               });
@@ -68,6 +79,7 @@ export default class EchoBot extends ActivityHandler {
 
             await context.sendActivity({
               channelData: { streamId, streamType: 'streaming' },
+              replyToId: streamId,
               text: TOKENS,
               type: 'message'
             });
