@@ -467,7 +467,7 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
       ]
       scale: {
         maxReplicas: 1
-        minReplicas: 1
+        minReplicas: 1 // Should idle
       }
     }
   }
