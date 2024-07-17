@@ -67,7 +67,10 @@ export default class EchoBot extends ActivityHandler {
           throw new Error('Failed to send first typing activity.');
         }
 
+        // DLASE does not return `activity.id`.
         const { id: streamId } = firstActivity;
+
+        console.log(`streamId: ${streamId}`);
 
         const livestream = async (context: TurnContext) => {
           let match: RegExpMatchArray | null;
