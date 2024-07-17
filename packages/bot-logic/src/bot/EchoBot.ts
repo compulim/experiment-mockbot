@@ -58,7 +58,7 @@ export default class EchoBot extends ActivityHandler {
               const text = TOKENS.substring(0, match.index);
 
               await context.sendActivity({
-                channelData: { streamId, streamSequence: streamSequence++, streamType: 'chunk' },
+                channelData: { streamId, streamSequence: streamSequence++, streamType: 'streaming' },
                 text,
                 type: 'typing'
               });
