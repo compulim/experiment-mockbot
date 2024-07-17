@@ -27,10 +27,11 @@ const { APPSETTING_WEBSITE_SITE_NAME, MicrosoftAppId, PORT } = parse(
 
 const app = express();
 const bot = new EchoBot();
+const directToEngineAdapter = new DirectToEngineBotAdapter({ bot });
 
 app.use(cors());
 app.use(json());
-app.use(new DirectToEngineBotAdapter({ bot }).createExpressRouter());
+app.use(directToEngineAdapter.createExpressRouter());
 
 app.get('/health.txt', (_, res) => {
   res.setHeader('content-type', 'text/plain').send(`ok\n\n${BUILD_TIME}`);
@@ -52,8 +53,6 @@ APPSETTING_WEBSITE_SITE_NAME &&
 
 // Listen for incoming requests.
 app.post('/api/messages', (req, res, _) => {
-  console.log('POST /api/messages', req.body);
-
   adapter.process(req, res, async context => {
     // Route to main dialog.
     await bot.run(context);

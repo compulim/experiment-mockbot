@@ -1,9 +1,22 @@
-import { ActivityHandler, MessageFactory, type ConversationState, type UserState } from 'botbuilder';
+import {
+  ActivityHandler,
+  MessageFactory,
+  TurnContext,
+  // type CloudAdapter,
+  type ConversationState,
+  type UserState
+} from 'botbuilder';
+import sleep from './private/sleep.js';
 
 type BotInit = {
+  // adapter?: CloudAdapter;
   conversationState?: ConversationState;
   userState?: UserState;
 };
+
+const CHUNK_INTERVAL = 20;
+const TOKENS =
+  'Alfa Bravo Charlie Delta Echo Foxtrot Golf Hotel India Juliett Kilo Lima Mike November Oscar Papa Quebec Romeo Sierra Tango Uniform Victor Whiskey Xray Yankee Zulu';
 
 export default class EchoBot extends ActivityHandler {
   constructor({ conversationState, userState }: BotInit = {}) {
@@ -11,6 +24,59 @@ export default class EchoBot extends ActivityHandler {
 
     // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
     this.onMessage(async (context, next) => {
+      if (context.activity.text === 'proactive') {
+        const conversationReference = TurnContext.getConversationReference(context.activity);
+        const { adapter } = context;
+
+        'willContinue' in adapter && (adapter as { willContinue: (context: TurnContext) => {} }).willContinue(context);
+
+        setTimeout(() => {
+          adapter.continueConversation(conversationReference, async context => {
+            await context.sendActivity('Proactive done.');
+          });
+        }, 1000);
+
+        await context.sendActivity('Proactive kicked off.');
+
+        return;
+      } else if (context.activity.text === 'livestreaming') {
+        const conversationReference = TurnContext.getConversationReference(context.activity);
+        const { adapter } = context;
+
+        const firstActivity = await context.sendActivity({ type: 'typing' });
+
+        if (!firstActivity) {
+          throw new Error('Failed to send first typing activity.');
+        }
+
+        const { id: streamId } = firstActivity;
+
+        'willContinue' in adapter && (adapter as { willContinue: (context: TurnContext) => {} }).willContinue(context);
+
+        (async () => {
+          adapter.continueConversation(conversationReference, async context => {
+            let match: RegExpMatchArray | null;
+            let pattern = /\s/gu;
+
+            while ((match = pattern.exec(TOKENS))) {
+              const text = TOKENS.substring(0, match.index);
+
+              await context.sendActivity({ channelData: { streamId }, text, type: 'typing' });
+
+              await sleep(CHUNK_INTERVAL);
+            }
+
+            await context.sendActivity({
+              channelData: { streamId },
+              text: TOKENS,
+              type: 'message'
+            });
+          });
+        })();
+
+        return;
+      }
+
       const replyText = `Echo: ${context.activity.text}`;
 
       await context.sendActivity(MessageFactory.text(replyText, replyText));
