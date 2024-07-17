@@ -10,3 +10,10 @@
    - Does not support managed identity to issue Direct Line token
       - It seems ABS need to onboard MSI, `getToken('https://directline.botframework.com/')` fail with HTTP 500
 - Need RBAC
+- DLASE does not return activity ID of outgoing activity
+   - `const { id } = await context.sendActivity({})`
+   - `id` is `undefined`
+- Bot SDK `replyToId` bug
+   - `getContinuationActivity()` also return `id: uuid()`
+   - To workaround, hack the `context.activity.id`
+   - `adapter.continueConversationAsync(..., context => { context.activity.id = replyToId || ''; ... })`
