@@ -69,35 +69,45 @@ export default class EchoBot extends ActivityHandler {
 
         const { id: streamId } = firstActivity;
 
-        'willContinue' in adapter && (adapter as { willContinue: (context: TurnContext) => {} }).willContinue(context);
+        const livestream = async (context: TurnContext) => {
+          let match: RegExpMatchArray | null;
+          let pattern = /\s/gu;
+          let streamSequence = 0;
 
-        (async () => {
-          adapter.continueConversationAsync(botAppId, conversationReference, async context => {
-            context.activity.id = replyToId || ''; // HACK: `replyToId` is a random UUID.
-
-            let match: RegExpMatchArray | null;
-            let pattern = /\s/gu;
-            let streamSequence = 0;
-
-            while ((match = pattern.exec(TOKENS))) {
-              const text = TOKENS.substring(0, match.index);
-
-              await context.sendActivity({
-                channelData: { streamId, streamSequence: ++streamSequence, streamType: 'streaming' },
-                text,
-                type: 'typing'
-              });
-
-              await sleep(CHUNK_INTERVAL);
-            }
+          while ((match = pattern.exec(TOKENS))) {
+            const text = TOKENS.substring(0, match.index);
 
             await context.sendActivity({
-              channelData: { streamId, streamType: 'streaming' },
-              text: TOKENS,
-              type: 'message'
+              channelData: { streamId, streamSequence: ++streamSequence, streamType: 'streaming' },
+              text,
+              type: 'typing'
             });
+
+            await sleep(CHUNK_INTERVAL);
+          }
+
+          await context.sendActivity({
+            channelData: { streamId, streamType: 'streaming' },
+            text: TOKENS,
+            type: 'message'
           });
-        })();
+        };
+
+        if (context.activity.serviceUrl === 'urn:botframework:namedpipe:bfv4.pipes') {
+          // DLASE does not support proactive messaging.
+          await livestream(context);
+        } else {
+          (async () => {
+            'willContinue' in adapter &&
+              (adapter as { willContinue: (context: TurnContext) => {} }).willContinue(context);
+
+            adapter.continueConversationAsync(botAppId, conversationReference, async context => {
+              context.activity.id = replyToId || ''; // HACK: `replyToId` is a random UUID.
+
+              await livestream(context);
+            });
+          })();
+        }
 
         return;
       }
