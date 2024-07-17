@@ -1,10 +1,4 @@
-import {
-  ActivityHandler,
-  MessageFactory,
-  TurnContext,
-  type ConversationState,
-  type UserState
-} from 'botbuilder';
+import { ActivityHandler, MessageFactory, TurnContext, type ConversationState, type UserState } from 'botbuilder';
 import sleep from './private/sleep.js';
 
 type BotInit = {
@@ -23,6 +17,8 @@ export default class EchoBot extends ActivityHandler {
 
     // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
     this.onMessage(async (context, next) => {
+      console.log('onMessage', context.activity);
+
       if (context.activity.text === 'proactive') {
         const conversationReference = TurnContext.getConversationReference(context.activity);
         const { adapter } = context;
@@ -42,7 +38,7 @@ export default class EchoBot extends ActivityHandler {
         const conversationReference = TurnContext.getConversationReference(context.activity);
         const { adapter } = context;
 
-        const firstActivity = await context.sendActivity({ type: 'typing' });
+        const firstActivity = await context.sendActivity({ text: '...', type: 'typing' });
 
         if (!firstActivity) {
           throw new Error('Failed to send first typing activity.');
@@ -56,11 +52,16 @@ export default class EchoBot extends ActivityHandler {
           adapter.continueConversationAsync(botAppId, conversationReference, async context => {
             let match: RegExpMatchArray | null;
             let pattern = /\s/gu;
+            let streamSequence = 0;
 
             while ((match = pattern.exec(TOKENS))) {
               const text = TOKENS.substring(0, match.index);
 
-              await context.sendActivity({ channelData: { streamId }, text, type: 'typing' });
+              await context.sendActivity({
+                channelData: { streamId, streamSequence: streamSequence++, streamType: 'chunk' },
+                text,
+                type: 'typing'
+              });
 
               await sleep(CHUNK_INTERVAL);
             }
