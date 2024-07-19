@@ -51,7 +51,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup NPM 10.7
-        run: npm install -g npm@^10.7
+        run: npm install -g npm@10.7
 
       - name: Clean install
         run: npm clean-install --ignore-scripts
