@@ -6,11 +6,11 @@ const nodeResolvePlugin = {
   name: 'bot-builder-bundled',
   setup(build) {
     build.onResolve({ filter: /^botbuilder$/ }, () => ({
-      path: join(fileURLToPath(import.meta.url), '../../external-bot-builder-bundled/dist/index.js')
+      path: join(fileURLToPath(import.meta.url), '../../external-bot-builder-family-bundled/dist/botbuilder.js')
     }));
 
     build.onResolve({ filter: /^botbuilder-dialogs$/ }, () => ({
-      path: join(fileURLToPath(import.meta.url), '../../external-bot-builder-dialogs-bundled/dist/index.js')
+      path: join(fileURLToPath(import.meta.url), '../../external-bot-builder-family-bundled/dist/botbuilder-dialogs.js')
     }));
   }
 };

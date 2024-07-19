@@ -1,5 +1,3 @@
-// export * from 'botbuilder';
-
 import {
   ActivityHandler,
   BotAdapter,

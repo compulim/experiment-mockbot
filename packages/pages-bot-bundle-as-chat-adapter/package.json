@@ -23,8 +23,8 @@
     "@microsoft/botframework-mockbot-bot-logic": "^0.0.0-0",
     "@microsoft/botframework-mockbot-webchat-offline-chat-adapter": "^0.0.0-0",
     "@tsconfig/strictest": "^2.0.5",
-    "botbuilder": "npm:@microsoft/botframework-mockbot-external-bot-builder-bundled",
-    "botbuilder-dialogs": "npm:@microsoft/botframework-mockbot-external-bot-builder-dialogs-bundled",
+    "botbuilder": "npm:@microsoft/botframework-mockbot-external-bot-builder-family-bundled",
+    "botbuilder-dialogs": "npm:@microsoft/botframework-mockbot-external-bot-builder-family-bundled",
     "tsup": "^8.1.0",
     "typescript": "^5.5.3"
   }

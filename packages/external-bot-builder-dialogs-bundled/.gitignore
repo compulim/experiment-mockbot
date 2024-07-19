@@ -1,5 +1,0 @@
-/.env*
-/*.tgz
-/*.zip
-/dist/
-/node_modules/

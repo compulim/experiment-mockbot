@@ -9,6 +9,14 @@ const nodeResolvePlugin = {
       path: join(fileURLToPath(import.meta.url), `../esbuild/${args.path}-mock.cjs`)
     }));
 
+    build.onResolve({ filter: /^@microsoft\/recognizers-text-suite$/ }, () => ({
+      // TODO: Consider use read-pkg up or other mechanisms.
+      path: join(
+        fileURLToPath(import.meta.url),
+        '../../../node_modules/@microsoft/recognizers-text-suite/dist/recognizers-text-suite.es5.js'
+      )
+    }));
+
     build.onResolve({ filter: /^botframework-connector$/ }, () => ({
       // TODO: Consider use read-pkg up or other mechanisms.
       path: join(fileURLToPath(import.meta.url), '../../../node_modules/botframework-connector/src/index.ts')
@@ -23,7 +31,10 @@ export default defineConfig([
       BUILD_TIME: JSON.stringify(new Date().toISOString())
     },
     dts: true,
-    entry: { index: './src/index.ts' },
+    entry: {
+      botbuilder: './src/index.botbuilder.ts',
+      'botbuilder-dialogs': './src/index.botbuilder-dialogs.ts'
+    },
     esbuildOptions(options) {
       options.alias = {
         'node:http': 'http',
@@ -58,7 +69,7 @@ export default defineConfig([
       'path',
       'os',
       'string_decoder',
-      'vm',
+      'vm'
       // ---
       // '@microsoft/botframework-mockbot-bot-logic',
       // '@microsoft/botframework-mockbot-webchat-offline-chat-adapter'
