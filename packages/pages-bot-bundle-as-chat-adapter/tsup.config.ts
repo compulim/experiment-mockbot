@@ -25,7 +25,6 @@ export default defineConfig([
     entry: { index: './src/index.ts' },
     esbuildPlugins: [nodeResolvePlugin],
     format: ['esm'],
-    onSuccess: 'touch ../pages/src/app/index.tsx',
     platform: 'browser',
     sourcemap: true
   }

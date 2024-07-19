@@ -74,7 +74,6 @@ export default defineConfig([
       // '@microsoft/botframework-mockbot-bot-logic',
       // '@microsoft/botframework-mockbot-webchat-offline-chat-adapter'
     ],
-    onSuccess: 'touch ../pages-bot-bundle-as-chat-adapter/src/index.ts',
     platform: 'browser',
     sourcemap: true
   }
