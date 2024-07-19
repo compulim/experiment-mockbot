@@ -48,10 +48,11 @@ jobs:
       - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
+          cache: npm
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Clean install
-        run: npm clean-install --ignore-scripts --verbose
+        run: npm clean-install --ignore-scripts
 
       - name: Build
         run: npm run build
