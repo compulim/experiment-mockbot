@@ -17,14 +17,14 @@
     "bump:prod": "PACKAGES_TO_BUMP=$(cat package.json | jq -r '(.pinDependencies // {}) as $P | (.localPeerDependencies // {}) as $L | (.dependencies // {}) | to_entries | map(select(.key as $K | $L | has($K) | not)) | map(.key + \"@\" + ($P[.key] // [\"latest\"])[0]) | join(\" \")') && [ ! -z \"$PACKAGES_TO_BUMP\" ] && npm install $PACKAGES_TO_BUMP || true",
     "precommit": "npm run precommit:typescript",
     "precommit:typescript": "tsc --project ./src/tsconfig.json",
-    "start": "tsup --onSuccess \"touch ../pages/src/app/index.tsx\" --watch"
+    "start": "tsup --watch"
   },
-  "dependencies": {},
   "devDependencies": {
     "@microsoft/botframework-mockbot-bot-logic": "^0.0.0-0",
     "@microsoft/botframework-mockbot-webchat-offline-chat-adapter": "^0.0.0-0",
     "@tsconfig/strictest": "^2.0.5",
     "botbuilder": "npm:@microsoft/botframework-mockbot-external-bot-builder-bundled",
+    "botbuilder-dialogs": "npm:@microsoft/botframework-mockbot-external-bot-builder-dialogs-bundled",
     "tsup": "^8.1.0",
     "typescript": "^5.5.3"
   }

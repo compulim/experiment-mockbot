@@ -10,8 +10,6 @@ const USE_BUNDLE = (() => {
   }
 })();
 
-console.log({ USE_BUNDLE });
-
 export default memo(function WebChat() {
   const [webChatAdapters] = useWebChatAdapters();
   const key = useMemo(() => Date.now(), [webChatAdapters]);

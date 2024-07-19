@@ -8,6 +8,7 @@ export default defineConfig([
     dts: true,
     entry: { index: './src/index.ts' },
     format: ['esm'],
-    sourcemap: true
+    onSuccess: 'touch ../bot-app/src/index.ts && touch ../pages-bot-bundle-as-chat-adapter/src/index.ts',
+    sourcemap: true,
   }
 ]);

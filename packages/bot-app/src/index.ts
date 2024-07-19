@@ -3,7 +3,7 @@ import 'dotenv/config';
 // @ts-expect-error we will turn everything into CJS
 import { DirectToEngineBotAdapter } from '@microsoft/botframework-mockbot-bot-direct-to-engine-bot-adapter';
 // @ts-expect-error we will turn everything into CJS
-import { EchoBot } from '@microsoft/botframework-mockbot-bot-logic';
+import { MockBot } from '@microsoft/botframework-mockbot-bot-logic';
 import { AuthenticationConstants } from 'botframework-connector';
 import cors from 'cors';
 import express, { json } from 'express';
@@ -27,7 +27,7 @@ const { APPSETTING_WEBSITE_SITE_NAME, MicrosoftAppId, PORT } = parse(
 );
 
 const app = express();
-const bot = new EchoBot({ botAppId: MicrosoftAppId || '' });
+const bot = new MockBot({ botAppId: MicrosoftAppId || '' });
 const directToEngineAdapter = new DirectToEngineBotAdapter({ bot });
 
 app.use(cors());

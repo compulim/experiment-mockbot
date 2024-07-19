@@ -1,3 +1,4 @@
-import EchoBot from './bot/EchoBot.js';
+import EchoBot from './bot/EchoBot/index.js';
+import MockBot from './bot/MockBot/index.js';
 
-export { EchoBot };
+export { EchoBot, MockBot };
