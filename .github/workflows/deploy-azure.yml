@@ -21,7 +21,7 @@ concurrency:
 env:
   DEPLOYMENT_FAMILY_NAME: ${{ vars.DEPLOYMENT_FAMILY_NAME }}
   IMAGE_NAME_WITHOUT_OWNER: ${{ github.event.repository.name }}
-  NODE_VERSION: current
+  NODE_VERSION: 22.4
   REGISTRY: ghcr.io
 
 defaults:
