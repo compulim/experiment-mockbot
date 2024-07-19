@@ -3,14 +3,14 @@ import { defineConfig } from 'tsup';
 import { fileURLToPath } from 'url';
 
 const nodeResolvePlugin = {
-  name: 'bot-builder-bundled',
+  name: 'external-bundle',
   setup(build) {
     build.onResolve({ filter: /^botbuilder$/ }, () => ({
-      path: join(fileURLToPath(import.meta.url), '../../external-bot-builder-family-bundled/dist/botbuilder.js')
+      path: join(fileURLToPath(import.meta.url), '../../external-bundle/dist/botbuilder.js')
     }));
 
     build.onResolve({ filter: /^botbuilder-dialogs$/ }, () => ({
-      path: join(fileURLToPath(import.meta.url), '../../external-bot-builder-family-bundled/dist/botbuilder-dialogs.js')
+      path: join(fileURLToPath(import.meta.url), '../../external-bundle/dist/botbuilder-dialogs.js')
     }));
   }
 };
