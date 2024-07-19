@@ -51,7 +51,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Clean install
-        run: npm clean-install
+        run: npm clean-install --ignore-scripts
 
       - name: Build
         run: npm run build
