@@ -36,6 +36,7 @@
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.5",
     "botbuilder": "^4.22.3",
+    "botbuilder-dialogs": "^4.22.3",
     "tsup": "^8.1.0",
     "typescript": "^5.5.3"
   }
