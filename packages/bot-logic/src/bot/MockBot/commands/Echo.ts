@@ -1,5 +1,5 @@
 import { TurnContext } from 'botbuilder';
-import onErrorResumeNext from 'on-error-resume-next';
+import { onErrorResumeNext } from 'on-error-resume-next';
 
 const mode = 'line';
 const name = 'Echo';
@@ -27,4 +27,4 @@ async function processor(context: TurnContext, line: string) {
   });
 }
 
-export { help, mode, name, processor }
+export { help, mode, name, processor };
