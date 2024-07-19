@@ -17,7 +17,7 @@
     "bump:prod": "PACKAGES_TO_BUMP=$(cat package.json | jq -r '(.pinDependencies // {}) as $P | (.localPeerDependencies // {}) as $L | (.dependencies // {}) | to_entries | map(select(.key as $K | $L | has($K) | not)) | map(.key + \"@\" + ($P[.key] // [\"latest\"])[0]) | join(\" \")') && [ ! -z \"$PACKAGES_TO_BUMP\" ] && npm install $PACKAGES_TO_BUMP || true",
     "precommit": "npm run precommit:typescript",
     "precommit:typescript": "tsc --project ./src/tsconfig.json",
-    "start": "tsup --onSuccess \"touch ../bot-app/src/index.ts\" --watch"
+    "start": "tsup --watch"
   },
   "dependencies": {
     "@types/content-type": "^1.1.8",

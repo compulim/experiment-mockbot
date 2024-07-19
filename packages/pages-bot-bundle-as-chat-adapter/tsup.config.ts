@@ -9,7 +9,7 @@ const nodeResolvePlugin = {
       path: join(fileURLToPath(import.meta.url), '../../external-bundle/dist/botbuilder.js')
     }));
 
-    build.onResolve({ filter: /^botbuilder-dialogs$/ }, () => ({
+    build.onResolve({ filter: /^botbuilder\-dialogs$/ }, () => ({
       path: join(fileURLToPath(import.meta.url), '../../external-bundle/dist/botbuilder-dialogs.js')
     }));
   }
@@ -25,6 +25,7 @@ export default defineConfig([
     entry: { index: './src/index.ts' },
     esbuildPlugins: [nodeResolvePlugin],
     format: ['esm'],
+    onSuccess: 'touch ../pages/src/app/index.tsx',
     platform: 'browser',
     sourcemap: true
   }
