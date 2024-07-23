@@ -68,6 +68,7 @@ export default class DirectToEngineBotAdapter extends BotAdapter {
     } = req;
 
     res.socket?.setNoDelay(true);
+    res.setHeader('access-control-expose-headers', 'x-ms-conversationid');
     res.setHeader('x-ms-conversationid', conversationId);
 
     const turn = this.#activeSession.get(conversationId);
@@ -145,6 +146,7 @@ export default class DirectToEngineBotAdapter extends BotAdapter {
     this.#activeSession.set(conversationId, new ClientTurn());
 
     res.socket?.setNoDelay(true);
+    res.setHeader('access-control-expose-headers', 'x-ms-conversationid');
     res.setHeader('x-ms-conversationid', conversationId);
 
     const turn = this.#run(conversationId, {
