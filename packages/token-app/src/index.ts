@@ -57,38 +57,52 @@ app.get('/health.txt', (_, res) => {
   res.setHeader('content-type', 'text/plain').send(`ok\n\n${BUILD_TIME}`);
 });
 
-app.get(
+app.use(
   '/api/token/directline',
-  handleError(async (_, res) => res.json({ token: (await issueDirectLineToken()).token }))
-);
-
-app.get(
-  '/api/token/directline/msi',
-  handleError(async (_, res) => res.json({ token: (await issueDirectLineToken({ useManagedIdentity: true })).token }))
-);
-
-app.get(
-  '/api/token/directlinease',
-  handleError(async (_, res) => res.json({ token: (await issueDirectLineASEToken()).token }))
-);
-
-app.get(
-  '/api/token/speech',
-  handleError(async (_, res) =>
-    res.json({
-      region: SPEECH_SERVICES_REGION,
-      token: (await issueSpeechServicesAccessToken()).token
-    })
+  handleError(async (req, res, next) =>
+    req.method === 'GET' || req.method === 'POST' ? res.json({ token: (await issueDirectLineToken()).token }) : next()
   )
 );
 
-app.get(
+app.use(
+  '/api/token/directline/msi',
+  handleError(async (req, res, next) =>
+    req.method === 'GET' || req.method === 'POST'
+      ? res.json({ token: (await issueDirectLineToken({ useManagedIdentity: true })).token })
+      : next()
+  )
+);
+
+app.use(
+  '/api/token/directlinease',
+  handleError(async (req, res, next) =>
+    req.method === 'GET' || req.method === 'POST'
+      ? res.json({ token: (await issueDirectLineASEToken()).token })
+      : next()
+  )
+);
+
+app.use(
+  '/api/token/speech',
+  handleError(async (req, res, next) =>
+    req.method === 'GET' || req.method === 'POST'
+      ? res.json({
+          region: SPEECH_SERVICES_REGION,
+          token: (await issueSpeechServicesAccessToken()).token
+        })
+      : next()
+  )
+);
+
+app.use(
   '/api/token/speech/msi',
-  handleError(async (_, res) =>
-    res.json({
-      region: SPEECH_SERVICES_REGION,
-      token: (await issueSpeechServicesAccessToken({ useManagedIdentity: true })).token
-    })
+  handleError(async (req, res, next) =>
+    req.method === 'GET' || req.method === 'POST'
+      ? res.json({
+          region: SPEECH_SERVICES_REGION,
+          token: (await issueSpeechServicesAccessToken({ useManagedIdentity: true })).token
+        })
+      : next()
   )
 );
 
