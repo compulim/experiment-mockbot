@@ -68,12 +68,12 @@ const { WITH_ASSETS: withAssets } = parse(
   { WITH_ASSETS }
 );
 
-function buildURL(filename: string, contentType: string, base64: string): string {
+function buildURL(contentType: string, base64OrPath: string): string {
   if (withAssets) {
-    return `data:${contentType};base64,${base64}`;
+    return `data:${contentType};base64,${base64OrPath}`;
   }
 
-  const url = new URL(`https://localhost/assets/${filename}`);
+  const url = new URL(`https://localhost/assets/${base64OrPath}`);
 
   url.hostname = WEBSITE_HOSTNAME;
 
@@ -81,50 +81,30 @@ function buildURL(filename: string, contentType: string, base64: string): string
 }
 
 const assets = {
-  './airplane.png': buildURL('airplane.png', `image/png`, `${AirplanePng}`),
-  './bf_square.svg': buildURL('bf_square.svg', `image/svg+xml`, `${BfSquareSvg}`),
-  './bftest.mp3': buildURL('bftest.mp3', `audio/mp3`, `${BftestMp3}`),
-  './ms-band1.jpg': buildURL('ms-band1.jpg', `image/jpeg`, `${MsBand1Jpg}`),
-  './msband.mp4': buildURL('msband.mp4', `video/mp4`, `${MsbandMp4}`),
-  './sports-panthers.png': buildURL('sports-panthers.png', `image/png`, `${SportsPanthersPng}`),
-  './sports-seahawks.png': buildURL('sports-seahawks.png', `image/png`, `${SportsSeahawksPng}`),
-  './square-icon-green.png': buildURL('square-icon-green.png', `image/png`, `${SquareIconGreenPng}`),
-  './square-icon-purple.png': buildURL('square-icon-purple.png', `image/png`, `${SquareIconPurplePng}`),
-  './square-icon-red.png': buildURL('square-icon-red.png', `image/png`, `${SquareIconRedPng}`),
-  './square-icon.png': buildURL('square-icon.png', `image/png`, `${SquareIconPng}`),
-  './surface.gif': buildURL('surface.gif', `image/gif`, `${SurfaceGif}`),
-  './surface1.jpg': buildURL('surface1.jpg', `image/jpeg`, `${Surface1Jpg}`),
-  './surface2.jpg': buildURL('surface2.jpg', `image/jpeg`, `${Surface2Jpg}`),
-  './surface3.jpg': buildURL('surface3.jpg', `image/jpeg`, `${Surface3Jpg}`),
-  './surface4.jpg': buildURL('surface4.jpg', `image/jpeg`, `${Surface4Jpg}`),
-  './surface_anim.gif': buildURL('surface_anim.gif', `image/gif`, `${SurfaceAnimGif}`),
-  './test.docx': buildURL(
-    'test.docx',
-    `application/vnd.openxmlformats-officedocument.wordprocessingml.document`,
-    `${TestDocx}`
-  ),
-  './test.txt': buildURL('test.txt', `text/plain`, `${TestTxt}`),
-  './weather-partly-cloudy-day.png': buildURL(
-    'weather-partly-cloudy-day.png',
-    `image/png`,
-    `${WeatherPartlyCloudyDayPng}`
-  ),
-  './weather-partly-cloudy-night.png': buildURL(
-    'weather-partly-cloudy-night.png',
-    `image/png`,
-    `${WeatherPartlyCloudyNightPng}`
-  ),
-  './weather-rain-showers-day.png': buildURL(
-    'weather-rain-showers-day.png',
-    `image/png`,
-    `${WeatherRainShowersDayPng}`
-  ),
-  './weather-rain-showers-night.png': buildURL(
-    'weather-rain-showers-night.png',
-    `image/png`,
-    `${WeatherRainShowersNightPng}`
-  ),
-  './weather-sunny.png': buildURL('weather-sunny.png', `image/png`, `${WeatherSunnyPng}`)
+  './airplane.png': buildURL(`image/png`, `${AirplanePng}`),
+  './bf_square.svg': buildURL(`image/svg+xml`, `${BfSquareSvg}`),
+  './bftest.mp3': buildURL(`audio/mp3`, `${BftestMp3}`),
+  './ms-band1.jpg': buildURL(`image/jpeg`, `${MsBand1Jpg}`),
+  './msband.mp4': buildURL(`video/mp4`, `${MsbandMp4}`),
+  './sports-panthers.png': buildURL(`image/png`, `${SportsPanthersPng}`),
+  './sports-seahawks.png': buildURL(`image/png`, `${SportsSeahawksPng}`),
+  './square-icon-green.png': buildURL(`image/png`, `${SquareIconGreenPng}`),
+  './square-icon-purple.png': buildURL(`image/png`, `${SquareIconPurplePng}`),
+  './square-icon-red.png': buildURL(`image/png`, `${SquareIconRedPng}`),
+  './square-icon.png': buildURL(`image/png`, `${SquareIconPng}`),
+  './surface.gif': buildURL(`image/gif`, `${SurfaceGif}`),
+  './surface1.jpg': buildURL(`image/jpeg`, `${Surface1Jpg}`),
+  './surface2.jpg': buildURL(`image/jpeg`, `${Surface2Jpg}`),
+  './surface3.jpg': buildURL(`image/jpeg`, `${Surface3Jpg}`),
+  './surface4.jpg': buildURL(`image/jpeg`, `${Surface4Jpg}`),
+  './surface_anim.gif': buildURL(`image/gif`, `${SurfaceAnimGif}`),
+  './test.docx': buildURL(`application/vnd.openxmlformats-officedocument.wordprocessingml.document`, `${TestDocx}`),
+  './test.txt': buildURL(`text/plain`, `${TestTxt}`),
+  './weather-partly-cloudy-day.png': buildURL(`image/png`, `${WeatherPartlyCloudyDayPng}`),
+  './weather-partly-cloudy-night.png': buildURL(`image/png`, `${WeatherPartlyCloudyNightPng}`),
+  './weather-rain-showers-day.png': buildURL(`image/png`, `${WeatherRainShowersDayPng}`),
+  './weather-rain-showers-night.png': buildURL(`image/png`, `${WeatherRainShowersNightPng}`),
+  './weather-sunny.png': buildURL(`image/png`, `${WeatherSunnyPng}`)
 };
 
 export default assets;

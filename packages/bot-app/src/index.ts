@@ -9,6 +9,7 @@ import cors from 'cors';
 import express, { json } from 'express';
 import { createServer } from 'http';
 import { platform } from 'node:os';
+import { resolve } from 'path';
 import { object, optional, parse, string } from 'valibot';
 import createBotFrameworkAdapter from './adapter/createBotFrameworkAdapter.js';
 import handleError from './private/handleError.js';
@@ -62,6 +63,8 @@ app.post(
     });
   })
 );
+
+app.use('/assets/', express.static(resolve(__dirname, '../public/assets/')));
 
 const server = createServer(app);
 

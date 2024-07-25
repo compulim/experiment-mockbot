@@ -8,6 +8,7 @@
     "./.dockerignore",
     "./dist/",
     "./Dockerfile",
+    "./public/",
     "./web.config"
   ],
   "scripts": {
@@ -16,9 +17,10 @@
     "bump:auditfix": "npm audit fix || exit 0",
     "bump:dev": "PACKAGES_TO_BUMP=$(cat package.json | jq -r '(.pinDependencies // {}) as $P | (.localPeerDependencies // {}) as $L | (.devDependencies // {}) | to_entries | map(select(.key as $K | $L | has($K) | not)) | map(.key + \"@\" + ($P[.key] // [\"latest\"])[0]) | join(\" \")') && [ ! -z \"$PACKAGES_TO_BUMP\" ] && npm install $PACKAGES_TO_BUMP || true",
     "bump:prod": "PACKAGES_TO_BUMP=$(cat package.json | jq -r '(.pinDependencies // {}) as $P | (.localPeerDependencies // {}) as $L | (.dependencies // {}) | to_entries | map(select(.key as $K | $L | has($K) | not)) | map(.key + \"@\" + ($P[.key] // [\"latest\"])[0]) | join(\" \")') && [ ! -z \"$PACKAGES_TO_BUMP\" ] && npm install $PACKAGES_TO_BUMP || true",
+    "prebuild": "mkdir -p ./public/assets/ && rsync --exclude=*.map --exclude=*.js --exclude=*.ts ../bot-logic/dist/* ./public/assets/",
     "precommit": "npm run precommit:typescript",
     "precommit:typescript": "tsc --project ./src/tsconfig.json",
-    "start": "tsup --onSuccess \"node .\" --watch"
+    "start": "npm run prebuild && tsup --onSuccess \"node .\" --watch"
   },
   "dependencies": {
     "@microsoft/botframework-mockbot-bot-direct-to-engine-bot-adapter": "^0.0.0-0",

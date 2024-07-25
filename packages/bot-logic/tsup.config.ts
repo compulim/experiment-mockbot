@@ -15,14 +15,14 @@ export default defineConfig([
     ...BASE_OPTIONS,
     entry: { index: './src/index.ts' },
     loader: {
-      '.docx': 'empty',
-      '.gif': 'empty',
-      '.jpg': 'empty',
-      '.mp3': 'empty',
-      '.mp4': 'empty',
-      '.png': 'empty',
-      '.svg': 'empty',
-      '.txt': 'empty'
+      '.docx': 'file',
+      '.gif': 'file',
+      '.jpg': 'file',
+      '.mp3': 'file',
+      '.mp4': 'file',
+      '.png': 'file',
+      '.svg': 'file',
+      '.txt': 'file'
     },
     onSuccess: 'touch ../bot-app/src/index.ts'
   },
