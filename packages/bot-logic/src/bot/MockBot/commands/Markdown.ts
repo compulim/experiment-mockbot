@@ -11,7 +11,6 @@ function help() {
 }
 
 async function processor(context: TurnContext, arg?: string) {
-  const { PUBLIC_URL } = process.env;
   arg = !!arg && arg.toLowerCase().trim();
 
   if (arg === 'curlyaria') {

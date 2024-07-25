@@ -1,4 +1,5 @@
-import { TurnContext, VideoCard } from 'botbuilder';
+import { TurnContext } from 'botbuilder';
+import assets from '../assets/index.js';
 
 const name = 'Video card';
 
@@ -9,8 +10,6 @@ function help() {
 }
 
 async function processor(context: TurnContext) {
-  const { PUBLIC_URL } = process.env;
-
   await context.sendActivity({
     type: 'message',
     attachments: [{
@@ -20,10 +19,10 @@ async function processor(context: TurnContext) {
         subtitle: 'Large Video',
         text: 'No buttons, No Image, Autoloop, No Sharable',
         media: [{
-          url: `${ PUBLIC_URL }assets/msband.mp4`,
+          url: assets['./msband.mp4'],
           profile: 'videocard'
         }],
-        image: { imageAltText: 'Microsoft Band', url: `${ PUBLIC_URL }assets/ms-band1.jpg` },
+        image: { imageAltText: 'Microsoft Band', url: assets['./ms-band1.jpg'] },
         autoloop: true,
         autostart: false
       }
@@ -31,4 +30,4 @@ async function processor(context: TurnContext) {
   });
 }
 
-export { help, name, processor }
+export { help, name, processor };

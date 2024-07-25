@@ -1,5 +1,7 @@
 import { TurnContext } from 'botbuilder';
 
+import assets from '../assets/index.js';
+
 const name = 'Audio attachment';
 
 function help() {
@@ -9,17 +11,15 @@ function help() {
 }
 
 async function processor(context: TurnContext) {
-  const { PUBLIC_URL } = process.env;
-
   await context.sendActivity({
     type: 'message',
     text: '',
     attachments: [{
       contentType: 'audio/mpeg',
-      contentUrl: `${ PUBLIC_URL }assets/bftest.mp3`,
+      contentUrl: assets['./bftest.mp3'],
       name: 'BotFramework Test'
     }]
   });
 }
 
-export { help, name, processor }
+export { help, name, processor };

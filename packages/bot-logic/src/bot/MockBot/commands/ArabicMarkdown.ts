@@ -8,9 +8,7 @@ function help() {
   };
 }
 
-async function processor(context: TurnContext, arg: string = "") {
-  const { PUBLIC_URL } = process.env;
-
+async function processor(context: TurnContext) {
   await context.sendActivity({
     type: "message",
     textFormat: "markdown",

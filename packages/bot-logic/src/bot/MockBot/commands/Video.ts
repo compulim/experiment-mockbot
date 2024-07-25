@@ -1,4 +1,5 @@
 import { TurnContext } from 'botbuilder';
+import assets from '../assets/index.js';
 
 const name = 'Video attachment';
 
@@ -11,8 +12,6 @@ function help() {
 }
 
 async function processor(context: TurnContext, _: string, provider: string) {
-  const { PUBLIC_URL } = process.env;
-
   switch (provider) {
     case 'vimeo':
       return await context.sendActivity({
@@ -39,11 +38,11 @@ async function processor(context: TurnContext, _: string, provider: string) {
         type: 'message',
         attachments: [{
           contentType: 'video/mp4',
-          contentUrl: `${ PUBLIC_URL }assets/msband.mp4`,
+          contentUrl: assets['./msband.mp4'],
           name: 'Microsoft Band 2'
         }]
       });
   }
 }
 
-export { help, name, processor }
+export { help, name, processor };

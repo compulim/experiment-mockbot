@@ -1,4 +1,5 @@
 import { TurnContext } from 'botbuilder';
+import assets from '../assets/index.js';
 
 const name = 'Layout';
 
@@ -13,7 +14,6 @@ function help() {
 }
 
 async function processor(context: TurnContext, ...args: string[]) {
-  const { PUBLIC_URL } = process.env;
   const arg = args.map(arg => (arg || '').trim()).filter(arg => arg).join(' ');
 
   switch (arg) {
@@ -23,7 +23,7 @@ async function processor(context: TurnContext, ...args: string[]) {
         text: 'This command show single attachment in **default (stacked)** layout',
         attachments: [{
           contentType: 'image/jpg',
-          contentUrl: `${ PUBLIC_URL }assets/surface1.jpg`,
+          contentUrl: assets['./surface1.jpg'],
           name: 'Microsoft Surface'
         }]
       });
@@ -38,7 +38,7 @@ async function processor(context: TurnContext, ...args: string[]) {
         attachmentLayout: 'carousel',
         attachments: [{
           contentType: 'image/jpg',
-          contentUrl: `${ PUBLIC_URL }assets/surface1.jpg`,
+          contentUrl: assets['./surface1.jpg'],
           name: 'Microsoft Surface'
         }]
       });
@@ -52,11 +52,11 @@ async function processor(context: TurnContext, ...args: string[]) {
         attachmentLayout: 'carousel',
         attachments: [{
           contentType: 'image/jpg',
-          contentUrl: `${ PUBLIC_URL }assets/surface1.jpg`,
+          contentUrl: assets['./surface1.jpg'],
           name: 'Microsoft Surface'
         }, {
           contentType: 'image/jpg',
-          contentUrl: `${ PUBLIC_URL }assets/surface2.jpg`,
+          contentUrl: assets['./surface2.jpg'],
           name: 'Microsoft Surface'
         }]
       });
@@ -70,7 +70,7 @@ async function processor(context: TurnContext, ...args: string[]) {
         attachmentLayout: 'carousel',
         attachments: [{
           contentType: 'image/jpg',
-          contentUrl: `${ PUBLIC_URL }assets/surface1.jpg`,
+          contentUrl: assets['./surface1.jpg'],
           name: 'Microsoft Surface'
         }, {
           contentType: 'text/plain',
@@ -92,7 +92,7 @@ async function processor(context: TurnContext, ...args: string[]) {
         text: 'This command show 4 attachments in **default (stacked)** layout',
         attachments: [{
           contentType: 'image/jpg',
-          contentUrl: `${ PUBLIC_URL }assets/surface1.jpg`,
+          contentUrl: assets['./surface1.jpg'],
           name: 'Microsoft Surface'
         }, {
           contentType: 'text/plain',
@@ -108,4 +108,4 @@ async function processor(context: TurnContext, ...args: string[]) {
   }
 }
 
-export { help, name, processor }
+export { help, name, processor };

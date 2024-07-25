@@ -9,8 +9,6 @@ function help() {
 }
 
 async function processor(context: TurnContext) {
-  const { PUBLIC_URL } = process.env;
-
   await context.sendActivity({
     type: 'message',
     attachmentLayout: 'carousel',

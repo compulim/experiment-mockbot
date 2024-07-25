@@ -1,4 +1,5 @@
 import { TurnContext } from 'botbuilder';
+import assets from '../assets/index.js';
 
 const name = 'Hero card';
 const mode = 'line';
@@ -12,8 +13,6 @@ function help() {
 }
 
 async function processor(context: TurnContext, args: string) {
-  const { PUBLIC_URL } = process.env;
-
   switch (args.trim().toLowerCase()) {
     case 'thumbnailcard long title':
       await context.sendActivity({
@@ -26,7 +25,7 @@ async function processor(context: TurnContext, args: string) {
             buttons: [],
             images: [{
               alt: 'Microsoft Surface Alt',
-              url: `${ PUBLIC_URL }assets/surface1.jpg`,
+              url: assets['./surface1.jpg'],
             }],
             title: 'This is a ThumbnailCard with a really, really long title that is intended to test the richCardsWrapTitle style option.',
           }
@@ -44,7 +43,7 @@ async function processor(context: TurnContext, args: string) {
             buttons: [],
             images: [{
               alt: 'Microsoft Surface Alt',
-              url: `${ PUBLIC_URL }assets/surface1.jpg`,
+              url: assets['./surface1.jpg'],
             }],
             title: 'Microsoft Surface Pro',
           }
@@ -53,4 +52,4 @@ async function processor(context: TurnContext, args: string) {
   }
 }
 
-export { help, mode, name, processor }
+export { help, mode, name, processor };

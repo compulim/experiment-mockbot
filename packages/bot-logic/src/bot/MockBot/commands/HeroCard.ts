@@ -1,5 +1,7 @@
 import { TurnContext } from 'botbuilder';
 
+import assets from '../assets/index.js';
+
 const name = 'Hero card';
 // Read argument as a single line
 const mode = 'line';
@@ -13,8 +15,6 @@ function help() {
 }
 
 async function processor(context: TurnContext, args: string) {
-  const { PUBLIC_URL } = process.env;
-
   const command = args.trim().toLowerCase();
 
   if (command === 'herocard long title') {
@@ -39,15 +39,15 @@ async function processor(context: TurnContext, args: string) {
                 tap: {
                   type: 'openUrl',
                   title: 'Tapped it!',
-                  value: `${PUBLIC_URL}testurl1.html`
+                  value: `https://aka.ms/testurl1.html`
                 },
-                url: `${PUBLIC_URL}assets/surface1.jpg`
+                url: assets['./surface1.jpg']
               }
             ],
             tap: {
               type: 'openUrl',
               title: 'Tapped it!',
-              value: `${PUBLIC_URL}testurl2.html`
+              value: `https://aka.ms/testurl2.html`
             },
             subtitle: 'This is the subtitle',
             title:
@@ -153,15 +153,15 @@ async function processor(context: TurnContext, args: string) {
                 tap: {
                   type: 'openUrl',
                   title: 'Tapped it!',
-                  value: `${PUBLIC_URL}testurl1.html`
+                  value: `https://aka.ms/testurl1.html`
                 },
-                url: `${PUBLIC_URL}assets/surface1.jpg`
+                url: assets['./surface1.jpg']
               }
             ],
             tap: {
               type: 'openUrl',
               title: 'Tapped it!',
-              value: `${PUBLIC_URL}testurl2.html`
+              value: `https://aka.ms/testurl2.html`
             },
             subtitle: 'This is the subtitle',
             text:

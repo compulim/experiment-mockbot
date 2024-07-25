@@ -1,5 +1,7 @@
 import { TurnContext } from 'botbuilder';
 
+import assets from '../assets/index.js';
+
 const name = 'Animation card';
 
 function help() {
@@ -9,8 +11,6 @@ function help() {
 }
 
 async function processor(context: TurnContext) {
-  const { PUBLIC_URL } = process.env;
-
   await context.sendActivity({
     type: 'message',
     attachments: [{
@@ -21,7 +21,7 @@ async function processor(context: TurnContext) {
         text: 'No buttons, No Image, Autoloop, Autostart, Sharable',
         media: [{
           profile: 'animation',
-          url: `${ PUBLIC_URL }assets/surface_anim.gif`,
+          url: assets['./surface_anim.gif']
         }],
         autoloop: true,
         autostart: true
@@ -30,4 +30,4 @@ async function processor(context: TurnContext) {
   });
 }
 
-export { help, name, processor }
+export { help, name, processor };

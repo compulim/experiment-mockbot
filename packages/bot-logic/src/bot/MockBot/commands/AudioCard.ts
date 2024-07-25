@@ -1,5 +1,7 @@
 import { TurnContext } from 'botbuilder';
 
+import assets from '../assets/index.js';
+
 const name = 'Audio card';
 
 function help() {
@@ -9,8 +11,6 @@ function help() {
 }
 
 async function processor(context: TurnContext) {
-  const { PUBLIC_URL } = process.env;
-
   await context.sendActivity({
     type: 'message',
     attachments: [{
@@ -21,7 +21,7 @@ async function processor(context: TurnContext) {
         text: 'No buttons, No Image, Autoloop, Sharable',
         media: [{
           profile: 'audiocard',
-          url: `${ PUBLIC_URL }assets/bftest.mp3`
+          url: assets['./bftest.mp3']
         }],
         autoloop: true,
         autostart: false
@@ -30,4 +30,4 @@ async function processor(context: TurnContext) {
   });
 }
 
-export { help, name, processor }
+export { help, name, processor };

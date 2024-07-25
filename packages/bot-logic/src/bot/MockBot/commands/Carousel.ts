@@ -1,5 +1,7 @@
 import { TurnContext } from 'botbuilder';
 
+import assets from '../assets/index.js';
+
 const name = 'Carousel layout';
 
 function help() {
@@ -9,8 +11,6 @@ function help() {
 }
 
 async function processor(context: TurnContext) {
-  const { PUBLIC_URL } = process.env;
-
   await context.sendActivity({
     type: 'message',
     text: '',
@@ -22,7 +22,7 @@ async function processor(context: TurnContext) {
         subtitle: 'This is the subtitle',
         text: 'Price: $XXX.XX USD',
         images: [{
-          url: `${ PUBLIC_URL }assets/surface1.jpg`,
+          url: assets['./surface1.jpg'],
           alt: 'Details about image 1'
         }],
         buttons: [{
@@ -42,7 +42,7 @@ async function processor(context: TurnContext) {
         subtitle: 'This is the subtitle',
         text: 'Price: $XXX.XX USD',
         images: [{
-          url: `${ PUBLIC_URL }assets/surface2.jpg`,
+          url: assets['./surface2.jpg'],
           alt: 'Details about image 2'
         }],
         buttons: [{
@@ -62,7 +62,7 @@ async function processor(context: TurnContext) {
         subtitle: 'This is the subtitle',
         text: 'Price: $XXX.XX USD',
         images: [{
-          url: `${ PUBLIC_URL }assets/surface3.jpg`,
+          url: assets['./surface3.jpg'],
           alt: 'Details about image 3'
         }],
         buttons: [{
@@ -82,7 +82,7 @@ async function processor(context: TurnContext) {
         subtitle: 'This is the subtitle',
         text: 'Price: $XXX.XX USD',
         images: [{
-          url: `${ PUBLIC_URL }assets/surface4.jpg`,
+          url: assets['./surface4.jpg'],
           alt: 'Details about image 4'
         }],
         buttons: [{
@@ -99,4 +99,4 @@ async function processor(context: TurnContext) {
   });
 }
 
-export { help, name, processor }
+export { help, name, processor };

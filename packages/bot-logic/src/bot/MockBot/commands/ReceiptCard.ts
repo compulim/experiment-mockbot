@@ -1,5 +1,7 @@
 import { TurnContext } from 'botbuilder';
 
+import assets from '../assets/index.js';
+
 const mode = 'line';
 const name = 'Receipt card';
 
@@ -11,8 +13,6 @@ function help() {
 }
 
 async function processor(context: TurnContext, args: string) {
-  const { PUBLIC_URL } = process.env;
-
   const command = args.trim().toLowerCase();
 
   switch (command) {
@@ -103,9 +103,9 @@ async function processor(context: TurnContext, args: string) {
                     tap: {
                       type: 'openUrl',
                       title: 'Tapped it!',
-                      value: `${PUBLIC_URL}testurl1.html`
+                      value: `https://aka.ms/testurl1.html`
                     },
-                    url: `${PUBLIC_URL}assets/surface1.jpg`
+                    url: assets['./surface1.jpg']
                   },
                   price: '$XXX'
                 },
@@ -118,7 +118,7 @@ async function processor(context: TurnContext, args: string) {
                       title: 'Call back!',
                       value: '1234567890'
                     },
-                    url: `${PUBLIC_URL}assets/surface2.jpg`
+                    url: assets['./surface2.jpg']
                   },
                   price: '$XXX'
                 },
@@ -163,7 +163,7 @@ async function processor(context: TurnContext, args: string) {
               tap: {
                 type: 'openUrl',
                 title: 'Tapped it!',
-                value: `${PUBLIC_URL}testurl2.html`
+                value: `https://aka.ms/testurl2.html`
               }
             }
           }
