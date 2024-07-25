@@ -49,6 +49,11 @@ import WeatherRainShowersNightPng from './weather-rain-showers-night.png';
 // @ts-ignore no typings for assets
 import WeatherSunnyPng from './weather-sunny.png';
 
+declare global {
+  // Defined in tsup.config.js.
+  const WITH_ASSETS: boolean | undefined;
+}
+
 const { WEBSITE_HOSTNAME } = parse(
   object({
     WEBSITE_HOSTNAME: optional(string(), 'http://localhost:8000/')
@@ -56,15 +61,15 @@ const { WEBSITE_HOSTNAME } = parse(
   process?.env || {}
 );
 
-const { WITH_ASSETS } = parse(
+const { WITH_ASSETS: withAssets } = parse(
   object({
     WITH_ASSETS: optional(boolean(), false)
   }),
-  globalThis
+  { WITH_ASSETS }
 );
 
 function buildURL(filename: string, contentType: string, base64: string): string {
-  if (WITH_ASSETS) {
+  if (withAssets) {
     return `data:${contentType};base64,${base64}`;
   }
 
