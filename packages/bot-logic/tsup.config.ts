@@ -2,7 +2,8 @@ import { defineConfig, type Options } from 'tsup';
 
 const BASE_OPTIONS: Options = {
   define: {
-    BUILD_TIME: JSON.stringify(new Date().toISOString())
+    BUILD_TIME: JSON.stringify(new Date().toISOString()),
+    WITH_ASSETS: 'false'
   },
   dts: true,
   format: ['esm'],
@@ -27,9 +28,7 @@ export default defineConfig([
   },
   {
     ...BASE_OPTIONS,
-    define: {
-      WITH_ASSETS: 'true'
-    },
+    define: { ...BASE_OPTIONS.define, WITH_ASSETS: 'true' },
     entry: { 'index.with-assets': './src/index.ts' },
     loader: {
       '.docx': 'base64',
