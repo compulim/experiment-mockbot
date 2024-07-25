@@ -9,14 +9,14 @@ export default defineConfig([
     entry: { index: './src/index.ts' },
     format: ['esm'],
     loader: {
-      '.docx': 'dataurl',
-      '.gif': 'dataurl',
-      '.jpg': 'dataurl',
-      '.mp3': 'dataurl',
-      '.mp4': 'dataurl',
-      '.png': 'dataurl',
-      '.svg': 'dataurl',
-      '.txt': 'dataurl'
+      '.docx': 'base64',
+      '.gif': 'base64',
+      '.jpg': 'base64',
+      '.mp3': 'base64',
+      '.mp4': 'base64',
+      '.png': 'base64',
+      '.svg': 'base64',
+      '.txt': 'base64'
     },
     onSuccess: 'touch ../bot-app/src/index.ts && touch ../pages-bot-bundle-as-chat-adapter/src/index.ts',
     sourcemap: true
