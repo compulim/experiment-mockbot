@@ -49,9 +49,9 @@ import WeatherRainShowersNightPng from './weather-rain-showers-night.png';
 // @ts-ignore no typings for assets
 import WeatherSunnyPng from './weather-sunny.png';
 
-const { WEBSITE_SITE_NAME } = parse(
+const { WEBSITE_HOSTNAME } = parse(
   object({
-    WEBSITE_SITE_NAME: optional(string(), 'http://localhost:8000/')
+    WEBSITE_HOSTNAME: optional(string(), 'http://localhost:8000/')
   }),
   process?.env || {}
 );
@@ -70,7 +70,7 @@ function buildURL(filename: string, contentType: string, base64: string): string
 
   const url = new URL(`https://localhost/assets/${filename}`);
 
-  url.hostname = WEBSITE_SITE_NAME;
+  url.hostname = WEBSITE_HOSTNAME;
 
   return url.toString();
 }
