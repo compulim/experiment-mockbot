@@ -1,13 +1,36 @@
-import { defineConfig } from 'tsup';
+import { defineConfig, type Options } from 'tsup';
+
+const BASE_OPTIONS: Options = {
+  define: {
+    BUILD_TIME: JSON.stringify(new Date().toISOString())
+  },
+  dts: true,
+  format: ['esm'],
+  sourcemap: true
+};
 
 export default defineConfig([
   {
-    define: {
-      BUILD_TIME: JSON.stringify(new Date().toISOString())
-    },
-    dts: true,
+    ...BASE_OPTIONS,
     entry: { index: './src/index.ts' },
-    format: ['esm'],
+    loader: {
+      '.docx': 'empty',
+      '.gif': 'empty',
+      '.jpg': 'empty',
+      '.mp3': 'empty',
+      '.mp4': 'empty',
+      '.png': 'empty',
+      '.svg': 'empty',
+      '.txt': 'empty'
+    },
+    onSuccess: 'touch ../bot-app/src/index.ts'
+  },
+  {
+    ...BASE_OPTIONS,
+    define: {
+      WITH_ASSETS: 'true'
+    },
+    entry: { 'index.with-assets': './src/index.ts' },
     loader: {
       '.docx': 'base64',
       '.gif': 'base64',
@@ -18,7 +41,6 @@ export default defineConfig([
       '.svg': 'base64',
       '.txt': 'base64'
     },
-    onSuccess: 'touch ../bot-app/src/index.ts && touch ../pages-bot-bundle-as-chat-adapter/src/index.ts',
-    sourcemap: true
+    onSuccess: 'touch ../pages-bot-bundle-as-chat-adapter/src/index.ts'
   }
 ]);

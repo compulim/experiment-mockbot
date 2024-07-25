@@ -1,8 +1,8 @@
 import 'dotenv/config';
 
-// @ts-expect-error we will turn everything into CJS
+// @ts-ignore we will turn everything into CJS
 import { DirectToEngineBotAdapter } from '@microsoft/botframework-mockbot-bot-direct-to-engine-bot-adapter';
-// @ts-expect-error we will turn everything into CJS
+// @ts-ignore we will turn everything into CJS
 import { MockBot } from '@microsoft/botframework-mockbot-bot-logic';
 import { AuthenticationConstants } from 'botframework-connector';
 import cors from 'cors';

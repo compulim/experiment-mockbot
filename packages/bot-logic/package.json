@@ -7,8 +7,16 @@
     "./dist/"
   ],
   "type": "module",
-  "main": "./dist/index.js",
-  "typings": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.js",
+      "import": "./dist/index.js"
+    },
+    "./with-assets": {
+      "types": "./dist/index.with-assets.d.js",
+      "import": "./dist/index.with-assets.js"
+    }
+  },
   "scripts": {
     "build": "tsup",
     "bump": "npm run bump:prod && npm run bump:dev && npm run bump:auditfix",

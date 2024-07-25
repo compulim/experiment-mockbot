@@ -1,4 +1,4 @@
-import { MockBot } from '@microsoft/botframework-mockbot-bot-logic';
+import { MockBot } from '@microsoft/botframework-mockbot-bot-logic/with-assets';
 import { createDirectLine } from '@microsoft/botframework-mockbot-webchat-offline-chat-adapter';
 // import { ConversationState, MemoryStorage, UserState } from 'botbuilder';
 
