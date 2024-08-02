@@ -1,4 +1,4 @@
-import { ActivityHandler, type ConversationState, type UserState } from 'botbuilder';
+import { ActivityHandler, type ConversationState, type TurnContext, type UserState } from 'botbuilder';
 
 import commands from './commands.js';
 import * as OAuthCard from './commands/OAuthCard2.js';
@@ -14,8 +14,14 @@ type BotInit = {
 };
 
 export default class MockBot extends ActivityHandler {
-  constructor({ conversationState }: BotInit) {
+  #conversationState: ConversationState;
+  #userState: UserState;
+
+  constructor({ conversationState, userState }: BotInit) {
     super();
+
+    this.#conversationState = conversationState;
+    this.#userState = userState;
 
     const membersAddedActivityAccessor = conversationState.createProperty('membersAddedActivityAccessor');
 
@@ -135,8 +141,6 @@ export default class MockBot extends ActivityHandler {
               .join('\r\n')}`
           );
         } else if (cleanedText === 'conversationstart') {
-          // await conversationState.load(context);
-
           const membersAddedActivity = await membersAddedActivityAccessor.get(context);
 
           await context.sendActivity(`\`\`\`\n${JSON.stringify(membersAddedActivity)}\n\`\`\``);
@@ -181,10 +185,16 @@ export default class MockBot extends ActivityHandler {
     });
 
     this.onMembersAdded(async (context, next) => {
-      await membersAddedActivityAccessor.set(context, { locale: context.activity.locale });
-      // await conversationState?.saveChanges(context);
+      await membersAddedActivityAccessor.set(context, context.activity.locale);
 
       await next();
     });
+  }
+
+  override async run(context: TurnContext): Promise<void> {
+    await super.run(context);
+
+    await this.#conversationState.saveChanges(context, false);
+    await this.#userState.saveChanges(context, false);
   }
 }

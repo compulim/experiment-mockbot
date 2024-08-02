@@ -4,6 +4,7 @@ import 'dotenv/config';
 import { DirectToEngineBotAdapter } from '@microsoft/botframework-mockbot-bot-direct-to-engine-bot-adapter';
 // @ts-ignore we will turn everything into CJS
 import { MockBot } from '@microsoft/botframework-mockbot-bot-logic';
+import { ConversationState, MemoryStorage, UserState } from 'botbuilder';
 import { AuthenticationConstants } from 'botframework-connector';
 import cors from 'cors';
 import express, { json } from 'express';
@@ -27,8 +28,12 @@ const { APPSETTING_WEBSITE_SITE_NAME, MicrosoftAppId, PORT } = parse(
   process.env
 );
 
+const memory = new MemoryStorage();
+const conversationState = new ConversationState(memory);
+const userState = new UserState(memory);
+
 const app = express();
-const bot = new MockBot({ botAppId: MicrosoftAppId || '' });
+const bot = new MockBot({ botAppId: MicrosoftAppId || '', conversationState, userState });
 const directToEngineAdapter = new DirectToEngineBotAdapter({ bot });
 
 app.use(cors());

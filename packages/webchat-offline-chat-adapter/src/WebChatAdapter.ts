@@ -89,13 +89,13 @@ export default class WebChatAdapter extends BotAdapter {
           const serviceActivity: ServiceActivity = {
             ...activity,
             id,
+            channelId: 'offline',
             conversation: {
               conversationType: 'offline',
               id: this.#conversationId,
               name: this.#conversationId,
               isGroup: false
             },
-            channelId: 'webchat',
             recipient: BOT_PROFILE,
             timestamp
           };
@@ -180,11 +180,12 @@ export default class WebChatAdapter extends BotAdapter {
 
       this.#activityDeferred.next({
         ...activity,
+        channelId: 'offline',
         conversation: {
           conversationType: 'offline',
           id: this.#conversationId,
           isGroup: false,
-          name: activity.conversation.id
+          name: this.#conversationId
         },
         from: {
           id: activity.from.id,
@@ -221,8 +222,8 @@ export default class WebChatAdapter extends BotAdapter {
       conversation: Object.freeze({
         id: this.#conversationId,
         isGroup: false,
-        conversationType: '',
-        name: ''
+        conversationType: 'offline',
+        name: this.#conversationId
       }),
       // @ts-expect-error okay to be overriden
       from: { id: this.#userId },
