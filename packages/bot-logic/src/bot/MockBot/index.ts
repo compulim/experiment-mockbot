@@ -23,7 +23,7 @@ export default class MockBot extends ActivityHandler {
     this.#conversationState = conversationState;
     this.#userState = userState;
 
-    const membersAddedActivityAccessor = conversationState.createProperty('membersAddedActivityAccessor');
+    const membersAddedActivityLocaleAccessor = conversationState.createProperty('membersAddedActivityLocaleAccessor');
 
     // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
     this.onMessage(async context => {
@@ -141,9 +141,9 @@ export default class MockBot extends ActivityHandler {
               .join('\r\n')}`
           );
         } else if (cleanedText === 'conversationstart') {
-          const membersAddedActivity = await membersAddedActivityAccessor.get(context);
+          const locale = await membersAddedActivityLocaleAccessor.get(context);
 
-          await context.sendActivity(`\`\`\`\n${JSON.stringify(membersAddedActivity)}\n\`\`\``);
+          await context.sendActivity(`\`\`\`\n${JSON.stringify(locale)}\n\`\`\``);
         } else if (attachments.length) {
           const result = commands.find(({ pattern }) => pattern.test('upload'));
 
@@ -185,7 +185,7 @@ export default class MockBot extends ActivityHandler {
     });
 
     this.onMembersAdded(async (context, next) => {
-      await membersAddedActivityAccessor.set(context, context.activity);
+      await membersAddedActivityLocaleAccessor.set(context, context.activity.locale);
 
       await next();
     });
