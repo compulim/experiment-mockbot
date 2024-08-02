@@ -83,24 +83,24 @@ app.use(
 );
 
 app.use(
-  '/api/token/speech',
-  handleError(async (req, res, next) =>
-    req.method === 'GET' || req.method === 'POST'
-      ? res.json({
-          region: SPEECH_SERVICES_REGION,
-          token: (await issueSpeechServicesAccessToken()).token
-        })
-      : next()
-  )
-);
-
-app.use(
   '/api/token/speech/msi',
   handleError(async (req, res, next) =>
     req.method === 'GET' || req.method === 'POST'
       ? res.json({
           region: SPEECH_SERVICES_REGION,
           token: (await issueSpeechServicesAccessToken({ useManagedIdentity: true })).token
+        })
+      : next()
+  )
+);
+
+app.use(
+  '/api/token/speech',
+  handleError(async (req, res, next) =>
+    req.method === 'GET' || req.method === 'POST'
+      ? res.json({
+          region: SPEECH_SERVICES_REGION,
+          token: (await issueSpeechServicesAccessToken()).token
         })
       : next()
   )
