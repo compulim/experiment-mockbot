@@ -135,7 +135,7 @@ export default class MockBot extends ActivityHandler {
               .join('\r\n')}`
           );
         } else if (cleanedText === 'conversationstart') {
-          await conversationState.load(context);
+          // await conversationState.load(context);
 
           const membersAddedActivity = await membersAddedActivityAccessor.get(context);
 
@@ -181,9 +181,9 @@ export default class MockBot extends ActivityHandler {
     });
 
     this.onMembersAdded(async (context, next) => {
-      (await membersAddedActivityAccessor.get(context, {})).locale = context.activity.locale;
+      await membersAddedActivityAccessor.set(context, { locale: context.activity.locale });
+      // await conversationState?.saveChanges(context);
 
-      await conversationState?.saveChanges(context);
       await next();
     });
   }
