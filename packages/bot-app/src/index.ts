@@ -37,7 +37,7 @@ const bot = new MockBot({ botAppId: MicrosoftAppId || '', conversationState, use
 const directToEngineAdapter = new DirectToEngineBotAdapter({ bot });
 
 app.use(cors());
-app.use(json());
+app.use(json({ limit: '2mb' }));
 app.use(directToEngineAdapter.createExpressRouter());
 
 app.get('/health.txt', (_, res) => {
