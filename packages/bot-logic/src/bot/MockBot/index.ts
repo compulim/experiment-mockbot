@@ -1,4 +1,4 @@
-import { ActivityHandler } from 'botbuilder';
+import { ActivityHandler, MessageFactory, type ConversationState, type UserState } from 'botbuilder';
 
 import commands from './commands.js';
 import * as OAuthCard from './commands/OAuthCard2.js';
@@ -9,10 +9,12 @@ let echoTypingAsMessageConversations = new Set();
 
 type BotInit = {
   botAppId: string;
+  conversationState?: ConversationState;
+  userState?: UserState;
 };
 
 export default class MockBot extends ActivityHandler {
-  constructor(_: BotInit) {
+  constructor({ botAppId, conversationState, userState }: BotInit) {
     super();
 
     // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
@@ -167,7 +169,19 @@ export default class MockBot extends ActivityHandler {
           (await context.sendActivity({ type: 'typing' }));
         echoTypingAsMessageConversations.has(context.activity.conversation.id) &&
           (await context.sendActivity(`Received \`typing\` at ${new Date().toLocaleString()}.`));
+      } else if (context.activity.type === 'conversationstart') {
+        await context.sendActivity(`\`\`\`\n${JSON.stringify(userState?.get(context).membersAddedActivity)}\n\`\`\``);
       }
+    });
+
+    this.onMembersAdded(async (context, next) => {
+      const state = userState?.get(context);
+
+      if (state) {
+        state.membersAddedActivity = { locale: context.activity.locale };
+      }
+
+      await next();
     });
   }
 }
