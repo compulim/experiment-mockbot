@@ -4,9 +4,6 @@ import commands from './commands.js';
 import * as OAuthCard from './commands/OAuthCard2.js';
 import reduceMap from './private/reduceMap.js';
 
-let echoTypingConversations = new Set();
-let echoTypingAsMessageConversations = new Set();
-
 type BotInit = {
   botAppId: string;
   conversationState: ConversationState;
@@ -23,6 +20,8 @@ export default class MockBot extends ActivityHandler {
     this.#conversationState = conversationState;
     this.#userState = userState;
 
+    const echoTypingAccessor = conversationState.createProperty('echoTyping');
+    const echoTypingAsMessageAccessor = conversationState.createProperty('echoTypingAsMessage');
     const membersAddedActivityAccessor = conversationState.createProperty('membersAddedActivityAccessor');
 
     // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
@@ -86,25 +85,23 @@ export default class MockBot extends ActivityHandler {
           }
         } else if (/^echo-typing$/i.test(cleanedText)) {
           // We should "echoTyping" in a per-conversation basis
-          const { id: conversationID } = context.activity.conversation;
 
-          if (echoTypingConversations.has(conversationID)) {
-            echoTypingConversations.delete(conversationID);
+          if (await echoTypingAccessor.get(context)) {
             await context.sendActivity('Will stop echoing `"typing"` event');
+            await echoTypingAccessor.delete(context);
           } else {
-            echoTypingConversations.add(conversationID);
             await context.sendActivity('Will echo `"typing"` event');
+            await echoTypingAccessor.set(context, true);
           }
         } else if (/^echo-typing-as-message$/i.test(cleanedText)) {
           // We should "echoTyping" in a per-conversation basis
-          const { id: conversationID } = context.activity.conversation;
 
-          if (echoTypingAsMessageConversations.has(conversationID)) {
-            echoTypingAsMessageConversations.delete(conversationID);
+          if (await echoTypingAsMessageAccessor.get(context)) {
             await context.sendActivity('Will stop echoing `"typing"` event as message');
+            await echoTypingAsMessageAccessor.delete(context);
           } else {
-            echoTypingAsMessageConversations.add(conversationID);
             await context.sendActivity('Will echo `"typing"` event as message');
+            await echoTypingAsMessageAccessor.set(context, true);
           }
         } else if (/^help$/i.test(cleanedText)) {
           const attachments = commands.map(({ help, name }) => {
@@ -176,12 +173,19 @@ export default class MockBot extends ActivityHandler {
             type: 'message'
           });
         }
-      } else if (context.activity.type === 'typing') {
-        echoTypingConversations.has(context.activity.conversation.id) &&
-          (await context.sendActivity({ type: 'typing' }));
-        echoTypingAsMessageConversations.has(context.activity.conversation.id) &&
-          (await context.sendActivity(`Received \`typing\` at ${new Date().toLocaleString()}.`));
       }
+    });
+
+    this.onTyping(async (context, next) => {
+      if (await echoTypingAccessor.get(context)) {
+        await context.sendActivity({ type: 'typing' });
+      }
+
+      if (await echoTypingAsMessageAccessor.get(context)) {
+        await context.sendActivity(`Received \`typing\` at ${new Date().toLocaleString()}.`);
+      }
+
+      await next();
     });
 
     this.onMembersAdded(async (context, next) => {
