@@ -15,9 +15,7 @@ type ConnectionStatusOnline = 2;
 
 type ServiceActivity = Readonly<
   Omit<Activity, 'timestamp'> & {
-    conversation: {
-      id: LocalConversationId;
-    };
+    conversation: { id: LocalConversationId };
     timestamp: string;
   }
 >;
@@ -32,6 +30,10 @@ type ChatAdapter = {
   postActivity(activity: Activity): Observable<string>;
 };
 
+type WebChatAdapterInit = {
+  conversationStartProperties?: { locale?: string | undefined } | undefined;
+};
+
 /**
  * Custom BotAdapter used for deploying a bot in a browser.
  */
@@ -44,7 +46,7 @@ export default class WebChatAdapter extends BotAdapter {
   #logic: LogicHandler;
   #userId: string;
 
-  constructor() {
+  constructor(init: WebChatAdapterInit) {
     super();
 
     this.#conversationId = `c_${crypto.randomUUID()}`;
@@ -59,8 +61,11 @@ export default class WebChatAdapter extends BotAdapter {
       this.#connectionStatusDeferred.next(2 satisfies ConnectionStatusOnline);
 
       setTimeout(() => {
+        const locale = init?.conversationStartProperties?.locale;
+
         this.onReceive(
           Object.freeze({
+            ...(locale ? { locale } : {}),
             membersAdded: [Object.freeze({ id: this.#userId, name: 'User', role: 'user' })],
             type: 'conversationUpdate'
           })

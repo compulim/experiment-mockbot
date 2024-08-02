@@ -28,7 +28,7 @@ export default memo(function AppProvider({ children }: Props) {
   const botAppURL = useMemo(() => BOT_APP_URL || DEFAULT_BOT_APP_URL, []);
   const [webChatAdapters, setWebChatAdapters] = useState<WebChatAdapters | undefined>(undefined);
   const [token, setToken] = useState<string | undefined>(undefined);
-  const protocolState = Object.freeze(useState<Protocol>('direct line'));
+  const protocolState = Object.freeze(useState<Protocol>('offline'));
 
   const webChatAdaptersState = useMemo(
     () => Object.freeze(webChatAdapters ? ([webChatAdapters] as const) : []),
@@ -118,7 +118,13 @@ export default memo(function AppProvider({ children }: Props) {
           break;
 
         case 'offline':
-          setWebChatAdapters({ directLine: createBotAsChatAdapter() as any });
+          setWebChatAdapters({
+            directLine: createBotAsChatAdapter({
+              conversationStartProperties: {
+                locale: navigator.language
+              }
+            }) as any
+          });
 
           break;
 

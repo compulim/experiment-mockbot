@@ -1,3 +1,3 @@
-import { createDirectLine } from './createDirectLine.js';
+import { createDirectLine, type CreateDirectLineInit } from './createDirectLine.js';
 
-export { createDirectLine };
+export { createDirectLine, type CreateDirectLineInit };

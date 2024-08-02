@@ -3,13 +3,14 @@ import { type ActivityHandler } from 'botbuilder';
 import { type LogicHandler } from './LogicHandler.js';
 import WebChatAdapter from './WebChatAdapter.js';
 
-type CreateDirectLineInit = {
+export type CreateDirectLineInit = {
   bot: ActivityHandler;
-  processor?: LogicHandler;
+  conversationStartProperties?: { locale?: string | undefined } | undefined;
+  processor?: LogicHandler | undefined;
 };
 
-export const createDirectLine = ({ bot, processor }: CreateDirectLineInit) => {
-  const botAdapter = new WebChatAdapter();
+export const createDirectLine = ({ bot, conversationStartProperties, processor }: CreateDirectLineInit) => {
+  const botAdapter = new WebChatAdapter({ conversationStartProperties });
 
   if (!processor) {
     botAdapter.processActivity(context => bot.run(context));

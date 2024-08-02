@@ -1,4 +1,4 @@
-import { ActivityHandler, MessageFactory, type ConversationState, type UserState } from 'botbuilder';
+import { ActivityHandler, type ConversationState, type UserState } from 'botbuilder';
 
 import commands from './commands.js';
 import * as OAuthCard from './commands/OAuthCard2.js';
@@ -14,8 +14,10 @@ type BotInit = {
 };
 
 export default class MockBot extends ActivityHandler {
-  constructor({ botAppId, conversationState, userState }: BotInit) {
+  constructor({ conversationState }: BotInit) {
     super();
+
+    const membersAddedActivityAccessor = conversationState?.createProperty('membersAddedActivityAccessor');
 
     // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
     this.onMessage(async context => {
@@ -132,6 +134,12 @@ export default class MockBot extends ActivityHandler {
               .sort()
               .join('\r\n')}`
           );
+        } else if (cleanedText === 'conversationstart') {
+          await conversationState?.load(context);
+
+          const membersAddedActivity = await membersAddedActivityAccessor?.get(context);
+
+          await context.sendActivity(`\`\`\`\n${JSON.stringify(membersAddedActivity)}\n\`\`\``);
         } else if (attachments.length) {
           const result = commands.find(({ pattern }) => pattern.test('upload'));
 
@@ -169,18 +177,13 @@ export default class MockBot extends ActivityHandler {
           (await context.sendActivity({ type: 'typing' }));
         echoTypingAsMessageConversations.has(context.activity.conversation.id) &&
           (await context.sendActivity(`Received \`typing\` at ${new Date().toLocaleString()}.`));
-      } else if (context.activity.type === 'conversationstart') {
-        await context.sendActivity(`\`\`\`\n${JSON.stringify(userState?.get(context).membersAddedActivity)}\n\`\`\``);
       }
     });
 
     this.onMembersAdded(async (context, next) => {
-      const state = userState?.get(context);
+      await membersAddedActivityAccessor?.set(context, { locale: context.activity.locale });
 
-      if (state) {
-        state.membersAddedActivity = { locale: context.activity.locale };
-      }
-
+      await conversationState?.saveChanges(context);
       await next();
     });
   }
