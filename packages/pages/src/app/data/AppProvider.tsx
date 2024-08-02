@@ -43,13 +43,20 @@ export default memo(function AppProvider({ children }: Props) {
     setToken(undefined);
 
     (async (protocol, signal) => {
+      const conversationStartProperties = { locale: navigator.language };
+
       switch (protocol) {
         case 'direct line':
           {
             const { token } = await fetchJSON(new URL('api/token/directline', TOKEN_APP_URL), { signal });
 
             if (!signal.aborted) {
-              setWebChatAdapters({ directLine: createDirectLine({ token }) as unknown as DirectLineJSBotConnection });
+              setWebChatAdapters({
+                directLine: createDirectLine({
+                  conversationStartProperties,
+                  token
+                }) as unknown as DirectLineJSBotConnection
+              });
               setToken(token);
             }
           }
@@ -120,9 +127,7 @@ export default memo(function AppProvider({ children }: Props) {
         case 'offline':
           setWebChatAdapters({
             directLine: createBotAsChatAdapter({
-              conversationStartProperties: {
-                locale: navigator.language
-              }
+              conversationStartProperties: { locale: navigator.language }
             }) as any
           });
 

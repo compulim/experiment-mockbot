@@ -185,7 +185,7 @@ export default class MockBot extends ActivityHandler {
     });
 
     this.onMembersAdded(async (context, next) => {
-      await membersAddedActivityAccessor.set(context, context.activity.locale);
+      await membersAddedActivityAccessor.set(context, context.activity);
 
       await next();
     });
