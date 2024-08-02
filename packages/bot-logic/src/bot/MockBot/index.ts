@@ -9,15 +9,15 @@ let echoTypingAsMessageConversations = new Set();
 
 type BotInit = {
   botAppId: string;
-  conversationState?: ConversationState;
-  userState?: UserState;
+  conversationState: ConversationState;
+  userState: UserState;
 };
 
 export default class MockBot extends ActivityHandler {
   constructor({ conversationState }: BotInit) {
     super();
 
-    const membersAddedActivityAccessor = conversationState?.createProperty('membersAddedActivityAccessor');
+    const membersAddedActivityAccessor = conversationState.createProperty('membersAddedActivityAccessor');
 
     // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
     this.onMessage(async context => {
@@ -135,9 +135,9 @@ export default class MockBot extends ActivityHandler {
               .join('\r\n')}`
           );
         } else if (cleanedText === 'conversationstart') {
-          await conversationState?.load(context);
+          await conversationState.load(context);
 
-          const membersAddedActivity = await membersAddedActivityAccessor?.get(context);
+          const membersAddedActivity = await membersAddedActivityAccessor.get(context);
 
           await context.sendActivity(`\`\`\`\n${JSON.stringify(membersAddedActivity)}\n\`\`\``);
         } else if (attachments.length) {
@@ -181,7 +181,7 @@ export default class MockBot extends ActivityHandler {
     });
 
     this.onMembersAdded(async (context, next) => {
-      await membersAddedActivityAccessor?.set(context, { locale: context.activity.locale });
+      (await membersAddedActivityAccessor.get(context, {})).locale = context.activity.locale;
 
       await conversationState?.saveChanges(context);
       await next();
