@@ -268,6 +268,10 @@ resource botApp 'Microsoft.Web/sites@2023-12-01' = {
           value: 'UserAssignedMSI'
         }
         {
+          name: 'OAUTH_CONNECTION_NAME'
+          value: botDummyOAuthConnection.name
+        }
+        {
           name: 'WEBSITE_RUN_FROM_PACKAGE'
           value: '1'
         }
