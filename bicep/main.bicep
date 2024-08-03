@@ -131,6 +131,7 @@ resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
 }
 
 resource botDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2023-09-15-preview' = {
+  location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
   name: 'DummyOAuthConnection'
   parent: bot
   properties: {
