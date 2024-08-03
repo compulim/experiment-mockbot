@@ -130,6 +130,18 @@ resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   }
 }
 
+resource botDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2023-09-15-preview' = {
+  name: 'DummyOAuthConnection'
+  parent: bot
+  properties: {
+    clientId: 'dummy'
+    clientSecret: 'dummy'
+    id: 'dummy'
+    name: 'Dummy'
+    serviceProviderId: 'd05eaacf-1593-4603-9c6c-d4d8fffa46cb' // "GitHub"
+  }
+}
+
 resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
   name: 'DirectLineChannel'
   parent: bot
