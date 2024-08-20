@@ -14,7 +14,7 @@
     "bump:prod": "PACKAGES_TO_BUMP=$(cat package.json | jq -r '(.pinDependencies // {}) as $P | (.localPeerDependencies // {}) as $L | (.dependencies // {}) | to_entries | map(select(.key as $K | $L | has($K) | not)) | map(.key + \"@\" + ($P[.key] // [\"latest\"])[0]) | join(\" \")') && [ ! -z \"$PACKAGES_TO_BUMP\" ] && npm install $PACKAGES_TO_BUMP || true",
     "precommit": "npm run precommit:typescript",
     "precommit:typescript": "tsc --project ./src/tsconfig.json",
-    "start": "npm run build -- --servedir=./public"
+    "start": "npm run build -- --define:IS_DEVELOPMENT=true --servedir=./public --watch"
   },
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.5",
@@ -25,6 +25,7 @@
   "dependencies": {
     "@microsoft/botframework-mockbot-pages-bot-bundle-as-chat-adapter": "^0.0.0-0",
     "botframework-webchat": "^4.18.0",
+    "botframework-webchat-fluent-theme": "^4.18.0",
     "copilot-studio-direct-to-engine-chat-adapter": "^0.0.0-main.20240702-213245.f263309",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

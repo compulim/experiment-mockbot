@@ -2,9 +2,10 @@ import { ActivityHandler, type ConversationState, type TurnContext, type UserSta
 
 import commands from './commands.js';
 import * as OAuthCard from './commands/OAuthCard2.js';
+import aToZ from './commands2/aToZ.js';
 import reduceMap from './private/reduceMap.js';
 
-type BotInit = {
+export type BotInit = {
   botAppId: string;
   conversationState: ConversationState;
   userState: UserState;
@@ -14,8 +15,10 @@ export default class MockBot extends ActivityHandler {
   #conversationState: ConversationState;
   #userState: UserState;
 
-  constructor({ conversationState, userState }: BotInit) {
+  constructor(init: BotInit) {
     super();
+
+    const { conversationState, userState } = init;
 
     this.#conversationState = conversationState;
     this.#userState = userState;
@@ -128,6 +131,8 @@ export default class MockBot extends ActivityHandler {
         const locale = await membersAddedActivityAccessor.get(context);
 
         await context.sendActivity(`\`\`\`\n${JSON.stringify(locale, null, 2)}\n\`\`\``);
+      } else if (cleanedText === 'atoz') {
+        return aToZ(init, context);
       } else if (attachments.length) {
         const result = commands.find(({ pattern }) => pattern.test('upload'));
 

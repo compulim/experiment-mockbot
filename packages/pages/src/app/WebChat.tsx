@@ -1,4 +1,5 @@
 import ReactWebChat from 'botframework-webchat';
+import { FluentThemeProvider } from 'botframework-webchat-fluent-theme';
 import { memo, useMemo } from 'react';
 import useWebChatAdapters from './data/useWebChatAdapters';
 
@@ -14,5 +15,11 @@ export default memo(function WebChat() {
   const [webChatAdapters] = useWebChatAdapters();
   const key = useMemo(() => Date.now(), [webChatAdapters]);
 
-  return webChatAdapters && <ReactWebChat {...webChatAdapters} key={key} sendTypingIndicator={true} />;
+  return (
+    webChatAdapters && (
+      <FluentThemeProvider>
+        <ReactWebChat {...webChatAdapters} key={key} sendTypingIndicator={true} />
+      </FluentThemeProvider>
+    )
+  );
 });
