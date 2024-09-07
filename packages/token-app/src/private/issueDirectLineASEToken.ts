@@ -50,6 +50,7 @@ export default async function issueDirectLineASEToken(
 
   if (response.status === 200) {
     return Object.freeze({
+      domain: new URL('/.bot/v3/directline', url).href,
       token: parse(directLineASEIssueTokenResponse, JSON.parse(response.bodyAsText || '')).token
     });
   }
