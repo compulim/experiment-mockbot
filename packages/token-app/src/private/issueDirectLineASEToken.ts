@@ -13,7 +13,7 @@ const directLineASEIssueTokenResponse = object({ token: string() });
 
 export default async function issueDirectLineASEToken(
   init: { useManagedIdentity?: boolean | undefined } = {}
-): Promise<Readonly<{ token: string }>> {
+): Promise<Readonly<{ domain: string; token: string }>> {
   const { AZURE_CLIENT_ID, BOT_APP_HOSTNAME, DIRECT_LINE_SECRET } = parse(envSchema, process.env);
 
   const client = new ServiceClient();

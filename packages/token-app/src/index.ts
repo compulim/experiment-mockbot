@@ -75,11 +75,15 @@ app.use(
 
 app.use(
   '/api/token/directlinease',
-  handleError(async (req, res, next) =>
-    req.method === 'GET' || req.method === 'POST'
-      ? res.json({ token: (await issueDirectLineASEToken()).token })
-      : next()
-  )
+  handleError(async (req, res, next) => {
+    if (req.method === 'GET' || req.method === 'POST') {
+      const { domain, token } = await issueDirectLineASEToken();
+
+      return res.json({ domain, token });
+    }
+
+    return next();
+  })
 );
 
 app.use(
