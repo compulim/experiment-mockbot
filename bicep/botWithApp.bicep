@@ -197,7 +197,7 @@ resource botReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01'
   kind: 'AzureCLI'
   location: location
   #disable-next-line use-stable-resource-identifiers
-  name: '${deploymentFamilyName}-script'
+  name: '${deploymentFamilyName}-reconfigure-script'
   properties: {
     arguments: '\\"${app.properties.defaultHostName}\\" \\"${bot.name}\\" \\"${resourceGroup().name}\\"'
     azCliVersion: '2.61.0'
