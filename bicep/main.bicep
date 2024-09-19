@@ -123,7 +123,7 @@ resource echoBotIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
   name: '${echoBotName}-identity'
 }
 
-resource echoBot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
+resource echoBot 'Microsoft.BotService/botServices@2022-09-15' = {
   kind: 'azurebot'
   location: 'global'
   name: echoBotName
@@ -140,7 +140,7 @@ resource echoBot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   }
 }
 
-resource echoBotDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2023-09-15-preview' = {
+resource echoBotDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2022-09-15' = {
   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
   name: '${echoBotName}-dummy-oauth-connection'
   parent: echoBot
@@ -176,7 +176,7 @@ resource echoBotDirectLineChannel 'Microsoft.BotService/botServices/channels@202
 }
 
 // Direct Line Speech is not working with `disableLocalAuth`, need investigations.
-// resource echoBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+// resource echoBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
 //   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
 //   name: '${echoBotName}-direct-line-speech-channel'
 //   parent: echoBot
@@ -374,7 +374,7 @@ resource mockBotIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
   name: '${mockBotName}-identity'
 }
 
-resource mockBot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
+resource mockBot 'Microsoft.BotService/botServices@2022-09-15' = {
   kind: 'azurebot'
   location: 'global'
   name: mockBotName
@@ -391,7 +391,7 @@ resource mockBot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   }
 }
 
-resource mockBotDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2023-09-15-preview' = {
+resource mockBotDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2022-09-15' = {
   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
   name: '${mockBotName}-dummy-oauth-connection'
   parent: mockBot
@@ -427,7 +427,7 @@ resource mockBotDirectLineChannel 'Microsoft.BotService/botServices/channels@202
 }
 
 // Direct Line Speech is not working with `disableLocalAuth`, need investigations.
-// resource mockBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+// resource mockBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
 //   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
 //   name: '${mockBotName}-direct-line-speech-channel'
 //   parent: mockBot
