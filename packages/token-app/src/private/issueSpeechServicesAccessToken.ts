@@ -4,21 +4,29 @@ import { ManagedIdentityCredential } from '@azure/identity';
 import { object, parse, string } from 'valibot';
 
 const envSchema = object({
-  AZURE_CLIENT_ID: string(),
+  ECHO_BOT_AZURE_CLIENT_ID: string(),
+  MOCK_BOT_AZURE_CLIENT_ID: string(),
   SPEECH_SERVICES_REGION: string(),
   SPEECH_SERVICES_RESOURCE_ID: string(),
   SPEECH_SERVICES_SUBSCRIPTION_KEY: string()
 });
 
 export default async function issueSpeechServicesAccessToken(
-  init: { useManagedIdentity?: boolean | undefined } = {}
+  init: { bot?: 'echo bot' | 'mock bot' | undefined; useManagedIdentity?: boolean | undefined } = {}
 ): Promise<Readonly<{ token: string }>> {
-  const { AZURE_CLIENT_ID, SPEECH_SERVICES_REGION, SPEECH_SERVICES_RESOURCE_ID, SPEECH_SERVICES_SUBSCRIPTION_KEY } =
-    parse(envSchema, process.env);
+  const {
+    ECHO_BOT_AZURE_CLIENT_ID,
+    MOCK_BOT_AZURE_CLIENT_ID,
+    SPEECH_SERVICES_REGION,
+    SPEECH_SERVICES_RESOURCE_ID,
+    SPEECH_SERVICES_SUBSCRIPTION_KEY
+  } = parse(envSchema, process.env);
 
   // https://github.com/MicrosoftDocs/azure-docs/blob/main/articles/ai-services/speech-service/includes/cognitive-services-speech-service-rest-auth.md
   if (init.useManagedIdentity) {
-    const tokenCredential = new ManagedIdentityCredential({ clientId: AZURE_CLIENT_ID });
+    const tokenCredential = new ManagedIdentityCredential({
+      clientId: init.bot === 'echo bot' ? ECHO_BOT_AZURE_CLIENT_ID : MOCK_BOT_AZURE_CLIENT_ID
+    });
 
     const accessToken = await tokenCredential.getToken('https://cognitiveservices.azure.com');
 

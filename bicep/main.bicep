@@ -25,10 +25,12 @@ param deployTime string = utcNow()
 param location string = 'westus'
 // param location string = resourceGroup().location
 
-param botName string = '${deploymentFamilyName}-bot'
 param keyVaultName string = '${deploymentFamilyName}-key'
 param logAnalyticsName string = '${deploymentFamilyName}-log'
-param mockbot1AppName string = '${deploymentFamilyName}-mockbot1-app'
+param echoBotAppName string = '${deploymentFamilyName}-echo-bot-app'
+param echoBotName string = '${deploymentFamilyName}-echo-bot'
+param mockBotAppName string = '${deploymentFamilyName}-mock-bot-app'
+param mockBotName string = '${deploymentFamilyName}-mock-bot'
 param speechServicesName string = '${deploymentFamilyName}-speech'
 param tokenAppName string = '${deploymentFamilyName}-token-app'
 
@@ -92,8 +94,16 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   }
 }
 
-resource directLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  name: 'direct-line-secret'
+resource echoBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  name: '${echoBotName}-direct-line-secret'
+  parent: keyVault
+  properties: {
+    value: 'PLACEHOLDER' // Creates an empty slot and we will fill it out later.
+  }
+}
+
+resource mockBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  name: '${mockBotName}-direct-line-secret'
   parent: keyVault
   properties: {
     value: 'PLACEHOLDER' // Creates an empty slot and we will fill it out later.
@@ -108,21 +118,21 @@ resource speechServicesSubscriptionKey 'Microsoft.KeyVault/vaults/secrets@2023-0
   }
 }
 
-resource botIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
+resource echoBotIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
-  name: '${botName}-identity'
+  name: '${echoBotName}-identity'
 }
 
-resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
+resource echoBot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   kind: 'azurebot'
   location: 'global'
-  name: botName
+  name: echoBotName
   properties: {
-    displayName: botName
+    displayName: echoBotName
     endpoint: 'https://dummy.localhost/api/messages' // Chicken-and-egg problem, we will set it later.
-    msaAppId: botIdentity.properties.clientId
-    msaAppMSIResourceId: botIdentity.id
-    msaAppTenantId: botIdentity.properties.tenantId
+    msaAppId: echoBotIdentity.properties.clientId
+    msaAppMSIResourceId: echoBotIdentity.id
+    msaAppTenantId: echoBotIdentity.properties.tenantId
     msaAppType: 'UserAssignedMSI'
   }
   sku: {
@@ -130,10 +140,10 @@ resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   }
 }
 
-resource botDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2023-09-15-preview' = {
+resource echoBotDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2023-09-15-preview' = {
   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
   name: 'DummyOAuthConnection'
-  parent: bot
+  parent: echoBot
   properties: {
     clientId: 'dummy'
     clientSecret: 'dummy'
@@ -143,9 +153,9 @@ resource botDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2
   }
 }
 
-resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+resource echoBotDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
   name: 'DirectLineChannel'
-  parent: bot
+  parent: echoBot
   properties: {
     channelName: 'DirectLineChannel'
     properties: {
@@ -166,10 +176,10 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09
 }
 
 // Direct Line Speech is not working with `disableLocalAuth`, need investigations.
-// resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+// resource echoBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
 //   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
 //   name: 'DirectLineSpeechChannel'
-//   parent: bot
+//   parent: echoBot
 //   properties: {
 //     channelName: 'DirectLineSpeechChannel'
 //     properties: {
@@ -184,10 +194,10 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09
 // }
 
 // Disable Direct Line Speech for now.
-resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+resource echoBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-  name: 'DirectLineSpeechChannel'
-  parent: bot
+  name: '${echoBotName}-DirectLineSpeechChannel'
+  parent: echoBot
   properties: {
     channelName: 'DirectLineSpeechChannel'
     properties: {
@@ -196,9 +206,9 @@ resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2
   }
 }
 
-resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
-  name: 'WebChatChannel'
-  parent: bot
+resource echoBotWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+  name: '${echoBotName}-WebChatChannel'
+  parent: echoBot
   properties: {
     channelName: 'WebChatChannel'
     properties: {
@@ -207,14 +217,14 @@ resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15
   }
 }
 
-resource mockbot1AppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
+resource echoBotAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
-  name: '${mockbot1AppName}-identity'
+  name: '${echoBotAppName}-identity'
 }
 
-resource mockbot1AppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
+resource echoBotAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   location: location
-  name: '${mockbot1AppName}-plan'
+  name: '${echoBotAppName}-plan'
   properties: {
     zoneRedundant: false
   }
@@ -226,20 +236,20 @@ resource mockbot1AppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   }
 }
 
-resource mockbot1App 'Microsoft.Web/sites@2023-12-01' = {
+resource echoBotApp 'Microsoft.Web/sites@2023-12-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${mockbot1AppIdentity.id}': {}
-      '${botIdentity.id}': {}
+      '${echoBotAppIdentity.id}': {}
+      '${echoBotIdentity.id}': {}
     }
   }
   location: location
-  name: mockbot1AppName
+  name: echoBotAppName
   properties: {
     clientAffinityEnabled: false
     httpsOnly: true
-    serverFarmId: mockbot1AppPlan.id
+    serverFarmId: echoBotAppPlan.id
     siteConfig: {
       alwaysOn: true
       appSettings: [
@@ -253,15 +263,15 @@ resource mockbot1App 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'DirectLineExtensionKey'
-          value: botDirectLineChannel.properties.properties.extensionKey1
+          value: echoBotDirectLineChannel.properties.properties.extensionKey1
         }
         {
           name: 'MicrosoftAppId'
-          value: botIdentity.properties.clientId
+          value: echoBotIdentity.properties.clientId
         }
         {
           name: 'MicrosoftAppTenantId'
-          value: botIdentity.properties.tenantId
+          value: echoBotIdentity.properties.tenantId
         }
         {
           name: 'MicrosoftAppType'
@@ -269,7 +279,7 @@ resource mockbot1App 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'OAUTH_CONNECTION_NAME'
-          value: botDummyOAuthConnection.name
+          value: echoBotDummyOAuthConnection.name
         }
         {
           name: 'WEBSITE_RUN_FROM_PACKAGE'
@@ -288,7 +298,7 @@ resource mockbot1App 'Microsoft.Web/sites@2023-12-01' = {
   }
 }
 
-resource botReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+resource echoBotReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -298,9 +308,9 @@ resource botReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01'
   kind: 'AzureCLI'
   location: location
   #disable-next-line use-stable-resource-identifiers
-  name: '${bot.name}-script'
+  name: '${echoBot.name}-script'
   properties: {
-    arguments: '\\"${mockbot1App.properties.defaultHostName}\\" \\"${bot.name}\\" \\"${resourceGroup().name}\\"'
+    arguments: '\\"${echoBotApp.properties.defaultHostName}\\" \\"${echoBot.name}\\" \\"${resourceGroup().name}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     forceUpdateTag: deployTime
@@ -308,20 +318,20 @@ resource botReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01'
     scriptContent: '''
       set -eo pipefail
 
+      BOT_APP_NAME=$1
       BOT_NAME=$2
-      MOCKBOT1_APP_NAME=$1
       RESOURCE_GROUP_NAME=$3
 
       az bot update \
         --name $BOT_NAME \
         --resource-group $RESOURCE_GROUP_NAME \
-        --endpoint https://$MOCKBOT1_APP_NAME/api/messages
+        --endpoint https://$BOT_APP_NAME/api/messages
     '''
     timeout: 'PT2M'
   }
 }
 
-resource keyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -333,7 +343,258 @@ resource keyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08
   #disable-next-line use-stable-resource-identifiers
   name: '${keyVaultName}-script'
   properties: {
-    arguments: '\\"${bot.name}\\" \\"${directLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
+    arguments: '\\"${echoBot.name}\\" \\"${echoBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
+    azCliVersion: '2.61.0'
+    cleanupPreference: 'Always'
+    forceUpdateTag: deployTime
+    retentionInterval: 'PT1H' // Minimal retention is 1 hour.
+    scriptContent: '''
+      set -eo pipefail
+
+      BOT_NAME=$1
+      DIRECT_LINE_SECRET_SECRET_NAME=$2
+      KEY_VAULT_NAME=$3
+      RESOURCE_GROUP_NAME=$4
+
+      # Direct Line secret can only be retrieved via HTTP POST call, thus, "update" command is required.
+      DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
+
+      az keyvault secret set \
+        --name $DIRECT_LINE_SECRET_SECRET_NAME \
+        --output none \
+        --value $DIRECT_LINE_SECRET \
+        --vault-name $KEY_VAULT_NAME
+    '''
+    timeout: 'PT2M'
+  }
+}
+
+resource mockBotIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
+  location: location
+  name: '${mockBotName}-identity'
+}
+
+resource mockBot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
+  kind: 'azurebot'
+  location: 'global'
+  name: mockBotName
+  properties: {
+    displayName: mockBotName
+    endpoint: 'https://dummy.localhost/api/messages' // Chicken-and-egg problem, we will set it later.
+    msaAppId: mockBotIdentity.properties.clientId
+    msaAppMSIResourceId: mockBotIdentity.id
+    msaAppTenantId: mockBotIdentity.properties.tenantId
+    msaAppType: 'UserAssignedMSI'
+  }
+  sku: {
+    name: 'S1'
+  }
+}
+
+resource mockBotDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2023-09-15-preview' = {
+  location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
+  name: 'DummyOAuthConnection'
+  parent: mockBot
+  properties: {
+    clientId: 'dummy'
+    clientSecret: 'dummy'
+    id: 'dummy'
+    name: 'Dummy'
+    serviceProviderId: 'd05eaacf-1593-4603-9c6c-d4d8fffa46cb' // "GitHub"
+  }
+}
+
+resource mockBotDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+  name: 'DirectLineChannel'
+  parent: mockBot
+  properties: {
+    channelName: 'DirectLineChannel'
+    properties: {
+      sites: [
+        {
+          isEnabled: true
+          isSecureSiteEnabled: true
+          isV1Enabled: false
+          isV3Enabled: true
+          siteName: 'Default Site'
+          trustedOrigins: [
+            'https://compulim.github.io'
+          ]
+        }
+      ]
+    }
+  }
+}
+
+// Direct Line Speech is not working with `disableLocalAuth`, need investigations.
+// resource mockBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+//   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
+//   name: 'DirectLineSpeechChannel'
+//   parent: mockBot
+//   properties: {
+//     channelName: 'DirectLineSpeechChannel'
+//     properties: {
+//       cognitiveServiceRegion: speechServices.location
+//       cognitiveServiceResourceId: speechServices.id
+//       cognitiveServiceSubscriptionKey: speechServices.listKeys().key1
+//       // customSpeechModelId: ''
+//       // customVoiceDeploymentId: ''
+//       isEnabled: true
+//     }
+//   }
+// }
+
+// Disable Direct Line Speech for now.
+resource mockBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+  location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
+  name: '${mockBotName}-DirectLineSpeechChannel'
+  parent: mockBot
+  properties: {
+    channelName: 'DirectLineSpeechChannel'
+    properties: {
+      isEnabled: false
+    }
+  }
+}
+
+resource mockBotWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+  name: '${mockBotName}-WebChatChannel'
+  parent: mockBot
+  properties: {
+    channelName: 'WebChatChannel'
+    properties: {
+      sites: [] // Remove all sites
+    }
+  }
+}
+
+resource mockBotAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
+  location: location
+  name: '${mockBotAppName}-identity'
+}
+
+resource mockBotAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
+  location: location
+  name: '${mockBotAppName}-plan'
+  properties: {
+    zoneRedundant: false
+  }
+  sku: {
+    family: 'S'
+    name: 'S1'
+    size: 'S1'
+    tier: 'Standard'
+  }
+}
+
+resource mockBotApp 'Microsoft.Web/sites@2023-12-01' = {
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${mockBotAppIdentity.id}': {}
+      '${mockBotIdentity.id}': {}
+    }
+  }
+  location: location
+  name: mockBotAppName
+  properties: {
+    clientAffinityEnabled: false
+    httpsOnly: true
+    serverFarmId: mockBotAppPlan.id
+    siteConfig: {
+      alwaysOn: true
+      appSettings: [
+        {
+          name: 'WEBSITE_NODE_DEFAULT_VERSION'
+          value: '~20'
+        }
+        {
+          name: 'DIRECTLINE_EXTENSION_VERSION'
+          value: 'latest'
+        }
+        {
+          name: 'DirectLineExtensionKey'
+          value: mockBotDirectLineChannel.properties.properties.extensionKey1
+        }
+        {
+          name: 'MicrosoftAppId'
+          value: mockBotIdentity.properties.clientId
+        }
+        {
+          name: 'MicrosoftAppTenantId'
+          value: mockBotIdentity.properties.tenantId
+        }
+        {
+          name: 'MicrosoftAppType'
+          value: 'UserAssignedMSI'
+        }
+        {
+          name: 'OAUTH_CONNECTION_NAME'
+          value: mockBotDummyOAuthConnection.name
+        }
+        {
+          name: 'WEBSITE_RUN_FROM_PACKAGE'
+          value: '1'
+        }
+      ]
+      ftpsState: 'Disabled'
+      metadata: [
+        {
+          name: 'CURRENT_STACK'
+          value: 'node'
+        }
+      ]
+      webSocketsEnabled: true
+    }
+  }
+}
+
+resource mockBotReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${builderIdentity.id}': {}
+    }
+  }
+  kind: 'AzureCLI'
+  location: location
+  #disable-next-line use-stable-resource-identifiers
+  name: '${mockBot.name}-script'
+  properties: {
+    arguments: '\\"${mockBotApp.properties.defaultHostName}\\" \\"${mockBot.name}\\" \\"${resourceGroup().name}\\"'
+    azCliVersion: '2.61.0'
+    cleanupPreference: 'Always'
+    forceUpdateTag: deployTime
+    retentionInterval: 'PT1H' // Minimal retention is 1 hour.
+    scriptContent: '''
+      set -eo pipefail
+
+      BOT_APP_NAME=$1
+      BOT_NAME=$2
+      RESOURCE_GROUP_NAME=$3
+
+      az bot update \
+        --name $BOT_NAME \
+        --resource-group $RESOURCE_GROUP_NAME \
+        --endpoint https://$BOT_APP_NAME/api/messages
+    '''
+    timeout: 'PT2M'
+  }
+}
+
+resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${builderIdentity.id}': {}
+    }
+  }
+  kind: 'AzureCLI'
+  location: location
+  #disable-next-line use-stable-resource-identifiers
+  name: '${keyVaultName}-script'
+  properties: {
+    arguments: '\\"${mockBot.name}\\" \\"${mockBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     forceUpdateTag: deployTime
@@ -378,11 +639,13 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
   dependsOn: [
     // This Bicep doesn't implicitly talks about botApp depends on keyVaultSaveSecretScript.
     // When the Container Apps is up, it may retrieve the placeholder value instead of the actual because of the deployment order.
-    keyVaultSaveSecretScript
+    echoBotKeyVaultSaveSecretScript
   ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
+      '${echoBotIdentity.id}': {}
+      '${mockBotIdentity.id}': {}
       '${tokenAppIdentity.id}': {}
       // TODO: Add speech identity
     }
@@ -411,8 +674,13 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
       secrets: [
         {
           identity: tokenAppIdentity.id
-          keyVaultUrl: directLineSecret.properties.secretUri
-          name: 'direct-line-secret'
+          keyVaultUrl: echoBotDirectLineSecret.properties.secretUri
+          name: '${echoBotName}-direct-line-secret'
+        }
+        {
+          identity: tokenAppIdentity.id
+          keyVaultUrl: mockBotDirectLineSecret.properties.secretUri
+          name: '${mockBotName}-direct-line-secret'
         }
         {
           name: 'registry-password'
@@ -430,21 +698,33 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
       containers: [
         {
           env: [
-            {
-              name: 'AZURE_CLIENT_ID'
-              value: tokenAppIdentity.properties.clientId
-            }
             // {
             //   name: 'AZURE_LOG_LEVEL'
             //   value: 'verbose'
             // }
             {
-              name: 'MOCKBOT1_APP_HOSTNAME'
-              value: mockbot1App.properties.defaultHostName
+              name: 'ECHO_BOT_APP_HOSTNAME'
+              value: echoBotApp.properties.defaultHostName
             }
             {
-              name: 'DIRECT_LINE_SECRET'
-              secretRef: 'direct-line-secret'
+              name: 'ECHO_BOT_AZURE_CLIENT_ID'
+              value: echoBotIdentity.properties.clientId
+            }
+            {
+              name: 'ECHO_BOT_DIRECT_LINE_SECRET'
+              secretRef: '${echoBotName}-direct-line-secret'
+            }
+            {
+              name: 'MOCK_BOT_APP_HOSTNAME'
+              value: mockBotApp.properties.defaultHostName
+            }
+            {
+              name: 'MOCK_BOT_AZURE_CLIENT_ID'
+              value: mockBotIdentity.properties.clientId
+            }
+            {
+              name: 'MOCK_BOT_DIRECT_LINE_SECRET'
+              secretRef: '${mockBotName}-direct-line-secret'
             }
             {
               name: 'SPEECH_SERVICES_REGION'
@@ -490,11 +770,17 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
   }
 }
 
-// Output "mockbot1AppName" for ZIP deployment later.
-output mockbot1AppName string = mockbot1AppName
+// Output "echoBotAppName" for ZIP deployment later.
+output echoBotAppName string = echoBotAppName
 
-// Output "mockbot1AppURL" for display in GitHub deployment.
-output mockbot1AppURL string = 'https://${mockbot1App.properties.defaultHostName}/'
+// Output "echoBotAppURL" for display in GitHub deployment.
+output echoBotAppURL string = 'https://${echoBotApp.properties.defaultHostName}/'
+
+// Output "mockBotAppName" for ZIP deployment later.
+output mockBotAppName string = mockBotAppName
+
+// Output "mockBotAppURL" for display in GitHub deployment.
+output mockBotAppURL string = 'https://${mockBotApp.properties.defaultHostName}/'
 
 // Output "tokenAppURL" for GitHub Pages.
 output tokenAppURL string = 'https://${tokenApp.properties.configuration.ingress.fqdn}/'

@@ -8,7 +8,7 @@ export default defineConfig([
     dts: true,
     entry: { index: './src/index.ts' },
     format: ['esm'],
-    onSuccess: 'touch ../mockbot1-app/src/index.ts',
+    onSuccess: 'touch ../echo-bot-app/src/index.ts ../mock-bot-app/src/index.ts',
     platform: 'node',
     sourcemap: true
   }

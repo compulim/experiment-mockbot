@@ -24,7 +24,7 @@ export default defineConfig([
       '.svg': 'file',
       '.txt': 'file'
     },
-    onSuccess: 'touch ../mockbot1-app/src/index.ts'
+    onSuccess: 'touch ../echo-bot-app/src/index.ts ../mock-bot-app/src/index.ts'
   },
   {
     ...BASE_OPTIONS,

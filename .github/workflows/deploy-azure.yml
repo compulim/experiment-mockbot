@@ -59,16 +59,28 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Pack mockbot1-app
+      - name: Pack echo-bot-app
         run: npm pack
-        working-directory: ./packages/mockbot1-app
+        working-directory: ./packages/echo-bot-app
 
-      - name: Upload mockbot1-app tarball
+      - name: Upload echo-bot-app tarball
         uses: actions/upload-artifact@v4
         with:
           compression-level: 0
-          name: mockbot1-app-tarball
-          path: ./packages/mockbot1-app/*.tgz
+          name: echo-bot-app-tarball
+          path: ./packages/echo-bot-app/*.tgz
+          retention-days: 1
+
+      - name: Pack mock-bot-app
+        run: npm pack
+        working-directory: ./packages/mock-bot-app
+
+      - name: Upload mock-bot-app tarball
+        uses: actions/upload-artifact@v4
+        with:
+          compression-level: 0
+          name: mock-bot-app-tarball
+          path: ./packages/mock-bot-app/*.tgz
           retention-days: 1
 
       - name: Pack GitHub Pages
@@ -95,37 +107,41 @@ jobs:
           path: ./packages/token-app/*.tgz
           retention-days: 1
 
-  convert-mockbot1-app-artifact:
-    name: Convert mockbot1-app tarball to ZIP deployment
+  convert-bot-app-artifact:
+    name: Convert ${{ matrix.name }} tarball to ZIP deployment
     needs: build
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        name: [echo-bot-app, mock-bot-app]
 
     steps:
       - name: Download tarball
         uses: actions/download-artifact@v4
         with:
-          name: mockbot1-app-tarball
+          name: ${{ matrix.name }}-tarball
 
       - name: Extract tarball
         run: |
-          mkdir ./mockbot1-app
-          cd ./mockbot1-app
+          mkdir ./${{ matrix.name }}
+          cd ./${{ matrix.name }}
           tar xvf ../*.tgz --strip-components=1
 
       - name: List directory
         run: ls -laR
-        working-directory: ./mockbot1-app
+        working-directory: ./${{ matrix.name }}
 
       - name: Compress as ZIP
-        run: zip -r ../mockbot1-app.zip .
-        working-directory: ./mockbot1-app
+        run: zip -r ../${{ matrix.name }}.zip .
+        working-directory: ./${{ matrix.name }}
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
           compression-level: 0
-          name: mockbot1-app-zip
-          path: ./mockbot1-app.zip
+          name: ${{ matrix.name }}-zip
+          path: ./${{ matrix.name }}.zip
           retention-days: 1
 
   publish-containers:
@@ -190,12 +206,14 @@ jobs:
   deploy-bicep:
     environment:
       name: azure
-      url: ${{ steps.arm-deploy.outputs.mockbot1AppURL }}health.txt
+      url: ${{ steps.arm-deploy.outputs.mockBotAppURL }}health.txt
     name: Deploy Bicep
     needs: publish-containers
     outputs:
-      mockbot1-app-name: ${{ steps.arm-deploy.outputs.mockbot1AppName }}
-      mockbot1-app-url: ${{ steps.arm-deploy.outputs.mockbot1AppURL }}
+      echo-bot-app-name: ${{ steps.arm-deploy.outputs.echoBotAppName }}
+      echo-bot-app-url: ${{ steps.arm-deploy.outputs.echoBotAppURL }}
+      mock-bot-app-name: ${{ steps.arm-deploy.outputs.mockBotAppName }}
+      mock-bot-app-url: ${{ steps.arm-deploy.outputs.mockBotAppURL }}
       token-app-url: ${{ steps.arm-deploy.outputs.tokenAppURL }}
     permissions:
       id-token: write
@@ -238,13 +256,13 @@ jobs:
           resourceGroupName: ${{ vars.RESOURCE_GROUP_NAME }}
           template: ./main.bicep
 
-  publish-mockbot1-app:
+  publish-echo-bot-app:
     environment:
       name: azure
       url: ${{ steps.webapps-deploy.outputs.webapp-url }}
-    name: Publish mockbot1-app to Web Apps
+    name: Publish echo-bot-app to Web Apps
     needs:
-      - convert-mockbot1-app-artifact
+      - convert-echo-bot-app-artifact
       - deploy-bicep
     permissions:
       id-token: write
@@ -254,7 +272,7 @@ jobs:
       - name: Download tarball
         uses: actions/download-artifact@v4
         with:
-          name: mockbot1-app-zip
+          name: echo-bot-app-zip
 
       - name: Azure login
         uses: azure/login@v2
@@ -266,8 +284,39 @@ jobs:
       - id: webapps-deploy
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ needs.deploy-bicep.outputs.mockbot1-app-name }}
-          package: ./mockbot1-app.zip
+          app-name: ${{ needs.deploy-bicep.outputs.echo-bot-app-name }}
+          package: ./echo-bot-app.zip
+
+  publish-mock-bot-app:
+    environment:
+      name: azure
+      url: ${{ steps.webapps-deploy.outputs.webapp-url }}
+    name: Publish mock-bot-app to Web Apps
+    needs:
+      - convert-mock-bot-app-artifact
+      - deploy-bicep
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download tarball
+        uses: actions/download-artifact@v4
+        with:
+          name: mock-bot-app-zip
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.BUILDER_CLIENT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ID }}
+          tenant-id: ${{ vars.TENANT_ID }}
+
+      - id: webapps-deploy
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ needs.deploy-bicep.outputs.mock-bot-app-name }}
+          package: ./mock-bot-app.zip
 
   build-pages:
     name: Build GitHub Pages
@@ -287,7 +336,8 @@ jobs:
         run: npm clean-install
 
       - env:
-          MOCKBOT1_APP_URL: ${{ needs.deploy-bicep.outputs.mockbot1-app-url }}
+          ECHO_BOT_APP_URL: ${{ needs.deploy-bicep.outputs.echo-bot-app-url }}
+          MOCK_BOT_APP_URL: ${{ needs.deploy-bicep.outputs.mock-bot-app-url }}
           TOKEN_APP_URL: ${{ needs.deploy-bicep.outputs.token-app-url }}
         name: Build
         run: npm run build
