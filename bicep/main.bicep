@@ -703,7 +703,7 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
             //   value: 'verbose'
             // }
             {
-              name: 'ECHO_BOT_APP_HOSTNAME'
+              name: 'ECHO_BOT_APP_HOST_NAME'
               value: echoBotApp.properties.defaultHostName
             }
             {
@@ -715,7 +715,7 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
               secretRef: '${echoBotName}-direct-line-secret'
             }
             {
-              name: 'MOCK_BOT_APP_HOSTNAME'
+              name: 'MOCK_BOT_APP_HOST_NAME'
               value: mockBotApp.properties.defaultHostName
             }
             {

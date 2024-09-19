@@ -4,10 +4,10 @@ import { ManagedIdentityCredential } from '@azure/identity';
 import { object, parse, string } from 'valibot';
 
 const envSchema = object({
-  ECHO_BOT_APP_HOSTNAME: string(),
+  ECHO_BOT_APP_HOST_NAME: string(),
   ECHO_BOT_AZURE_CLIENT_ID: string(),
   ECHO_BOT_DIRECT_LINE_SECRET: string(),
-  MOCK_BOT_APP_HOSTNAME: string(),
+  MOCK_BOT_APP_HOST_NAME: string(),
   MOCK_BOT_AZURE_CLIENT_ID: string(),
   MOCK_BOT_DIRECT_LINE_SECRET: string()
 });
@@ -18,10 +18,10 @@ export default async function issueDirectLineASEToken(
   init: { bot?: 'echo bot' | 'mock bot' | undefined; useManagedIdentity?: boolean | undefined } = {}
 ): Promise<Readonly<{ domain: string; token: string }>> {
   const {
-    ECHO_BOT_APP_HOSTNAME,
+    ECHO_BOT_APP_HOST_NAME,
     ECHO_BOT_AZURE_CLIENT_ID,
     ECHO_BOT_DIRECT_LINE_SECRET,
-    MOCK_BOT_APP_HOSTNAME,
+    MOCK_BOT_APP_HOST_NAME,
     MOCK_BOT_AZURE_CLIENT_ID,
     MOCK_BOT_DIRECT_LINE_SECRET
   } = parse(envSchema, process.env);
@@ -29,7 +29,7 @@ export default async function issueDirectLineASEToken(
   const client = new ServiceClient();
   const url = new URL('https://dummy/.bot/v3/directline/tokens/generate');
 
-  url.hostname = init.bot === 'echo bot' ? ECHO_BOT_APP_HOSTNAME : MOCK_BOT_APP_HOSTNAME;
+  url.hostname = init.bot === 'echo bot' ? ECHO_BOT_APP_HOST_NAME : MOCK_BOT_APP_HOST_NAME;
 
   const headers = createHttpHeaders({ 'content-type': 'application/json' });
 
