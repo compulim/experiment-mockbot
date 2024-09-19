@@ -293,7 +293,7 @@ jobs:
       url: ${{ steps.webapps-deploy.outputs.webapp-url }}
     name: Publish mock-bot-app to Web Apps
     needs:
-      - convert-mock-bot-app-artifact
+      - convert-bot-app-artifact
       - deploy-bicep
     permissions:
       id-token: write
