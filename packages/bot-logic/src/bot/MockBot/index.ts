@@ -1,4 +1,4 @@
-import { ActivityHandler, type ConversationState, type TurnContext, type UserState } from 'botbuilder';
+import { ActivityHandler, MessageFactory, type ConversationState, type TurnContext, type UserState } from 'botbuilder';
 
 import commands from './commands.js';
 import * as OAuthCard from './commands/OAuthCard2.js';
@@ -196,6 +196,12 @@ export default class MockBot extends ActivityHandler {
     });
 
     this.onMembersAdded(async (context, next) => {
+      for (const member of context.activity.membersAdded || []) {
+        if (member.id !== context.activity.recipient.id && context.activity.locale) {
+          await context.sendActivity(MessageFactory.text('Hello and welcome!'));
+        }
+      }
+
       await membersAddedActivityAccessor.set(context, { locale: context.activity.locale });
 
       await next();
