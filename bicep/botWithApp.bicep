@@ -3,7 +3,7 @@ metadata description = 'Deploy a bot with web apps'
 param builderIdentityId string
 
 @description('Family name of the deployment.')
-@maxLength(20)
+@maxLength(40)
 param deploymentFamilyName string
 
 param deployTime string = utcNow()
@@ -31,7 +31,7 @@ resource bot 'Microsoft.BotService/botServices@2022-09-15' = {
 
 resource botDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2022-09-15' = {
   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-  name: '${bot.name}-dummy-oauth-connection'
+  name: '${bot.name}-oauth'
   parent: bot
   properties: {
     clientId: 'dummy'
@@ -43,7 +43,7 @@ resource botDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2
 }
 
 resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
-  name: '${bot.name}-direct-line-channel'
+  name: 'DirectLineChannel'
   parent: bot
   properties: {
     channelName: 'DirectLineChannel'
@@ -85,7 +85,7 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09
 // Disable Direct Line Speech for now.
 resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-  name: '${bot.name}-direct-line-speech-channel'
+  name: 'DirectLineSpeechChannel'
   parent: bot
   properties: {
     channelName: 'DirectLineSpeechChannel'
@@ -96,7 +96,7 @@ resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2
 }
 
 resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
-  name: '${bot.name}-web-chat-channel'
+  name: 'WebChatChannel'
   parent: bot
   properties: {
     channelName: 'WebChatChannel'
