@@ -18,6 +18,10 @@ const { PORT, SPEECH_SERVICES_REGION, TRUSTED_ORIGINS } = parse(
   process.env
 );
 
+function getBotFromQuery(query: unknown): 'echo bot' | 'mock bot' {
+  return query && typeof query === 'object' && 'bot' in query && query.bot === 'echo bot' ? 'echo bot' : 'mock bot';
+}
+
 function handleError<P, ResBody, ReqBody, ReqQuery, Locals extends Record<string, any> = Record<string, any>>(
   fn: RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>
 ): RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals> {
@@ -60,7 +64,11 @@ app.get('/health.txt', (_, res) => {
 app.use(
   '/api/token/directline',
   handleError(async (req, res, next) =>
-    req.method === 'GET' || req.method === 'POST' ? res.json({ token: (await issueDirectLineToken()).token }) : next()
+    req.method === 'GET' || req.method === 'POST'
+      ? res.json({
+          token: (await issueDirectLineToken({ bot: getBotFromQuery(req.query) })).token
+        })
+      : next()
   )
 );
 
@@ -68,7 +76,9 @@ app.use(
   '/api/token/directline/msi',
   handleError(async (req, res, next) =>
     req.method === 'GET' || req.method === 'POST'
-      ? res.json({ token: (await issueDirectLineToken({ useManagedIdentity: true })).token })
+      ? res.json({
+          token: (await issueDirectLineToken({ bot: getBotFromQuery(req.query), useManagedIdentity: true })).token
+        })
       : next()
   )
 );
@@ -77,7 +87,7 @@ app.use(
   '/api/token/directlinease',
   handleError(async (req, res, next) => {
     if (req.method === 'GET' || req.method === 'POST') {
-      const { domain, token } = await issueDirectLineASEToken();
+      const { domain, token } = await issueDirectLineASEToken({ bot: getBotFromQuery(req.query) });
 
       return res.json({ domain, token });
     }
@@ -92,7 +102,8 @@ app.use(
     req.method === 'GET' || req.method === 'POST'
       ? res.json({
           region: SPEECH_SERVICES_REGION,
-          token: (await issueSpeechServicesAccessToken({ useManagedIdentity: true })).token
+          token: (await issueSpeechServicesAccessToken({ bot: getBotFromQuery(req.query), useManagedIdentity: true }))
+            .token
         })
       : next()
   )
@@ -104,7 +115,7 @@ app.use(
     req.method === 'GET' || req.method === 'POST'
       ? res.json({
           region: SPEECH_SERVICES_REGION,
-          token: (await issueSpeechServicesAccessToken()).token
+          token: (await issueSpeechServicesAccessToken({ bot: getBotFromQuery(req.query) })).token
         })
       : next()
   )
