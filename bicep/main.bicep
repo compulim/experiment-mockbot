@@ -142,7 +142,7 @@ resource echoBot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
 
 resource echoBotDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2023-09-15-preview' = {
   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-  name: 'DummyOAuthConnection'
+  name: '${echoBotName}-DummyOAuthConnection'
   parent: echoBot
   properties: {
     clientId: 'dummy'
@@ -154,7 +154,7 @@ resource echoBotDummyOAuthConnection 'Microsoft.BotService/botServices/connectio
 }
 
 resource echoBotDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
-  name: 'DirectLineChannel'
+  name: '${echoBotName}-DirectLineChannel'
   parent: echoBot
   properties: {
     channelName: 'DirectLineChannel'
@@ -393,7 +393,7 @@ resource mockBot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
 
 resource mockBotDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2023-09-15-preview' = {
   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-  name: 'DummyOAuthConnection'
+  name: '${mockBotName}-DummyOAuthConnection'
   parent: mockBot
   properties: {
     clientId: 'dummy'
@@ -405,7 +405,7 @@ resource mockBotDummyOAuthConnection 'Microsoft.BotService/botServices/connectio
 }
 
 resource mockBotDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
-  name: 'DirectLineChannel'
+  name: '${mockBotName}-DirectLineChannel'
   parent: mockBot
   properties: {
     channelName: 'DirectLineChannel'
