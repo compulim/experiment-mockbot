@@ -154,7 +154,7 @@ resource echoBotDummyOAuthConnection 'Microsoft.BotService/botServices/connectio
 }
 
 resource echoBotDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
-  name: '${echoBotName}-direct-line-channel'
+  name: 'EchoBotDirectLineChannel'
   parent: echoBot
   properties: {
     channelName: 'DirectLineChannel'
