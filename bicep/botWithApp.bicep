@@ -43,7 +43,7 @@ resource botDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2
 }
 
 resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
-  name: 'DirectLineChannel'
+  name: 'DirectLineChannel' // ABS mistook this name as the properties.channelName. This must be "XXXChannel" otherwise it will throw CHANNEL_NOT_SUPPORTED error.
   parent: bot
   properties: {
     channelName: 'DirectLineChannel'
@@ -67,7 +67,7 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09
 // Direct Line Speech is not working with `disableLocalAuth`, need investigations.
 // resource echoBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
 //   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-//   name: '${echoBotName}-direct-line-speech-channel'
+//   name: 'DirectLineSpeechChannel'
 //   parent: echoBot
 //   properties: {
 //     channelName: 'DirectLineSpeechChannel'
@@ -85,7 +85,7 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09
 // Disable Direct Line Speech for now.
 resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-  name: 'DirectLineSpeechChannel'
+  name: 'DirectLineSpeechChannel' // ABS mistook this name as the properties.channelName. This must be "XXXChannel" otherwise it will throw CHANNEL_NOT_SUPPORTED error.
   parent: bot
   properties: {
     channelName: 'DirectLineSpeechChannel'
@@ -96,7 +96,7 @@ resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2
 }
 
 resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
-  name: 'WebChatChannel'
+  name: 'WebChatChannel' // ABS mistook this name as the properties.channelName. This must be "XXXChannel" otherwise it will throw CHANNEL_NOT_SUPPORTED error.
   parent: bot
   properties: {
     channelName: 'WebChatChannel'
@@ -197,7 +197,7 @@ resource botReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01'
   kind: 'AzureCLI'
   location: location
   #disable-next-line use-stable-resource-identifiers
-  name: '${bot.name}-script'
+  name: '${deploymentFamilyName}-script'
   properties: {
     arguments: '\\"${app.properties.defaultHostName}\\" \\"${bot.name}\\" \\"${resourceGroup().name}\\"'
     azCliVersion: '2.61.0'
