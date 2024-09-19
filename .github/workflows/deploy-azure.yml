@@ -59,16 +59,16 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Pack bot-app
+      - name: Pack mockbot1-app
         run: npm pack
-        working-directory: ./packages/bot-app
+        working-directory: ./packages/mockbot1-app
 
-      - name: Upload bot-app tarball
+      - name: Upload mockbot1-app tarball
         uses: actions/upload-artifact@v4
         with:
           compression-level: 0
-          name: bot-app-tarball
-          path: ./packages/bot-app/*.tgz
+          name: mockbot1-app-tarball
+          path: ./packages/mockbot1-app/*.tgz
           retention-days: 1
 
       - name: Pack GitHub Pages
@@ -95,8 +95,8 @@ jobs:
           path: ./packages/token-app/*.tgz
           retention-days: 1
 
-  convert-bot-app-artifact:
-    name: Convert bot-app tarball to ZIP deployment
+  convert-mockbot1-app-artifact:
+    name: Convert mockbot1-app tarball to ZIP deployment
     needs: build
     runs-on: ubuntu-latest
 
@@ -104,28 +104,28 @@ jobs:
       - name: Download tarball
         uses: actions/download-artifact@v4
         with:
-          name: bot-app-tarball
+          name: mockbot1-app-tarball
 
       - name: Extract tarball
         run: |
-          mkdir ./bot-app
-          cd ./bot-app
+          mkdir ./mockbot1-app
+          cd ./mockbot1-app
           tar xvf ../*.tgz --strip-components=1
 
       - name: List directory
         run: ls -laR
-        working-directory: ./bot-app
+        working-directory: ./mockbot1-app
 
       - name: Compress as ZIP
-        run: zip -r ../bot-app.zip .
-        working-directory: ./bot-app
+        run: zip -r ../mockbot1-app.zip .
+        working-directory: ./mockbot1-app
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
           compression-level: 0
-          name: bot-app-zip
-          path: ./bot-app.zip
+          name: mockbot1-app-zip
+          path: ./mockbot1-app.zip
           retention-days: 1
 
   publish-containers:
@@ -190,12 +190,12 @@ jobs:
   deploy-bicep:
     environment:
       name: azure
-      url: ${{ steps.arm-deploy.outputs.botAppURL }}health.txt
+      url: ${{ steps.arm-deploy.outputs.mockbot1AppURL }}health.txt
     name: Deploy Bicep
     needs: publish-containers
     outputs:
-      bot-app-name: ${{ steps.arm-deploy.outputs.botAppName }}
-      bot-app-url: ${{ steps.arm-deploy.outputs.botAppURL }}
+      mockbot1-app-name: ${{ steps.arm-deploy.outputs.mockbot1AppName }}
+      mockbot1-app-url: ${{ steps.arm-deploy.outputs.mockbot1AppURL }}
       token-app-url: ${{ steps.arm-deploy.outputs.tokenAppURL }}
     permissions:
       id-token: write
@@ -238,13 +238,13 @@ jobs:
           resourceGroupName: ${{ vars.RESOURCE_GROUP_NAME }}
           template: ./main.bicep
 
-  publish-bot-app:
+  publish-mockbot1-app:
     environment:
       name: azure
       url: ${{ steps.webapps-deploy.outputs.webapp-url }}
-    name: Publish bot-app to Web Apps
+    name: Publish mockbot1-app to Web Apps
     needs:
-      - convert-bot-app-artifact
+      - convert-mockbot1-app-artifact
       - deploy-bicep
     permissions:
       id-token: write
@@ -254,7 +254,7 @@ jobs:
       - name: Download tarball
         uses: actions/download-artifact@v4
         with:
-          name: bot-app-zip
+          name: mockbot1-app-zip
 
       - name: Azure login
         uses: azure/login@v2
@@ -266,8 +266,8 @@ jobs:
       - id: webapps-deploy
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ needs.deploy-bicep.outputs.bot-app-name }}
-          package: ./bot-app.zip
+          app-name: ${{ needs.deploy-bicep.outputs.mockbot1-app-name }}
+          package: ./mockbot1-app.zip
 
   build-pages:
     name: Build GitHub Pages
@@ -287,7 +287,7 @@ jobs:
         run: npm clean-install
 
       - env:
-          BOT_APP_URL: ${{ needs.deploy-bicep.outputs.bot-app-url }}
+          MOCKBOT1_APP_URL: ${{ needs.deploy-bicep.outputs.mockbot1-app-url }}
           TOKEN_APP_URL: ${{ needs.deploy-bicep.outputs.token-app-url }}
         name: Build
         run: npm run build

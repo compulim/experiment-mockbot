@@ -9,6 +9,7 @@ export default defineConfig([
     entry: { index: './src/index.ts' },
     format: ['esm'],
     onSuccess: 'touch ../mockbot1-app/src/index.ts',
+    platform: 'node',
     sourcemap: true
   }
 ]);

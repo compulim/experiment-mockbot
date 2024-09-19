@@ -25,10 +25,10 @@ param deployTime string = utcNow()
 param location string = 'westus'
 // param location string = resourceGroup().location
 
-param botAppName string = '${deploymentFamilyName}-bot-app'
 param botName string = '${deploymentFamilyName}-bot'
 param keyVaultName string = '${deploymentFamilyName}-key'
 param logAnalyticsName string = '${deploymentFamilyName}-log'
+param mockbot1AppName string = '${deploymentFamilyName}-mockbot1-app'
 param speechServicesName string = '${deploymentFamilyName}-speech'
 param tokenAppName string = '${deploymentFamilyName}-token-app'
 
@@ -207,14 +207,14 @@ resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15
   }
 }
 
-resource botAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
+resource mockbot1AppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
-  name: '${botAppName}-identity'
+  name: '${mockbot1AppName}-identity'
 }
 
-resource botAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
+resource mockbot1AppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   location: location
-  name: '${botAppName}-plan'
+  name: '${mockbot1AppName}-plan'
   properties: {
     zoneRedundant: false
   }
@@ -226,20 +226,20 @@ resource botAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   }
 }
 
-resource botApp 'Microsoft.Web/sites@2023-12-01' = {
+resource mockbot1App 'Microsoft.Web/sites@2023-12-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${botAppIdentity.id}': {}
+      '${mockbot1AppIdentity.id}': {}
       '${botIdentity.id}': {}
     }
   }
   location: location
-  name: botAppName
+  name: mockbot1AppName
   properties: {
     clientAffinityEnabled: false
     httpsOnly: true
-    serverFarmId: botAppPlan.id
+    serverFarmId: mockbot1AppPlan.id
     siteConfig: {
       alwaysOn: true
       appSettings: [
@@ -300,7 +300,7 @@ resource botReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01'
   #disable-next-line use-stable-resource-identifiers
   name: '${bot.name}-script'
   properties: {
-    arguments: '\\"${botApp.properties.defaultHostName}\\" \\"${bot.name}\\" \\"${resourceGroup().name}\\"'
+    arguments: '\\"${mockbot1App.properties.defaultHostName}\\" \\"${bot.name}\\" \\"${resourceGroup().name}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     forceUpdateTag: deployTime
@@ -308,14 +308,14 @@ resource botReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01'
     scriptContent: '''
       set -eo pipefail
 
-      BOT_APP_NAME=$1
       BOT_NAME=$2
+      MOCKBOT1_APP_NAME=$1
       RESOURCE_GROUP_NAME=$3
 
       az bot update \
         --name $BOT_NAME \
         --resource-group $RESOURCE_GROUP_NAME \
-        --endpoint https://$BOT_APP_NAME/api/messages
+        --endpoint https://$MOCKBOT1_APP_NAME/api/messages
     '''
     timeout: 'PT2M'
   }
@@ -439,8 +439,8 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
             //   value: 'verbose'
             // }
             {
-              name: 'BOT_APP_HOSTNAME'
-              value: botApp.properties.defaultHostName
+              name: 'MOCKBOT1_APP_HOSTNAME'
+              value: mockbot1App.properties.defaultHostName
             }
             {
               name: 'DIRECT_LINE_SECRET'
@@ -490,11 +490,11 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
   }
 }
 
-// Output "botAppName" for ZIP deployment later.
-output botAppName string = botAppName
+// Output "mockbot1AppName" for ZIP deployment later.
+output mockbot1AppName string = mockbot1AppName
 
-// Output "botAppURL" for display in GitHub deployment.
-output botAppURL string = 'https://${botApp.properties.defaultHostName}/'
+// Output "mockbot1AppURL" for display in GitHub deployment.
+output mockbot1AppURL string = 'https://${mockbot1App.properties.defaultHostName}/'
 
 // Output "tokenAppURL" for GitHub Pages.
 output tokenAppURL string = 'https://${tokenApp.properties.configuration.ingress.fqdn}/'

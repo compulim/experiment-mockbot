@@ -14,7 +14,7 @@ import { AppContext, AppContextType } from './private/AppContext';
 import fetchJSON from './private/fetchJSON';
 
 declare global {
-  const BOT_APP_URL: string;
+  const MOCKBOT1_APP_URL: string;
   const TOKEN_APP_URL: string;
 }
 
@@ -22,12 +22,12 @@ type Props = {
   children?: ReactNode | undefined;
 };
 
-const DEFAULT_BOT_APP_URL = 'http://localhost:3978';
+const DEFAULT_MOCKBOT1_APP_URL = 'http://localhost:3978';
 
 export default memo(function AppProvider({ children }: Props) {
-  const botAppURL = useMemo(() => BOT_APP_URL || DEFAULT_BOT_APP_URL, []);
   const [webChatAdapters, setWebChatAdapters] = useState<WebChatAdapters | undefined>(undefined);
   const [token, setToken] = useState<string | undefined>(undefined);
+  const mockbot1AppURL = useMemo(() => MOCKBOT1_APP_URL || DEFAULT_MOCKBOT1_APP_URL, []);
   const protocolState = Object.freeze(useState<Protocol>('offline'));
 
   const webChatAdaptersState = useMemo(
@@ -68,7 +68,7 @@ export default memo(function AppProvider({ children }: Props) {
             const { token } = await fetchJSON(new URL('api/token/directlinease', TOKEN_APP_URL), { signal });
 
             const directLine = (await createDirectLineAppServiceExtension({
-              domain: new URL('/.bot/v3/directline', botAppURL).toString(),
+              domain: new URL('/.bot/v3/directline', mockbot1AppURL).toString(),
               token
             })) as unknown as DirectLineJSBotConnection;
 
@@ -115,7 +115,7 @@ export default memo(function AppProvider({ children }: Props) {
                   async getToken() {
                     return 'DUMMY';
                   },
-                  islandURI: new URL('.', botAppURL),
+                  islandURI: new URL('.', mockbot1AppURL),
                   transport: protocol === 'direct to engine rest' ? 'rest' : 'auto'
                 })
               )
