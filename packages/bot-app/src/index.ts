@@ -15,10 +15,6 @@ import { object, optional, parse, string } from 'valibot';
 import createBotFrameworkAdapter from './adapter/createBotFrameworkAdapter.js';
 import handleError from './private/handleError.js';
 
-declare global {
-  var BUILD_TIME: string;
-}
-
 const { APPSETTING_WEBSITE_SITE_NAME, MicrosoftAppId, PORT } = parse(
   object({
     APPSETTING_WEBSITE_SITE_NAME: optional(string()),
