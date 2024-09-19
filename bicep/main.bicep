@@ -142,7 +142,7 @@ resource echoBot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
 
 resource echoBotDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2023-09-15-preview' = {
   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-  name: '${echoBotName}-DummyOAuthConnection'
+  name: '${echoBotName}-dummy-oauth-connection'
   parent: echoBot
   properties: {
     clientId: 'dummy'
@@ -154,7 +154,7 @@ resource echoBotDummyOAuthConnection 'Microsoft.BotService/botServices/connectio
 }
 
 resource echoBotDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
-  name: '${echoBotName}-DirectLineChannel'
+  name: '${echoBotName}-direct-line-channel'
   parent: echoBot
   properties: {
     channelName: 'DirectLineChannel'
@@ -178,7 +178,7 @@ resource echoBotDirectLineChannel 'Microsoft.BotService/botServices/channels@202
 // Direct Line Speech is not working with `disableLocalAuth`, need investigations.
 // resource echoBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
 //   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-//   name: 'DirectLineSpeechChannel'
+//   name: '${echoBotName}-direct-line-speech-channel'
 //   parent: echoBot
 //   properties: {
 //     channelName: 'DirectLineSpeechChannel'
@@ -196,7 +196,7 @@ resource echoBotDirectLineChannel 'Microsoft.BotService/botServices/channels@202
 // Disable Direct Line Speech for now.
 resource echoBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-  name: '${echoBotName}-DirectLineSpeechChannel'
+  name: '${echoBotName}-direct-line-speech-channel'
   parent: echoBot
   properties: {
     channelName: 'DirectLineSpeechChannel'
@@ -207,7 +207,7 @@ resource echoBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channe
 }
 
 resource echoBotWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
-  name: '${echoBotName}-WebChatChannel'
+  name: '${echoBotName}-web-chat-channel'
   parent: echoBot
   properties: {
     channelName: 'WebChatChannel'
@@ -341,7 +341,7 @@ resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
   kind: 'AzureCLI'
   location: location
   #disable-next-line use-stable-resource-identifiers
-  name: '${keyVaultName}-script'
+  name: '${echoBotName}-save-secret-script'
   properties: {
     arguments: '\\"${echoBot.name}\\" \\"${echoBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
     azCliVersion: '2.61.0'
@@ -393,7 +393,7 @@ resource mockBot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
 
 resource mockBotDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2023-09-15-preview' = {
   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-  name: '${mockBotName}-DummyOAuthConnection'
+  name: '${mockBotName}-dummy-oauth-connection'
   parent: mockBot
   properties: {
     clientId: 'dummy'
@@ -405,7 +405,7 @@ resource mockBotDummyOAuthConnection 'Microsoft.BotService/botServices/connectio
 }
 
 resource mockBotDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
-  name: '${mockBotName}-DirectLineChannel'
+  name: '${mockBotName}-direct-line-channel'
   parent: mockBot
   properties: {
     channelName: 'DirectLineChannel'
@@ -429,7 +429,7 @@ resource mockBotDirectLineChannel 'Microsoft.BotService/botServices/channels@202
 // Direct Line Speech is not working with `disableLocalAuth`, need investigations.
 // resource mockBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
 //   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-//   name: 'DirectLineSpeechChannel'
+//   name: '${mockBotName}-direct-line-speech-channel'
 //   parent: mockBot
 //   properties: {
 //     channelName: 'DirectLineSpeechChannel'
@@ -447,7 +447,7 @@ resource mockBotDirectLineChannel 'Microsoft.BotService/botServices/channels@202
 // Disable Direct Line Speech for now.
 resource mockBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-  name: '${mockBotName}-DirectLineSpeechChannel'
+  name: '${mockBotName}-direct-line-speech-channel'
   parent: mockBot
   properties: {
     channelName: 'DirectLineSpeechChannel'
@@ -458,7 +458,7 @@ resource mockBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channe
 }
 
 resource mockBotWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
-  name: '${mockBotName}-WebChatChannel'
+  name: '${mockBotName}-web-chat-channel'
   parent: mockBot
   properties: {
     channelName: 'WebChatChannel'
@@ -592,7 +592,7 @@ resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
   kind: 'AzureCLI'
   location: location
   #disable-next-line use-stable-resource-identifiers
-  name: '${keyVaultName}-script'
+  name: '${mockBotName}-save-secret-script'
   properties: {
     arguments: '\\"${mockBot.name}\\" \\"${mockBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
     azCliVersion: '2.61.0'
