@@ -153,7 +153,7 @@ resource echoBotDummyOAuthConnection 'Microsoft.BotService/botServices/connectio
   }
 }
 
-resource echoBotDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+resource echoBotDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
   name: '${echoBotName}-direct-line-channel'
   parent: echoBot
   properties: {
@@ -194,19 +194,19 @@ resource echoBotDirectLineChannel 'Microsoft.BotService/botServices/channels@202
 // }
 
 // Disable Direct Line Speech for now.
-// resource echoBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
-//   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-//   name: '${echoBotName}-direct-line-speech-channel'
-//   parent: echoBot
-//   properties: {
-//     channelName: 'DirectLineSpeechChannel'
-//     properties: {
-//       isEnabled: false
-//     }
-//   }
-// }
+resource echoBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
+  location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
+  name: '${echoBotName}-direct-line-speech-channel'
+  parent: echoBot
+  properties: {
+    channelName: 'DirectLineSpeechChannel'
+    properties: {
+      isEnabled: false
+    }
+  }
+}
 
-resource echoBotWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+resource echoBotWebChatChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
   name: '${echoBotName}-web-chat-channel'
   parent: echoBot
   properties: {
@@ -404,7 +404,7 @@ resource mockBotDummyOAuthConnection 'Microsoft.BotService/botServices/connectio
   }
 }
 
-resource mockBotDirectLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+resource mockBotDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
   name: '${mockBotName}-direct-line-channel'
   parent: mockBot
   properties: {
@@ -445,19 +445,19 @@ resource mockBotDirectLineChannel 'Microsoft.BotService/botServices/channels@202
 // }
 
 // Disable Direct Line Speech for now.
-// resource mockBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
-//   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-//   name: '${mockBotName}-direct-line-speech-channel'
-//   parent: mockBot
-//   properties: {
-//     channelName: 'DirectLineSpeechChannel'
-//     properties: {
-//       isEnabled: false
-//     }
-//   }
-// }
+resource mockBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
+  location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
+  name: '${mockBotName}-direct-line-speech-channel'
+  parent: mockBot
+  properties: {
+    channelName: 'DirectLineSpeechChannel'
+    properties: {
+      isEnabled: false
+    }
+  }
+}
 
-resource mockBotWebChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+resource mockBotWebChatChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
   name: '${mockBotName}-web-chat-channel'
   parent: mockBot
   properties: {
