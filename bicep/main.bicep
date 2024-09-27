@@ -58,6 +58,7 @@ resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview
   location: location
   name: speechServicesName
   properties: {
+    customSubDomainName: speechServicesName
     disableLocalAuth: true
   }
   sku: {
