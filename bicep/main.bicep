@@ -212,6 +212,8 @@ module mockBotWithApp 'botWithApp.bicep' = {
     deploymentFamilyName: mockBotDeploymentFamilyName
     deployTime: deployTime
     location: location
+    speechServicesRegion: speechServices.location
+    speechServicesResourceId: speechServices.id
   }
 }
 

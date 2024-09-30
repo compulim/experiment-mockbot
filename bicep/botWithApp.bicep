@@ -11,6 +11,8 @@ param location string
 param botIdentityClientId string
 param botIdentityId string
 param botIdentityTenantId string
+param speechServicesRegion string = ''
+param speechServicesResourceId string = ''
 
 resource bot 'Microsoft.BotService/botServices@2022-09-15' = {
   kind: 'azurebot'
@@ -65,24 +67,6 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09
 }
 
 // Direct Line Speech is not working with `disableLocalAuth`, need investigations.
-// resource echoBotDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
-//   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-//   name: 'DirectLineSpeechChannel'
-//   parent: echoBot
-//   properties: {
-//     channelName: 'DirectLineSpeechChannel'
-//     properties: {
-//       cognitiveServiceRegion: speechServices.location
-//       cognitiveServiceResourceId: speechServices.id
-//       cognitiveServiceSubscriptionKey: speechServices.listKeys().key1
-//       // customSpeechModelId: ''
-//       // customVoiceDeploymentId: ''
-//       isEnabled: true
-//     }
-//   }
-// }
-
-// Disable Direct Line Speech for now.
 resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
   name: 'DirectLineSpeechChannel' // ABS mistook this name as the properties.channelName. This must be "XXXChannel" otherwise it will throw CHANNEL_NOT_SUPPORTED error.
@@ -90,10 +74,28 @@ resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2
   properties: {
     channelName: 'DirectLineSpeechChannel'
     properties: {
-      isEnabled: false
+      cognitiveServiceRegion: speechServicesRegion
+      cognitiveServiceResourceId: speechServicesResourceId
+      // cognitiveServiceSubscriptionKey: speechServices.listKeys().key1
+      // customSpeechModelId: ''
+      // customVoiceDeploymentId: ''
+      isEnabled: (speechServicesResourceId != '')
     }
   }
 }
+
+// // Disable Direct Line Speech for now.
+// resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
+//   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
+//   name: 'DirectLineSpeechChannel' // ABS mistook this name as the properties.channelName. This must be "XXXChannel" otherwise it will throw CHANNEL_NOT_SUPPORTED error.
+//   parent: bot
+//   properties: {
+//     channelName: 'DirectLineSpeechChannel'
+//     properties: {
+//       isEnabled: false
+//     }
+//   }
+// }
 
 resource botWebChatChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
   name: 'WebChatChannel' // ABS mistook this name as the properties.channelName. This must be "XXXChannel" otherwise it will throw CHANNEL_NOT_SUPPORTED error.
