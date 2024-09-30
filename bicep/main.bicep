@@ -58,6 +58,7 @@ resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview
   location: location
   name: speechServicesName
   properties: {
+    // https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-services-private-link?tabs=portal#adjust-an-application-to-use-a-speech-resource-without-private-endpoints
     customSubDomainName: speechServicesName
     disableLocalAuth: true
   }
@@ -65,6 +66,17 @@ resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview
     name: 'S0'
   }
   // TODO: Should add role assignment for "tokenAppIdentity" or a new "speechUser" identity.
+  //       Cognitive Services Speech User = "/providers/Microsoft.Authorization/roleDefinitions/f2dc8367-1007-4938-bd23-fe263f013447"
+}
+
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: '${tokenAppName}-identity-speech-role'
+  properties: {
+    // Cognitive Services Speech User = f2dc8367-1007-4938-bd23-fe263f013447
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', 'f2dc8367-1007-4938-bd23-fe263f013447')
+    principalId: tokenAppIdentity.properties.principalId
+  }
+  scope: speechServices
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
