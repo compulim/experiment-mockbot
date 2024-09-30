@@ -59,7 +59,7 @@ resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview
   name: speechServicesName
   properties: {
     // https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-services-private-link?tabs=portal#adjust-an-application-to-use-a-speech-resource-without-private-endpoints
-    customSubDomainName: speechServicesName
+    // customSubDomainName: speechServicesName
     disableLocalAuth: true
   }
   sku: {
