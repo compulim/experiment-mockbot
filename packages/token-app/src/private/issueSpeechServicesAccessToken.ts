@@ -28,7 +28,8 @@ export default async function issueSpeechServicesAccessToken(
       clientId: init.bot === 'echo bot' ? ECHO_BOT_AZURE_CLIENT_ID : MOCK_BOT_AZURE_CLIENT_ID
     });
 
-    const accessToken = await tokenCredential.getToken('https://cognitiveservices.azure.com');
+    // const accessToken = await tokenCredential.getToken('https://cognitiveservices.azure.com');
+    const accessToken = await tokenCredential.getToken('https://cognitiveservices.azure.com/.default');
 
     // Currently bugged, this authorization token cannot be used for Web Socket and not for issuing another token.
     return { token: `aad#${SPEECH_SERVICES_RESOURCE_ID}#${accessToken.token}` };
