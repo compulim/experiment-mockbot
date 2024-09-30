@@ -68,6 +68,11 @@ resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview
   // TODO: Should add role assignment for "tokenAppIdentity" or a new "speechUser" identity.
 }
 
+resource speechServicesIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
+  location: location
+  name: '${speechServicesName}-identity'
+}
+
 // ERROR: Cannot set role assignment because
 //        {
 //          "code": "InvalidTemplateDeployment",
@@ -75,11 +80,11 @@ resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview
 //        }
 
 // resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-//   name: '${tokenAppName}-identity-speech-role'
+//   name: '${speechServicesName}-identity-speech-role'
 //   properties: {
 //     // Cognitive Services Speech User = f2dc8367-1007-4938-bd23-fe263f013447
 //     roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', 'f2dc8367-1007-4938-bd23-fe263f013447')
-//     principalId: tokenAppIdentity.properties.principalId
+//     principalId: speechIdentity.properties.principalId
 //   }
 //   scope: speechServices
 // }
@@ -274,6 +279,7 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
     userAssignedIdentities: {
       '${echoBotIdentity.id}': {}
       '${mockBotIdentity.id}': {}
+      '${speechServicesIdentity.id}': {}
       '${tokenAppIdentity.id}': {}
       // TODO: Add speech identity
     }
@@ -353,6 +359,10 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'MOCK_BOT_DIRECT_LINE_SECRET'
               secretRef: '${mockBotDeploymentFamilyName}-direct-line-secret'
+            }
+            {
+              name: 'SPEECH_SERVICES_AZURE_CLIENT_ID'
+              value: speechServicesIdentity.properties.clientId
             }
             {
               name: 'SPEECH_SERVICES_REGION'
