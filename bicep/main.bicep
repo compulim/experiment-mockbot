@@ -83,7 +83,8 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: '${speechServicesName}-identity-speech-role'
   properties: {
     // Cognitive Services Speech User = f2dc8367-1007-4938-bd23-fe263f013447
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', 'f2dc8367-1007-4938-bd23-fe263f013447')
+    roleDefinitionId: 'f2dc8367-1007-4938-bd23-fe263f013447'
+    // roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', 'f2dc8367-1007-4938-bd23-fe263f013447')
     principalId: speechServicesIdentity.properties.principalId
   }
   scope: speechServices
