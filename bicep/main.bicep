@@ -79,13 +79,20 @@ resource speechServicesIdentity 'Microsoft.ManagedIdentity/userAssignedIdentitie
 //          "message": "The template deployment failed with error: 'Authorization failed for template resource 'xxx-token-app-identity-speech-role' of type 'Microsoft.Authorization/roleAssignments'. The client 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx' with object id 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx' does not have permission to perform action 'Microsoft.Authorization/roleAssignments/write' at scope '/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx/resourceGroups/xxx-rg/providers/Microsoft.CognitiveServices/accounts/xxx-speech/providers/Microsoft.Authorization/roleAssignments/xxx-token-app-identity-speech-role'.'."
 //        }
 
+@description('This is the built-in Cognitive Services Speech User role. See https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#contributor')
+resource speechServicesUserRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  scope: subscription()
+  name: 'f2dc8367-1007-4938-bd23-fe263f013447'
+}
+
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: '${speechServicesName}-identity-speech-role'
+  // Use GUID to prevent error on creating role assignment after deletion.
+  // https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/scenarios-rbac#resource-deletion-behavior
+  name: guid(resourceGroup().id, speechServicesIdentity.id, speechServicesUserRoleDefinition.id)
   properties: {
-    // Cognitive Services Speech User = f2dc8367-1007-4938-bd23-fe263f013447
-    roleDefinitionId: 'f2dc8367-1007-4938-bd23-fe263f013447'
-    // roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', 'f2dc8367-1007-4938-bd23-fe263f013447')
+    roleDefinitionId: speechServicesUserRoleDefinition.id
     principalId: speechServicesIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
   }
   scope: speechServices
 }
