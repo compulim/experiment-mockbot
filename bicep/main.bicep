@@ -65,19 +65,12 @@ resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview
   sku: {
     name: 'S0'
   }
-  // TODO: Should add role assignment for "tokenAppIdentity" or a new "speechUser" identity.
 }
 
 resource speechServicesIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
   name: '${speechServicesName}-identity'
 }
-
-// ERROR: Cannot set role assignment because
-//        {
-//          "code": "InvalidTemplateDeployment",
-//          "message": "The template deployment failed with error: 'Authorization failed for template resource 'xxx-token-app-identity-speech-role' of type 'Microsoft.Authorization/roleAssignments'. The client 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx' with object id 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx' does not have permission to perform action 'Microsoft.Authorization/roleAssignments/write' at scope '/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx/resourceGroups/xxx-rg/providers/Microsoft.CognitiveServices/accounts/xxx-speech/providers/Microsoft.Authorization/roleAssignments/xxx-token-app-identity-speech-role'.'."
-//        }
 
 @description('This is the built-in Cognitive Services Speech User role. See https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#contributor')
 resource speechServicesUserRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
@@ -86,7 +79,7 @@ resource speechServicesUserRoleDefinition 'Microsoft.Authorization/roleDefinitio
 }
 
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  // Use GUID to prevent error on creating role assignment after deletion.
+  // Use GUID to prevent error on recreating role assignment.
   // https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/scenarios-rbac#resource-deletion-behavior
   name: guid(resourceGroup().id, speechServicesIdentity.id, speechServicesUserRoleDefinition.id)
   properties: {
