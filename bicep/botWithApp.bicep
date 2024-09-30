@@ -187,6 +187,7 @@ resource app 'Microsoft.Web/sites@2023-12-01' = {
   }
 }
 
+// We need to create ABS before Web Apps because we need "DL ASE Extension key" to set in Web Apps.
 resource botReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   identity: {
     type: 'UserAssigned'

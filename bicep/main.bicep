@@ -29,8 +29,6 @@ param keyVaultName string = '${deploymentFamilyName}-key'
 param logAnalyticsName string = '${deploymentFamilyName}-log'
 param echoBotDeploymentFamilyName string = '${deploymentFamilyName}-echo-bot'
 param mockBotDeploymentFamilyName string = '${deploymentFamilyName}-mock-bot'
-// param mockBotAppName string = '${deploymentFamilyName}-mock-bot-app'
-// param mockBotName string = '${deploymentFamilyName}-mock-bot'
 param speechServicesName string = '${deploymentFamilyName}-speech'
 param tokenAppName string = '${deploymentFamilyName}-token-app'
 
@@ -58,6 +56,7 @@ resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview
   location: location
   name: speechServicesName
   properties: {
+    // Despite mentioned here, custom sub-domain name is not required to use Entra authentication (i.e. managed identity) for STT/TTS.
     // https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-services-private-link?tabs=portal#adjust-an-application-to-use-a-speech-resource-without-private-endpoints
     // customSubDomainName: speechServicesName
     disableLocalAuth: true
@@ -282,7 +281,6 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
       '${mockBotIdentity.id}': {}
       '${speechServicesIdentity.id}': {}
       '${tokenAppIdentity.id}': {}
-      // TODO: Add speech identity
     }
   }
   location: location
