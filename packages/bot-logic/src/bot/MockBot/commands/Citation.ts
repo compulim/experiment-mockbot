@@ -6,54 +6,65 @@ const help = () => ({
 });
 
 async function processor(context: TurnContext) {
-  await context.sendActivity({
-    type: 'message',
-    text: `Sure, you should override the default proxy settings[1]\u200B[2], when your proxy server requires authentication[3].
-
-[1]: https://support.microsoft.com/en-us/windows/use-a-proxy-server-in-windows-03096c53-0554-4ffe-b6ab-8b1deee8dae1 "Use a proxy server in Windows"
-[2]: https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/configure-proxy-server-settings "Configure proxy server settings - Windows Server"
-[3]: cite:1 "Introduction Configuring proxy settings is a fundamental aspect..."
-[4]: cite:2 "This citation has no name"
-`,
-    entities: [
-      {
-        '@context': 'https://schema.org',
-        '@id':
-          'https://support.microsoft.com/en-us/windows/use-a-proxy-server-in-windows-03096c53-0554-4ffe-b6ab-8b1deee8dae1',
-        '@type': 'Claim',
-        type: 'https://schema.org/Claim',
-
-        claimInterpreter: {
-          '@type': 'Project',
-          slogan: 'Surfaced with Azure OpenAI'
-        },
-        name: 'Use a proxy server in Windows'
-      },
-      {
-        '@context': 'https://schema.org',
-        '@id':
-          'https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/configure-proxy-server-settings',
-        '@type': 'Claim',
-        type: 'https://schema.org/Claim',
-
-        claimInterpreter: {
-          '@type': 'Project',
-          slogan: 'Surfaced with Azure OpenAI'
-        },
-        name: 'Configure proxy server settings - Windows Server'
-      },
-      {
-        '@context': 'https://schema.org',
-        '@id': 'cite:1',
-        '@type': 'Claim',
-        claimInterpreter: {
-          '@type': 'Project',
-          slogan: 'Surfaced with Azure OpenAI'
-        },
-        type: 'https://schema.org/Claim',
-
-        name: 'Introduction Configuring proxy settings is a fundamental aspect...',
-        text: `Aute Lorem id laboris Lorem do dolor mollit. Officia dolore dolor do culpa nostrud velit officia magna ut aute pariatur excepteur ut cupidatat. Minim minim sunt enim pariatur incididunt eiusmod esse adipisicing do do nulla consequat minim. Exercitation enim adipisicing esse non pariatur duis deserunt eu magna enim amet irure veniam. Minim labore aliquip velit exercitation Lorem exercitation minim excepteur.
+  await context.sendActivity(
+    {
+      type: 'message',
+      text: 'Sure, you should override the default proxy settings[1]​[2], when your proxy server requires authentication[3].\n\n[1]: https://support.microsoft.com/en-us/windows/use-a-proxy-server-in-windows-03096c53-0554-4ffe-b6ab-8b1deee8dae1 "Use a proxy server in Windows"\n[2]: https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/configure-proxy-server-settings "Configure proxy server settings - Windows Server"\n[3]: _:c1 "Introduction Configuring proxy settings is a fundamental aspect..."\n',
+      entities: [
+        {
+          '@context': 'https://schema.org',
+          '@id': '',
+          '@type': 'Message',
+          citation: [
+            {
+              '@id':
+                'https://support.microsoft.com/en-us/windows/use-a-proxy-server-in-windows-03096c53-0554-4ffe-b6ab-8b1deee8dae1',
+              '@type': 'Claim',
+              appearance: {
+                '@type': 'DigitalDocument',
+                encodingFormat: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                url: 'https://support.microsoft.com/en-us/windows/use-a-proxy-server-in-windows-03096c53-0554-4ffe-b6ab-8b1deee8dae1',
+                usageInfo: {
+                  '@type': 'CreativeWork',
+                  additionalType: 'https://copilotstudio.microsoft.com/sensitivity-labels/v1',
+                  name: 'General'
+                }
+              },
+              claimInterpreter: {
+                '@type': 'Project',
+                slogan: 'Surfaced with Azure OpenAI',
+                url: 'https://www.microsoft.com/en-us/ai/responsible-ai'
+              },
+              position: '1'
+            },
+            {
+              '@id':
+                'https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/configure-proxy-server-settings',
+              '@type': 'Claim',
+              appearance: {
+                '@type': 'DigitalDocument',
+                dateModified: '2024-03-01T15:56:27.000-0800',
+                editor: 'William Wong',
+                encodingFormat: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                url: 'https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/configure-proxy-server-settings'
+              },
+              claimInterpreter: {
+                '@type': 'Project',
+                slogan: 'Surfaced with Azure OpenAI',
+                url: 'https://www.microsoft.com/en-us/ai/responsible-ai'
+              },
+              position: '2'
+            },
+            {
+              '@id': '_:c1',
+              '@type': 'Claim',
+              appearance: {
+                '@type': 'DigitalDocument',
+                abstract:
+                  'Aute Lorem id laboris Lorem do dolor mollit. Officia dolore dolor do culpa nostrud velit officia...',
+                encodingFormat: 'text/markdown',
+                name: 'Sample Citation From File',
+                text: `Aute Lorem id laboris Lorem do dolor mollit. Officia dolore dolor do culpa nostrud velit officia magna ut aute pariatur excepteur ut cupidatat. Minim minim sunt enim pariatur incididunt eiusmod esse adipisicing do do nulla consequat minim. Exercitation enim adipisicing esse non pariatur duis deserunt eu magna enim amet irure veniam. Minim labore aliquip velit exercitation Lorem exercitation minim excepteur.
 
 ## Introduction
 
@@ -110,37 +121,48 @@ While configuring PAD proxy settings, you may encounter some common challenges:
 ## Conclusion
 
 Configuring Proxy Auto-Discovery (PAD) proxy settings is a vital task for network administrators seeking to streamline the proxy configuration process and enhance network security. By automating the discovery and configuration of proxy servers, PAD ensures efficiency, consistency, and scalability in network environments. However, it is essential to follow the recommended steps carefully and be prepared to troubleshoot common challenges to maintain a smooth proxy configuration process. Ultimately, a well-configured PAD proxy setup contributes to a more secure, efficient, and user-friendly network environment.
-`
-      },
-      {
-        '@context': 'https://schema.org',
-        '@id': 'cite:2',
-        '@type': 'Claim',
-        claimInterpreter: {
-          '@type': 'Project',
-          slogan: 'Surfaced with Azure OpenAI'
-        },
-        type: 'https://schema.org/Claim',
-
-        name: 'This citation has no name',
-        text: 'Here is some plain text without any Markdown formatting in it.'
-      },
-      {
-        '@context': 'https://schema.org',
-        '@type': 'VoteAction',
-        type: 'https://schema.org/VoteAction',
-
-        actionOption: 'upvote'
-      },
-      {
-        '@context': 'https://schema.org',
-        '@type': 'VoteAction',
-        type: 'https://schema.org/VoteAction',
-
-        actionOption: 'downvote'
-      }
-    ]
-  });
+`,
+                usageInfo: {
+                  '@id': '_:s1',
+                  '@type': 'CreativeWork',
+                  additionalType: 'https://copilotstudio.microsoft.com/sensitivity-labels/v1',
+                  description:
+                    'Data is classified as Confidential but is NOT PROTECTED to allow access by approved NDA business partners. If a higher level of protection is needed please change the sensitivity level of the cited content.',
+                  keywords: ['EncryptedContent'],
+                  name: 'Confidential\\Any User (No Protection)',
+                  pattern: {
+                    '@type': 'DefinedTermSet',
+                    inDefinedTermSet: 'https://www.w3.org/TR/css-color-4/',
+                    name: 'color',
+                    termCode: 'orange'
+                  }
+                }
+              },
+              claimInterpreter: {
+                '@type': 'Project',
+                slogan: 'Surfaced with Azure OpenAI',
+                url: 'https://www.microsoft.com/en-us/ai/responsible-ai'
+              },
+              position: '3'
+            }
+          ],
+          keywords: ['AIGeneratedContent'],
+          potentialAction: [
+            {
+              '@type': 'LikeAction'
+            },
+            {
+              '@type': 'DislikeAction'
+            }
+          ],
+          type: 'https://schema.org/Message',
+          usageInfo: {
+            '@id': '_:s1'
+          }
+        }
+      ]
+    }
+  );
 }
 
 export { help, name, processor };
