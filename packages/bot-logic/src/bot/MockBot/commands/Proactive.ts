@@ -11,7 +11,7 @@ function help() {
   };
 }
 
-async function processor({ botAppId }: BotInit, context: TurnContext, args: string = '') {
+async function processor(context: TurnContext, botAppId: string, args: string = '') {
   const reference = TurnContext.getConversationReference(context.activity);
 
   await context.sendActivity({
