@@ -3,7 +3,6 @@ import { ActivityHandler, type ConversationState, type TurnContext, type UserSta
 import commands from './commands.js';
 import * as OAuthCard from './commands/OAuthCard2.js';
 import aToZ from './commands2/aToZ.js';
-import proactive from './commands2/proactive.js';
 import reduceMap from './private/reduceMap.js';
 
 export type BotInit = {
