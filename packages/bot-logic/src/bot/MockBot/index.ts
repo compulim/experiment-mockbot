@@ -3,6 +3,7 @@ import { ActivityHandler, type ConversationState, type TurnContext, type UserSta
 import commands from './commands.js';
 import * as OAuthCard from './commands/OAuthCard2.js';
 import aToZ from './commands2/aToZ.js';
+import proactive from './commands2/proactive.js';
 import reduceMap from './private/reduceMap.js';
 
 export type BotInit = {
@@ -64,7 +65,9 @@ export default class MockBot extends ActivityHandler {
       const cleanedText = (text || '').trim().replace(/\.$/, '');
       const command = (commands as any[]).find(({ pattern }) => pattern.test(cleanedText));
 
-      if (command) {
+      if (/^proactive(\s+([\d\w]+))*?\.?$/iu.test(cleanedText)) {
+        await proactive(context, init.botAppId, cleanedText.substring(10));
+      } else if (command) {
         const { mode, pattern, processor } = command;
         const match = pattern.exec(cleanedText);
 

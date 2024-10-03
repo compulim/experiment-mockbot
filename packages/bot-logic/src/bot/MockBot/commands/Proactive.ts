@@ -1,4 +1,6 @@
 import { TurnContext } from 'botbuilder';
+import type { BotInit } from '../index.js';
+import sleep from '../private/sleep.js';
 
 const name = 'Proactive message';
 const WAIT_INTERVAL = 5000;
@@ -9,7 +11,7 @@ function help() {
   };
 }
 
-async function processor(context: TurnContext, args: string = '') {
+async function processor({ botAppId }: BotInit, context: TurnContext, args: string = '') {
   const reference = TurnContext.getConversationReference(context.activity);
 
   await context.sendActivity({
@@ -31,7 +33,7 @@ async function processor(context: TurnContext, args: string = '') {
     // This block of code should run under another process and it will only have knowledge of adapter setup and conversation reference.
     await sleep(WAIT_INTERVAL);
 
-    await adapter.continueConversation(reference, async continuedContext => {
+    adapter.continueConversationAsync(botAppId, reference, async continuedContext => {
       const command = args.trim().toLowerCase();
 
       if (command === 'card') {
@@ -67,10 +69,6 @@ async function processor(context: TurnContext, args: string = '') {
       }
     });
   })(reference, context.adapter);
-}
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export { help, name, processor };
