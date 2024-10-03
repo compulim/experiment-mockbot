@@ -2,6 +2,7 @@ import { ActivityHandler, type ConversationState, type TurnContext, type UserSta
 
 import commands from './commands.js';
 import * as OAuthCard from './commands/OAuthCard2.js';
+import { processor as proactive } from './commands/Proactive.js';
 import aToZ from './commands2/aToZ.js';
 import reduceMap from './private/reduceMap.js';
 
