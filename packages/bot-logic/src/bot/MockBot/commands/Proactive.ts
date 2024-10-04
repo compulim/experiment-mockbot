@@ -1,5 +1,4 @@
 import { TurnContext } from 'botbuilder';
-import type { BotInit } from '../index.js';
 import sleep from '../private/sleep.js';
 
 const name = 'Proactive message';
@@ -13,6 +12,9 @@ function help() {
 
 async function processor(context: TurnContext, botAppId: string, args: string = '') {
   const reference = TurnContext.getConversationReference(context.activity);
+
+  // SDK requires setting activityId for a proper replyToId.
+  reference.activityId = context.activity.id || '';
 
   await context.sendActivity({
     speak: 'Will send a proactive message soon.',
