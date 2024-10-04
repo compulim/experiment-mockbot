@@ -3,7 +3,7 @@ import App from './App';
 import AppProvider from './data/AppProvider';
 
 declare global {
-  const IS_DEVELOPMENT: boolean;
+  const IS_DEVELOPMENT: boolean | undefined;
 }
 
 const main = document.querySelector('main');
@@ -15,4 +15,6 @@ main &&
     </AppProvider>
   );
 
-IS_DEVELOPMENT && new EventSource('/esbuild').addEventListener('change', () => location.reload());
+'IS_DEVELOPMENT' in globalThis &&
+  IS_DEVELOPMENT &&
+  new EventSource('/esbuild').addEventListener('change', () => location.reload());
