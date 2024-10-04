@@ -28,12 +28,12 @@ async function processor(context: TurnContext, botAppId: string, args: string = 
     ]
   });
 
+  'willContinue' in context.adapter && (context.adapter as { willContinue: (context: TurnContext) => {} }).willContinue(context);
+
   (async function (reference, adapter) {
     // We specifically write this block of code to show how proactive message should work.
     // This block of code should run under another process and it will only have knowledge of adapter setup and conversation reference.
     await sleep(WAIT_INTERVAL);
-
-    'willContinue' in adapter && (adapter as { willContinue: (context: TurnContext) => {} }).willContinue(context);
 
     adapter.continueConversationAsync(botAppId, reference, async continuedContext => {
       const command = args.trim().toLowerCase();
