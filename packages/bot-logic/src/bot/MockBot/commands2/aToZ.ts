@@ -10,9 +10,6 @@ export default async function aToZ({ botAppId }: BotInit, context: TurnContext) 
   const conversationReference = TurnContext.getConversationReference(context.activity);
   const replyToId = context.activity.id;
 
-  // SDK requires setting activityId for a proper replyToId.
-  conversationReference.activityId = context.activity.id || '';
-
   const { adapter } = context;
 
   const firstActivity = await context.sendActivity({

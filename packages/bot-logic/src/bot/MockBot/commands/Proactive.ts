@@ -12,9 +12,10 @@ function help() {
 
 async function processor(context: TurnContext, botAppId: string, args: string = '') {
   const reference = TurnContext.getConversationReference(context.activity);
-
-  // SDK requires setting activityId for a proper replyToId.
-  reference.activityId = context.activity.id || '';
+  const {
+    activity: { id: replyToId },
+    adapter
+  } = context;
 
   await context.sendActivity({
     speak: 'Will send a proactive message soon.',
@@ -30,14 +31,16 @@ async function processor(context: TurnContext, botAppId: string, args: string = 
     ]
   });
 
-  'willContinue' in context.adapter && (context.adapter as { willContinue: (context: TurnContext) => {} }).willContinue(context);
+  (async function (reference) {
+    'willContinue' in adapter && (adapter as { willContinue: (context: TurnContext) => {} }).willContinue(context);
 
-  (async function (reference, adapter) {
     // We specifically write this block of code to show how proactive message should work.
     // This block of code should run under another process and it will only have knowledge of adapter setup and conversation reference.
     await sleep(WAIT_INTERVAL);
 
     adapter.continueConversationAsync(botAppId, reference, async continuedContext => {
+      continuedContext.activity.id = replyToId || ''; // HACK: `replyToId` is a random UUID.
+
       const command = args.trim().toLowerCase();
 
       if (command === 'card') {
@@ -72,7 +75,7 @@ async function processor(context: TurnContext, botAppId: string, args: string = 
         });
       }
     });
-  })(reference, context.adapter);
+  })(reference);
 }
 
 export { help, name, processor };
