@@ -4,6 +4,7 @@ import commands from './commands.js';
 import * as OAuthCard from './commands/OAuthCard2.js';
 import { processor as proactive } from './commands/Proactive.js';
 import aToZ from './commands2/aToZ.js';
+import printCard from './commands2/printCard.js';
 import reduceMap from './private/reduceMap.js';
 
 export type BotInit = {
@@ -67,6 +68,8 @@ export default class MockBot extends ActivityHandler {
 
       if (/^proactive(\s+([\d\w]+))*?\.?$/iu.test(cleanedText)) {
         await proactive(context, init.botAppId, cleanedText.substring(10));
+      } else if (/^printcard\s/iu.test(cleanedText)) {
+        await printCard(context, cleanedText.substring(10));
       } else if (command) {
         const { mode, pattern, processor } = command;
         const match = pattern.exec(cleanedText);
