@@ -31,6 +31,10 @@ async function processor(context: TurnContext, botAppId: string, args: string = 
     ]
   });
 
+  // SSE only: IIS does not flush \n\n, it just flush \n. Thus, the most recent activity cannot properly flushed until the stream is ended.
+  // We are adding an "event" activity so the first "message" activity will be flushed properly.
+  await context.sendActivity({ type: 'event' });
+
   (async function (reference) {
     'willContinue' in adapter && (adapter as { willContinue: (context: TurnContext) => {} }).willContinue(context);
 
