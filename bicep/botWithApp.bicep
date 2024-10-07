@@ -21,6 +21,7 @@ resource bot 'Microsoft.BotService/botServices@2022-09-15' = {
   properties: {
     displayName: '${deploymentFamilyName}-bot'
     endpoint: 'https://dummy.localhost/api/messages' // Chicken-and-egg problem, we will set it later.
+    isStreamingSupported: true
     msaAppId: botIdentityClientId
     msaAppMSIResourceId: botIdentityId
     msaAppTenantId: botIdentityTenantId
