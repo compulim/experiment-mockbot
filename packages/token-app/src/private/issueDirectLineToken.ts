@@ -61,5 +61,5 @@ export default async function issueDirectLineToken(
 
   console.error(response.bodyAsText);
 
-  throw new Error(`Direct Line service returned ${response.status}.`);
+  throw new Error(`Direct Line service returned ${response.status} while fetching token for "${init.bot}".`);
 }

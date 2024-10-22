@@ -52,5 +52,5 @@ export default async function issueSpeechServicesAccessToken(
 
   console.error(response.bodyAsText);
 
-  throw new Error(`Speech Services returned ${response.status}.`);
+  throw new Error(`Speech Services returned ${response.status} while fetching token.`);
 }

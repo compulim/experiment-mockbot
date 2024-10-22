@@ -72,5 +72,5 @@ export default async function issueDirectLineASEToken(
 
   console.error(response.bodyAsText);
 
-  throw new Error(`Direct Line ASE service returned ${response.status}.`);
+  throw new Error(`Direct Line ASE service returned ${response.status} while fetching token for "${init.bot}".`);
 }
