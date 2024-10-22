@@ -61,5 +61,11 @@ export default async function issueDirectLineToken(
 
   console.error(response.bodyAsText);
 
-  throw new Error(`Direct Line service returned ${response.status} while fetching token for "${init.bot}".`);
+  throw new Error(
+    `Direct Line service returned ${response.status} while fetching token for "${init.bot}"${
+      init.useManagedIdentity
+        ? ` with MSI ${init.bot === 'echo bot' ? ECHO_BOT_AZURE_CLIENT_ID : MOCK_BOT_AZURE_CLIENT_ID}`
+        : ' with secret'
+    }.`
+  );
 }
