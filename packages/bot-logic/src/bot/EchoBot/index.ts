@@ -1,4 +1,11 @@
-import { ActivityHandler, InputHints, MessageFactory, TurnContext, type ConversationState, type UserState } from 'botbuilder';
+import {
+  ActivityHandler,
+  InputHints,
+  MessageFactory,
+  TurnContext,
+  type ConversationState,
+  type UserState
+} from 'botbuilder';
 import sleep from './private/sleep.js';
 
 type BotInit = {
