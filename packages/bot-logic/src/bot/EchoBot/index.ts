@@ -117,7 +117,7 @@ export default class EchoBot extends ActivityHandler {
 
       const replyText = `Echo: ${context.activity.text}`;
 
-      await context.sendActivity(MessageFactory.text(replyText, replyText));
+      await context.sendActivity(MessageFactory.text(replyText, replyText, 'expectingInput'));
       // By calling next() you ensure that the next BotHandler is run.
       await next();
 
