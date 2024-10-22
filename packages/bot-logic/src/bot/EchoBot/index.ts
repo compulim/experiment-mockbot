@@ -1,4 +1,4 @@
-import { ActivityHandler, MessageFactory, TurnContext, type ConversationState, type UserState } from 'botbuilder';
+import { ActivityHandler, InputHints, MessageFactory, TurnContext, type ConversationState, type UserState } from 'botbuilder';
 import sleep from './private/sleep.js';
 
 type BotInit = {
@@ -117,7 +117,7 @@ export default class EchoBot extends ActivityHandler {
 
       const replyText = `Echo: ${context.activity.text}`;
 
-      await context.sendActivity(MessageFactory.text(replyText, replyText, 'expectingInput'));
+      await context.sendActivity(MessageFactory.text(replyText, replyText, InputHints.ExpectingInput));
       // By calling next() you ensure that the next BotHandler is run.
       await next();
 
