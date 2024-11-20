@@ -59,8 +59,7 @@ resource speechServices 'Microsoft.CognitiveServices/accounts@2024-04-01-preview
     // Despite mentioned here, custom sub-domain name is not required to use Entra authentication (i.e. managed identity) for STT/TTS.
     // https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-services-private-link?tabs=portal#adjust-an-application-to-use-a-speech-resource-without-private-endpoints
     // customSubDomainName: speechServicesName
-    // disableLocalAuth: true
-    disableLocalAuth: false
+    disableLocalAuth: true
   }
   sku: {
     name: 'S0'
