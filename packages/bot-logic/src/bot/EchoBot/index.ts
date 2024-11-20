@@ -1,6 +1,6 @@
 import {
   ActivityHandler,
-  InputHints,
+  // InputHints,
   MessageFactory,
   TurnContext,
   type ConversationState,
@@ -124,7 +124,8 @@ export default class EchoBot extends ActivityHandler {
 
       const replyText = `Echo: ${context.activity.text}`;
 
-      await context.sendActivity(MessageFactory.text(replyText, replyText, InputHints.ExpectingInput));
+      // await context.sendActivity(MessageFactory.text(replyText, replyText, InputHints.ExpectingInput));
+      await context.sendActivity(MessageFactory.text(replyText, replyText, 'expectingInput'));
       // By calling next() you ensure that the next BotHandler is run.
       await next();
 
