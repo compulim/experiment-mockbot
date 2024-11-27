@@ -1,0 +1,32 @@
+.checkbox {
+  flex-shrink: 0;
+  height: 60px;
+  position: relative;
+  width: 60px;
+}
+
+.checkbox.disabled {
+  opacity: 0.3;
+}
+
+.checkbox > * {
+  left: 0;
+  position: absolute;
+  top: 0;
+}
+
+.checkbox > .icon {
+  background-color: White;
+  font-size: 24px;
+  left: calc((100% - 24px) / 2);
+  top: calc((100% - 24px) / 2);
+}
+
+.checkbox > input {
+  background-color: Red;
+  height: 60px;
+  margin: 0;
+  opacity: 0;
+  padding: 0;
+  width: 60px;
+}

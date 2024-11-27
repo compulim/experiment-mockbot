@@ -1,0 +1,37 @@
+.task-list-attachment {
+  background-color: #efe;
+  font-family: Calibri, 'Helvetica Neue', Arial, sans-serif;
+  padding: 10px;
+  position: relative;
+}
+
+.task-list-attachment > ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.task-list-attachment > ul > li > label > input {
+  margin-right: 0.7em;
+}
+
+.task-list-attachment > footer {
+  color: #999;
+  font-size: 75%;
+  margin-top: 0.5em;
+}
+
+.task-list-attachment > div.badge {
+  background-color: #393;
+  border-radius: 0 0 0 4px;
+  color: White;
+  font-size: 60%;
+  padding: 2px 5px;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.task-list-item > span.completed {
+  text-decoration: line-through;
+}

@@ -1,4 +1,5 @@
-import { css } from 'glamor';
+import './Task.css';
+
 import { Delete24Regular } from '@fluentui/react-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
@@ -11,59 +12,6 @@ import deleteTask from './data/action/deleteTask';
 import editTaskText from './data/action/editTaskText';
 import markTaskAsCompleted from './data/action/markTaskAsCompleted';
 import markTaskAsIncompleted from './data/action/markTaskAsIncompleted';
-
-const ROOT_CSS = css({
-  alignItems: 'center',
-  display: 'flex',
-  fontSize: 32,
-  height: 60,
-
-  '& > .text': {
-    backgroundColor: 'Transparent',
-    border: 0,
-    flex: 1,
-    fontFamily: "'Segoe Script', serif",
-    fontSize: 32,
-    outline: 0,
-    overflow: 'hidden',
-    margin: 0,
-    minWidth: 100,
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-
-    '&.completed': {
-      textDecoration: 'line-through'
-    },
-
-    '&:placeholder-shown': {
-      color: 'Black',
-      opacity: 0.4
-    }
-  },
-
-  '& > button.delete': {
-    backgroundColor: 'transparent',
-    border: 0,
-    flexShrink: 0,
-    fontSize: 24,
-    height: '100%',
-    marginLeft: 20,
-    outline: 0,
-    textAlign: 'left',
-
-    '&:disabled': {
-      display: 'none'
-    },
-
-    '&:hover': {
-      color: 'Red'
-    },
-
-    '&:not(:hover)': {
-      opacity: 0.1
-    }
-  }
-});
 
 export default function Task({ taskId }) {
   const task = useSelector(({ tasks }) => tasks.find(({ id }) => id === taskId));
@@ -96,7 +44,7 @@ export default function Task({ taskId }) {
   const { completed = false } = task || {};
 
   return (
-    <div className={ROOT_CSS}>
+    <div className="task">
       <Checkbox checked={completed} disabled={!task} onChange={handleCompletedChange} />
       <input
         className={classNames('text', { completed })}

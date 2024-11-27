@@ -1,0 +1,28 @@
+.app {
+  background-color: White;
+  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIj8+PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMTIwIiB3aWR0aD0iMTAwIj48bGluZSB4MT0iMCIgeTE9IjU5LjUiIHgyPSIxMDAiIHkyPSI1OS41IiBzdHJva2U9IiNDQ0MiIHN0cm9rZS13aWR0aD0iMXB4IiAvPjxsaW5lIHgxPSIwIiB5MT0iMTE5LjUiIHgyPSIxMDAiIHkyPSIxMTkuNSIgc3Ryb2tlPSIjQ0NDIiBzdHJva2Utd2lkdGg9IjFweCIgLz48cmVjdCB4PSIwIiB5PSI2MCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSI1OSIgZmlsbD0icmdiKDI1NSwgMjU1LCAyMzApIiAvPjwvc3ZnPg==);
+  display: flex;
+  height: 100%;
+  justify-content: center;
+}
+
+.app > .task-list {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+.app > .task-list > .tasks {
+  flex: 1;
+}
+
+@media (max-width: 480px) {
+  app {
+    background-color: #f0f0f0;
+    background-image: none;
+
+    & > .task-list {
+      display: none;
+    }
+  }
+}

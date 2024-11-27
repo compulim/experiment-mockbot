@@ -1,0 +1,26 @@
+.add-task-box {
+  background-color: White;
+  border-top: solid 1px #ccc;
+  display: flex;
+}
+
+.add-task-box > button {
+  background-color: transparent;
+  border: 0;
+  font-size: 32;
+  padding: 20px 0 20px 20px;
+}
+
+.add-task-box > button:not(:hover) {
+  opacity: 0.2;
+}
+
+.add-task-box > input {
+  border: 0;
+  color: Navy;
+  flex: 1;
+  font-family: 'Segoe Script', serif;
+  font-size: 32;
+  outline: 0;
+  padding: 20;
+}

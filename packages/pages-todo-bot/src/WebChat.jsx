@@ -1,4 +1,5 @@
-import { css } from 'glamor';
+import './WebChat.css';
+
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactWebChat, {
@@ -17,24 +18,6 @@ import fetchSpeechServicesRegion from './util/fetchSpeechServicesRegion';
 import fetchSpeechServicesToken from './util/fetchSpeechServicesToken';
 import receiveActivity from './data/action/receiveActivity';
 import setDirectLine from './data/action/setDirectLine';
-
-const WEB_CHAT_BOX = css({
-  boxShadow: '0 0 10px rgba(0, 0, 0, .1)',
-  display: 'flex',
-  width: '100%',
-
-  '@media (min-width: 481px)': {
-    height: 'calc(100% - 20px)',
-    margin: 10,
-    width: 320
-  },
-
-  '& > *': {
-    borderRadius: 5,
-    overflow: 'hidden',
-    width: '100%'
-  }
-});
 
 const WEB_CHAT_STYLE_OPTIONS = {
   backgroundColor: '#F7F7F7',
@@ -103,7 +86,7 @@ export default function WebChat() {
 
   return (
     !!(directLine && webSpeechPonyfillFactory) && (
-      <div className={WEB_CHAT_BOX}>
+      <div className="web-chat-box">
         <FluentThemeProvider>
           <ReactWebChat
             attachmentMiddleware={attachmentMiddleware}

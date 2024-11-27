@@ -1,4 +1,5 @@
-import { css } from 'glamor';
+import './Tasks.css';
+
 import { useSelector } from 'react-redux';
 import classNames from 'classnames';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -6,15 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import createTaskId from './util/createTaskId';
 import Task from './Task';
 
-const ROOT_CSS = css({
-  listStyleType: 'none',
-  margin: 0,
-  padding: 0
-});
-
-export default function Tasks({
-  className
-}) {
+export default function Tasks({ className }) {
   const [newTaskId, setNewTaskId] = useState(createTaskId());
   const tasks = useSelector(({ tasks }) => tasks);
 
@@ -24,18 +17,18 @@ export default function Tasks({
     return () => {};
   }, [newTaskId, tasks]);
 
-  const tasksWithNewTask = useMemo(() => [
-    ...tasks.filter(({ id }) => id !== newTaskId),
-    { id: newTaskId }
-  ], [newTaskId, tasks]);
+  const tasksWithNewTask = useMemo(
+    () => [...tasks.filter(({ id }) => id !== newTaskId), { id: newTaskId }],
+    [newTaskId, tasks]
+  );
 
   return (
-    <ul className={ classNames(ROOT_CSS + '', className) }>
-      { tasksWithNewTask.map(({ id }) =>
+    <ul className={classNames('tasks', className)}>
+      {tasksWithNewTask.map(({ id }) => (
         <li key={id}>
-          <Task taskId={ id } />
-        </li>)
-      }
+          <Task taskId={id} />
+        </li>
+      ))}
     </ul>
   );
 }

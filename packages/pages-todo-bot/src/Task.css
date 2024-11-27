@@ -1,0 +1,52 @@
+.task {
+  align-items: center;
+  display: flex;
+  font-size: 32px;
+  height: 60px;
+}
+
+.task > .text {
+  background-color: Transparent;
+  border: 0;
+  flex: 1;
+  font-family: 'Segoe Script', serif;
+  font-size: 32px;
+  outline: 0;
+  overflow: hidden;
+  margin: 0;
+  min-width: 100px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task > .text.completed {
+  text-decoration: line-through;
+}
+
+.task > .text:placeholder-shown {
+  color: Black;
+  opacity: 0.4;
+}
+
+.task > button.delete {
+  background-color: transparent;
+  border: 0;
+  flex-shrink: 0;
+  font-size: 24px;
+  height: 100%;
+  margin-left: 20px;
+  outline: 0;
+  text-align: left;
+}
+
+.task > button.delete:disabled {
+  display: none;
+}
+
+.task > button.delete:hover {
+  color: Red;
+}
+
+.task > button.delete:not(:hover) {
+  opacity: 0.1;
+}
