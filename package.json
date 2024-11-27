@@ -15,7 +15,8 @@
     "/packages/token-app/",
     "/packages/webchat-offline-chat-adapter/",
     "/packages/pages-bot-bundle-as-chat-adapter/",
-    "/packages/pages/"
+    "/packages/pages/",
+    "/packages/pages-todo-bot/"
   ],
   "scripts": {
     "build": "npm run build --if-present --workspaces",

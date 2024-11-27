@@ -1,0 +1,41 @@
+{
+  "name": "@microsoft/botframework-mockbot-pages-todo-bot",
+  "version": "0.0.0-0",
+  "license": "MIT",
+  "private": true,
+  "files": [
+    "./public/"
+  ],
+  "scripts": {
+    "build": "esbuild --bundle --define:TOKEN_APP_URL=\\\"$TOKEN_APP_URL\\\" --entry-names=[name]/[ext]/main --jsx=automatic --minify --outdir=./public/static/ --sourcemap app=./src/index.tsx",
+    "bump": "npm run bump:prod && npm run bump:dev && npm run bump:auditfix",
+    "bump:auditfix": "npm audit fix || exit 0",
+    "bump:dev": "PACKAGES_TO_BUMP=$(cat package.json | jq -r '(.pinDependencies // {}) as $P | (.localPeerDependencies // {}) as $L | (.devDependencies // {}) | to_entries | map(select(.key as $K | $L | has($K) | not)) | map(.key + \"@\" + ($P[.key] // [\"latest\"])[0]) | join(\" \")') && [ ! -z \"$PACKAGES_TO_BUMP\" ] && npm install $PACKAGES_TO_BUMP || true",
+    "bump:prod": "PACKAGES_TO_BUMP=$(cat package.json | jq -r '(.pinDependencies // {}) as $P | (.localPeerDependencies // {}) as $L | (.dependencies // {}) | to_entries | map(select(.key as $K | $L | has($K) | not)) | map(.key + \"@\" + ($P[.key] // [\"latest\"])[0]) | join(\" \")') && [ ! -z \"$PACKAGES_TO_BUMP\" ] && npm install $PACKAGES_TO_BUMP || true",
+    "precommit": "npm run precommit:typescript",
+    "precommit:typescript": "tsc --project ./src/tsconfig.json",
+    "start": "npm run build -- --define:IS_DEVELOPMENT=true --servedir=./public --watch"
+  },
+  "devDependencies": {
+    "@tsconfig/strictest": "^2.0.5",
+    "@types/react": "^16.14.62",
+    "@types/react-dom": "^16.9.24",
+    "esbuild": "^0.23.0"
+  },
+  "dependencies": {
+    "@fluentui/react-icons": "^2.0.266",
+    "@microsoft/botframework-mockbot-pages-bot-bundle-as-chat-adapter": "^0.0.0-0",
+    "@uifabric/icons": "^7.9.5",
+    "botframework-webchat": "^4.18.0",
+    "botframework-webchat-fluent-theme": "^4.18.0",
+    "copilot-studio-direct-to-engine-chat-adapter": "^0.0.0-main.20240702-213245.f263309",
+    "glamor": "^2.20.40",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-redux": "^7.2.9",
+    "redux": "^4.2.1",
+    "redux-saga": "^1.3.0",
+    "simple-update-in": "^2.2.0",
+    "string-similarity": "^4.0.4"
+  }
+}

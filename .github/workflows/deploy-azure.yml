@@ -99,12 +99,24 @@ jobs:
         run: npm pack
         working-directory: ./packages/pages
 
+      - name: Pack GitHub Pages for To-Do bot
+        run: npm pack
+        working-directory: ./packages/pages-todo-bot
+
       - name: Upload GitHub Pages tarball
         uses: actions/upload-artifact@v4
         with:
           compression-level: 0
           name: pages-tarball
           path: ./packages/pages/*.tgz
+          retention-days: 1
+
+      - name: Upload GitHub Pages for To-Do bot tarball
+        uses: actions/upload-artifact@v4
+        with:
+          compression-level: 0
+          name: pages-todo-bot-tarball
+          path: ./packages/pages-todo-bot/*.tgz
           retention-days: 1
 
       - name: Pack token-app
@@ -367,6 +379,10 @@ jobs:
     name: Build GitHub Pages
     needs: deploy-bicep
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # name: [pages]
+        name: [pages-todo-bot]
 
     steps:
       - name: Checkout
@@ -390,12 +406,12 @@ jobs:
 
       - name: List directory
         run: ls -laR
-        working-directory: ./packages/pages/public
+        working-directory: ./packages/${{ matrix.name }}/public
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./packages/pages/public/
+          path: ./packages/${{ matrix.name }}/public/
 
   publish-pages:
     environment:

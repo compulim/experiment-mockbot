@@ -1,0 +1,5 @@
+html, body, main { height: 100%; }
+body {
+  background-color: #EEE;
+  margin: 0;
+}
