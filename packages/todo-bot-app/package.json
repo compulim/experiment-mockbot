@@ -1,50 +1,45 @@
 {
-  "name": "@microsoft/botframework-mockbot-bot-logic",
+  "name": "@microsoft/botframework-todo-bot-app",
   "version": "0.0.0-0",
   "license": "MIT",
   "private": true,
+  "main": "./dist/index.js",
   "files": [
-    "./dist/"
+    "./.dockerignore",
+    "./dist/",
+    "./Dockerfile",
+    "./public/",
+    "./web.config"
   ],
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.js",
-      "import": "./dist/index.js"
-    },
-    "./with-assets": {
-      "types": "./dist/index.with-assets.d.js",
-      "import": "./dist/index.with-assets.js"
-    }
-  },
   "scripts": {
-    "build": "tsup",
+    "build": "rollup -c",
     "bump": "npm run bump:prod && npm run bump:dev && npm run bump:auditfix",
     "bump:auditfix": "npm audit fix || exit 0",
     "bump:dev": "PACKAGES_TO_BUMP=$(cat package.json | jq -r '(.pinDependencies // {}) as $P | (.localPeerDependencies // {}) as $L | (.devDependencies // {}) | to_entries | map(select(.key as $K | $L | has($K) | not)) | map(.key + \"@\" + ($P[.key] // [\"latest\"])[0]) | join(\" \")') && [ ! -z \"$PACKAGES_TO_BUMP\" ] && npm install $PACKAGES_TO_BUMP || true",
     "bump:prod": "PACKAGES_TO_BUMP=$(cat package.json | jq -r '(.pinDependencies // {}) as $P | (.localPeerDependencies // {}) as $L | (.dependencies // {}) | to_entries | map(select(.key as $K | $L | has($K) | not)) | map(.key + \"@\" + ($P[.key] // [\"latest\"])[0]) | join(\" \")') && [ ! -z \"$PACKAGES_TO_BUMP\" ] && npm install $PACKAGES_TO_BUMP || true",
+    "prebuild": "mkdir -p ./public/assets/ && rsync --exclude=*.map --exclude=*.js --exclude=*.ts ../bot-logic/dist/* ./public/assets/",
     "precommit": "npm run precommit:typescript",
     "precommit:typescript": "tsc --project ./src/tsconfig.json",
-    "start": "tsup --watch"
+    "start": "npm run prebuild && tsup --onSuccess \"node .\" --watch"
   },
   "dependencies": {
+    "@microsoft/botframework-mockbot-bot-host": "^0.0.0-0",
+    "@microsoft/botframework-mockbot-bot-logic": "^0.0.0-0",
     "botbuilder": "^4.22.3",
-    "botbuilder-dialogs": "^4.22.3",
-    "botframework-connector": "^4.22.3",
-    "cors": "^2.8.5",
-    "express": "^4.19.2",
-    "math-random": "^2.0.1",
-    "on-error-resume-next": "^2.0.1",
-    "string-similarity": "^4.0.4",
+    "dotenv": "^16.4.5",
     "valibot": "^0.36.0"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-replace": "^5.0.7",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@tsconfig/strictest": "^2.0.5",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
-    "@types/math-random": "^1.0.2",
     "@types/node": "^20.14.10",
-    "@types/string-similarity": "^4.0.2",
+    "rollup": "^4.18.1",
     "tslib": "^2.6.3",
     "tsup": "^8.1.0",
     "typescript": "^5.5.3"

@@ -214,6 +214,8 @@ jobs:
       echo-bot-app-url: ${{ steps.arm-deploy.outputs.echoBotAppURL }}
       mock-bot-app-name: ${{ steps.arm-deploy.outputs.mockBotAppName }}
       mock-bot-app-url: ${{ steps.arm-deploy.outputs.mockBotAppURL }}
+      todo-bot-app-name: ${{ steps.arm-deploy.outputs.todoBotAppName }}
+      todo-bot-app-url: ${{ steps.arm-deploy.outputs.todoBotAppURL }}
       token-app-url: ${{ steps.arm-deploy.outputs.tokenAppURL }}
     permissions:
       id-token: write
@@ -318,6 +320,37 @@ jobs:
           app-name: ${{ needs.deploy-bicep.outputs.mock-bot-app-name }}
           package: ./mock-bot-app.zip
 
+  publish-todo-bot-app:
+    environment:
+      name: azure
+      url: ${{ steps.webapps-deploy.outputs.webapp-url }}
+    name: Publish todo-bot-app to Web Apps
+    needs:
+      - convert-bot-app-artifact
+      - deploy-bicep
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download tarball
+        uses: actions/download-artifact@v4
+        with:
+          name: todo-bot-app-zip
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.BUILDER_CLIENT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ID }}
+          tenant-id: ${{ vars.TENANT_ID }}
+
+      - id: webapps-deploy
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ needs.deploy-bicep.outputs.todo-bot-app-name }}
+          package: ./todo-bot-app.zip
+
   build-pages:
     name: Build GitHub Pages
     needs: deploy-bicep
@@ -338,6 +371,7 @@ jobs:
       - env:
           ECHO_BOT_APP_URL: ${{ needs.deploy-bicep.outputs.echo-bot-app-url }}
           MOCK_BOT_APP_URL: ${{ needs.deploy-bicep.outputs.mock-bot-app-url }}
+          TODO_BOT_APP_URL: ${{ needs.deploy-bicep.outputs.todo-bot-app-url }}
           TOKEN_APP_URL: ${{ needs.deploy-bicep.outputs.token-app-url }}
         name: Build
         run: npm run build

@@ -7,19 +7,23 @@ const envSchema = object({
   ECHO_BOT_AZURE_CLIENT_ID: string(),
   ECHO_BOT_DIRECT_LINE_SECRET: string(),
   MOCK_BOT_AZURE_CLIENT_ID: string(),
-  MOCK_BOT_DIRECT_LINE_SECRET: string()
+  MOCK_BOT_DIRECT_LINE_SECRET: string(),
+  TODO_BOT_AZURE_CLIENT_ID: string(),
+  TODO_BOT_DIRECT_LINE_SECRET: string()
 });
 
 const directLineIssueTokenResponse = string();
 
 export default async function issueDirectLineToken(
-  init: { bot?: 'echo bot' | 'mock bot' | undefined; useManagedIdentity?: boolean | undefined } = {}
+  init: { bot?: 'echo bot' | 'mock bot' | 'todo bot' | undefined; useManagedIdentity?: boolean | undefined } = {}
 ): Promise<Readonly<{ token: string }>> {
   const {
     ECHO_BOT_AZURE_CLIENT_ID,
     ECHO_BOT_DIRECT_LINE_SECRET,
     MOCK_BOT_AZURE_CLIENT_ID,
-    MOCK_BOT_DIRECT_LINE_SECRET
+    MOCK_BOT_DIRECT_LINE_SECRET,
+    TODO_BOT_AZURE_CLIENT_ID,
+    TODO_BOT_DIRECT_LINE_SECRET
   } = parse(envSchema, process.env);
 
   const client = new ServiceClient();
@@ -27,7 +31,12 @@ export default async function issueDirectLineToken(
 
   if (init.useManagedIdentity) {
     const tokenCredential = new ManagedIdentityCredential({
-      clientId: init.bot === 'echo bot' ? ECHO_BOT_AZURE_CLIENT_ID : MOCK_BOT_AZURE_CLIENT_ID
+      clientId:
+        init.bot === 'echo bot'
+          ? ECHO_BOT_AZURE_CLIENT_ID
+          : init.bot === 'todo bot'
+          ? TODO_BOT_AZURE_CLIENT_ID
+          : MOCK_BOT_AZURE_CLIENT_ID
     });
 
     const accessToken = await tokenCredential.getToken('https://directline.botframework.com/');
@@ -38,7 +47,13 @@ export default async function issueDirectLineToken(
   } else {
     headers.set(
       'authorization',
-      `Bearer ${init.bot === 'echo bot' ? ECHO_BOT_DIRECT_LINE_SECRET : MOCK_BOT_DIRECT_LINE_SECRET}`
+      `Bearer ${
+        init.bot === 'echo bot'
+          ? ECHO_BOT_DIRECT_LINE_SECRET
+          : init.bot === 'todo bot'
+          ? TODO_BOT_DIRECT_LINE_SECRET
+          : MOCK_BOT_DIRECT_LINE_SECRET
+      }`
     );
   }
 
@@ -64,7 +79,13 @@ export default async function issueDirectLineToken(
   throw new Error(
     `Direct Line service returned ${response.status} while fetching token for "${init.bot}"${
       init.useManagedIdentity
-        ? ` with MSI ${init.bot === 'echo bot' ? ECHO_BOT_AZURE_CLIENT_ID : MOCK_BOT_AZURE_CLIENT_ID}`
+        ? ` with MSI ${
+            init.bot === 'echo bot'
+              ? ECHO_BOT_AZURE_CLIENT_ID
+              : init.bot === 'todo bot'
+              ? TODO_BOT_AZURE_CLIENT_ID
+              : MOCK_BOT_AZURE_CLIENT_ID
+          }`
         : ' with secret'
     }.`
   );

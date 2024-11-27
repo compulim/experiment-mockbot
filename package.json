@@ -11,6 +11,7 @@
     "/packages/bot-host/",
     "/packages/echo-bot-app/",
     "/packages/mock-bot-app/",
+    "/packages/todo-bot-app/",
     "/packages/token-app/",
     "/packages/webchat-offline-chat-adapter/",
     "/packages/pages-bot-bundle-as-chat-adapter/",

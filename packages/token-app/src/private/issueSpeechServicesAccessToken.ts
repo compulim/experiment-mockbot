@@ -11,7 +11,7 @@ const envSchema = object({
 });
 
 export default async function issueSpeechServicesAccessToken(
-  init: { bot?: 'echo bot' | 'mock bot' | undefined; useManagedIdentity?: boolean | undefined } = {}
+  init: { bot?: 'echo bot' | 'mock bot' | 'todo bot' | undefined; useManagedIdentity?: boolean | undefined } = {}
 ): Promise<Readonly<{ token: string }>> {
   const {
     SPEECH_SERVICES_AZURE_CLIENT_ID,

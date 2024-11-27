@@ -29,6 +29,7 @@ param keyVaultName string = '${deploymentFamilyName}-key'
 param logAnalyticsName string = '${deploymentFamilyName}-log'
 param echoBotDeploymentFamilyName string = '${deploymentFamilyName}-echo-bot'
 param mockBotDeploymentFamilyName string = '${deploymentFamilyName}-mock-bot'
+param todoBotDeploymentFamilyName string = '${deploymentFamilyName}-todo-bot'
 param speechServicesName string = '${deploymentFamilyName}-speech'
 param tokenAppName string = '${deploymentFamilyName}-token-app'
 
@@ -127,6 +128,14 @@ resource echoBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' 
 
 resource mockBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: '${mockBotDeploymentFamilyName}-direct-line-secret'
+  parent: keyVault
+  properties: {
+    value: 'PLACEHOLDER' // Creates an empty slot and we will fill it out later.
+  }
+}
+
+resource todoBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  name: '${todoBotDeploymentFamilyName}-direct-line-secret'
   parent: keyVault
   properties: {
     value: 'PLACEHOLDER' // Creates an empty slot and we will fill it out later.
@@ -255,6 +264,62 @@ resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
   }
 }
 
+resource todoBotIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
+  location: location
+  name: '${todoBotDeploymentFamilyName}-identity'
+}
+
+module todoBotWithApp 'botWithApp.bicep' = {
+  name: todoBotDeploymentFamilyName
+  params: {
+    botIdentityId: todoBotIdentity.id
+    botIdentityClientId: todoBotIdentity.properties.clientId
+    botIdentityTenantId: todoBotIdentity.properties.tenantId
+    builderIdentityId: builderIdentity.id
+    deploymentFamilyName: todoBotDeploymentFamilyName
+    deployTime: deployTime
+    location: location
+  }
+}
+
+resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${builderIdentity.id}': {}
+    }
+  }
+  kind: 'AzureCLI'
+  location: location
+  #disable-next-line use-stable-resource-identifiers
+  name: '${todoBotWithApp.name}-save-secret-script'
+  properties: {
+    arguments: '\\"${todoBotWithApp.outputs.botName}\\" \\"${todoBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
+    azCliVersion: '2.61.0'
+    cleanupPreference: 'Always'
+    forceUpdateTag: deployTime
+    retentionInterval: 'PT1H' // Minimal retention is 1 hour.
+    scriptContent: '''
+      set -eo pipefail
+
+      BOT_NAME=$1
+      DIRECT_LINE_SECRET_SECRET_NAME=$2
+      KEY_VAULT_NAME=$3
+      RESOURCE_GROUP_NAME=$4
+
+      # Direct Line secret can only be retrieved via HTTP POST call, thus, "update" command is required.
+      DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
+
+      az keyvault secret set \
+        --name $DIRECT_LINE_SECRET_SECRET_NAME \
+        --output none \
+        --value $DIRECT_LINE_SECRET \
+        --vault-name $KEY_VAULT_NAME
+    '''
+    timeout: 'PT2M'
+  }
+}
+
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.app/managedenvironments?pivots=deployment-language-bicep
 resource tokenAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   location: location
@@ -282,6 +347,7 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
       '${echoBotIdentity.id}': {}
       '${mockBotIdentity.id}': {}
       '${speechServicesIdentity.id}': {}
+      '${todoBotIdentity.id}': {}
       '${tokenAppIdentity.id}': {}
     }
   }
@@ -325,6 +391,11 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
           identity: tokenAppIdentity.id
           keyVaultUrl: speechServicesSubscriptionKey.properties.secretUri
           name: 'speech-services-subscription-key'
+        }
+        {
+          identity: tokenAppIdentity.id
+          keyVaultUrl: todoBotDirectLineSecret.properties.secretUri
+          name: '${todoBotDeploymentFamilyName}-direct-line-secret'
         }
       ]
     }
@@ -378,6 +449,18 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
               secretRef: 'speech-services-subscription-key'
             }
             {
+              name: 'TODO_BOT_APP_HOST_NAME'
+              value: todoBotWithApp.outputs.appDefaultHostName
+            }
+            {
+              name: 'TODO_BOT_AZURE_CLIENT_ID'
+              value: todoBotIdentity.properties.clientId
+            }
+            {
+              name: 'TODO_BOT_DIRECT_LINE_SECRET'
+              secretRef: '${todoBotDeploymentFamilyName}-direct-line-secret'
+            }
+            {
               name: 'TRUSTED_ORIGINS'
               value: ''
               // value: 'https://compulim.github.io,https://localhost'
@@ -420,6 +503,12 @@ output mockBotAppName string = mockBotWithApp.outputs.appName
 
 // Output "mockBotAppURL" for display in GitHub deployment.
 output mockBotAppURL string = mockBotWithApp.outputs.appURL
+
+// Output "todoBotAppName" for ZIP deployment later.
+output todoBotAppName string = todoBotWithApp.outputs.appName
+
+// Output "todoBotAppURL" for display in GitHub deployment.
+output todoBotAppURL string = todoBotWithApp.outputs.appURL
 
 // Output "tokenAppURL" for GitHub Pages.
 output tokenAppURL string = 'https://${tokenApp.properties.configuration.ingress.fqdn}/'

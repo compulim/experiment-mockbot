@@ -18,8 +18,17 @@ const { PORT, SPEECH_SERVICES_REGION, TRUSTED_ORIGINS } = parse(
   process.env
 );
 
-function getBotFromQuery(query: unknown): 'echo bot' | 'mock bot' {
-  return query && typeof query === 'object' && 'bot' in query && query.bot === 'echo bot' ? 'echo bot' : 'mock bot';
+function getBotFromQuery(query: unknown): 'echo bot' | 'mock bot' | 'todo bot' {
+  switch (query && typeof query === 'object' && 'bot' in query && query.bot) {
+    case 'echo bot':
+      return 'echo bot';
+
+    case 'todo bot':
+      return 'todo bot';
+
+    default:
+      return 'mock bot';
+  }
 }
 
 function handleError<P, ResBody, ReqBody, ReqQuery, Locals extends Record<string, any> = Record<string, any>>(
