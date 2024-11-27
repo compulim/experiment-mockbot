@@ -83,6 +83,18 @@ jobs:
           path: ./packages/mock-bot-app/*.tgz
           retention-days: 1
 
+      - name: Pack todo-bot-app
+        run: npm pack
+        working-directory: ./packages/todo-bot-app
+
+      - name: Upload todo-bot-app tarball
+        uses: actions/upload-artifact@v4
+        with:
+          compression-level: 0
+          name: todo-bot-app-tarball
+          path: ./packages/todo-bot-app/*.tgz
+          retention-days: 1
+
       - name: Pack GitHub Pages
         run: npm pack
         working-directory: ./packages/pages
@@ -114,7 +126,7 @@ jobs:
 
     strategy:
       matrix:
-        name: [echo-bot-app, mock-bot-app]
+        name: [echo-bot-app, mock-bot-app, todo-bot-app]
 
     steps:
       - name: Download tarball
