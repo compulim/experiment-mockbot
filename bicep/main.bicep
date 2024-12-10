@@ -462,8 +462,9 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
             }
             {
               name: 'TRUSTED_ORIGINS'
-              value: ''
+              // value: ''
               // value: 'https://compulim.github.io,https://localhost'
+              value: 'https://compulim.github.io,https://localhost,https://*.local-credentialless.webcontainer-app.io'
             }
           ]
           image: '${registryServer}/${tokenAppImageName}'
