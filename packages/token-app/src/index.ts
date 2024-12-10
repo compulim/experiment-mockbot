@@ -50,14 +50,14 @@ const app = express();
 
 const corsMiddleware = cors({
   origin(requestOrigin, callback) {
-    return callback(
-      null,
+    if (
       !TRUSTED_ORIGINS ||
-        !!(
-          requestOrigin &&
-          TRUSTED_ORIGINS?.split(',').some(trustedOrigin => isMatch(requestOrigin, trustedOrigin.trim()))
-        )
-    );
+      (requestOrigin && TRUSTED_ORIGINS?.split(',').some(trustedOrigin => isMatch(requestOrigin, trustedOrigin.trim())))
+    ) {
+      return callback(null, true);
+    }
+
+    callback(new Error('Origin not allowed.'));
   }
 });
 
