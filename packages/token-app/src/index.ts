@@ -54,10 +54,10 @@ app.use(
       return callback(
         null,
         !TRUSTED_ORIGINS ||
-          !!(
-            requestOrigin &&
-            TRUSTED_ORIGINS?.split(',').some(trustedOrigin => isMatch(requestOrigin, trustedOrigin.trim()))
-          )
+          (requestOrigin &&
+            TRUSTED_ORIGINS?.split(',').some(trustedOrigin => isMatch(requestOrigin, trustedOrigin.trim())))
+          ? requestOrigin
+          : []
       );
     }
   })
