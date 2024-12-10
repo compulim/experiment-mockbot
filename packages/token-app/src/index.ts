@@ -48,20 +48,19 @@ function handleError<P, ResBody, ReqBody, ReqQuery, Locals extends Record<string
 
 const app = express();
 
-app.use(
-  cors({
-    origin(requestOrigin, callback) {
-      return callback(
-        null,
-        !TRUSTED_ORIGINS ||
-          (requestOrigin &&
-            TRUSTED_ORIGINS?.split(',').some(trustedOrigin => isMatch(requestOrigin, trustedOrigin.trim())))
-          ? requestOrigin
-          : []
-      );
-    }
-  })
-);
+const corsMiddleware = cors({
+  origin(requestOrigin, callback) {
+    return callback(
+      null,
+      !TRUSTED_ORIGINS ||
+        !!(
+          requestOrigin &&
+          TRUSTED_ORIGINS?.split(',').some(trustedOrigin => isMatch(requestOrigin, trustedOrigin.trim()))
+        )
+    );
+  }
+});
+
 app.use(json());
 
 app.get('/health.txt', (_, res) => {
@@ -70,6 +69,7 @@ app.get('/health.txt', (_, res) => {
 
 app.use(
   '/api/token/directline',
+  corsMiddleware,
   handleError(async (req, res, next) =>
     req.method === 'GET' || req.method === 'POST'
       ? res.json({
@@ -81,6 +81,7 @@ app.use(
 
 app.use(
   '/api/token/directline/msi',
+  corsMiddleware,
   handleError(async (req, res, next) =>
     req.method === 'GET' || req.method === 'POST'
       ? res.json({
@@ -92,6 +93,7 @@ app.use(
 
 app.use(
   '/api/token/directlinease',
+  corsMiddleware,
   handleError(async (req, res, next) => {
     if (req.method === 'GET' || req.method === 'POST') {
       const { domain, token } = await issueDirectLineASEToken({ bot: getBotFromQuery(req.query) });
@@ -105,6 +107,7 @@ app.use(
 
 app.use(
   '/api/token/speech/msi',
+  corsMiddleware,
   handleError(async (req, res, next) =>
     req.method === 'GET' || req.method === 'POST'
       ? res.json({
@@ -118,6 +121,7 @@ app.use(
 
 app.use(
   '/api/token/speech',
+  corsMiddleware,
   handleError(async (req, res, next) =>
     req.method === 'GET' || req.method === 'POST'
       ? res.json({
