@@ -51,15 +51,14 @@ const app = express();
 app.use(
   cors({
     origin(requestOrigin, callback) {
-      if (
+      return callback(
+        null,
         !TRUSTED_ORIGINS ||
-        (requestOrigin &&
-          TRUSTED_ORIGINS?.split(',').some(trustedOrigin => isMatch(requestOrigin, trustedOrigin.trim())))
-      ) {
-        return callback(null, true);
-      }
-
-      callback(new Error('Not allowed by CORS'));
+          !!(
+            requestOrigin &&
+            TRUSTED_ORIGINS?.split(',').some(trustedOrigin => isMatch(requestOrigin, trustedOrigin.trim()))
+          )
+      );
     }
   })
 );
