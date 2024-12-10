@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express, { json, type RequestHandler } from 'express';
+import { isMatch } from 'matcher';
 import { object, optional, parse, string } from 'valibot';
 import issueDirectLineASEToken from './private/issueDirectLineASEToken';
 import issueDirectLineToken from './private/issueDirectLineToken';
@@ -53,9 +54,7 @@ app.use(
       if (
         !TRUSTED_ORIGINS ||
         (requestOrigin &&
-          TRUSTED_ORIGINS?.split(',')
-            .map(origin => origin.trim())
-            .includes(requestOrigin))
+          TRUSTED_ORIGINS?.split(',').some(trustedOrigin => isMatch(requestOrigin, trustedOrigin.trim())))
       ) {
         return callback(null, true);
       }
