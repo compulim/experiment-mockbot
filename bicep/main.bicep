@@ -216,7 +216,7 @@ resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
   #disable-next-line use-stable-resource-identifiers
   name: '${echoBotWithApp.name}-save-secret-script'
   properties: {
-    arguments: '\\"${echoBotWithApp.outputs.botName}\\" \\"${echoBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
+    arguments: '\\"${echoBotWithApp.outputs.botName}\\" \\"${echoBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\" \\"${dateTimeAdd(deployTime, 'P7D')}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     forceUpdateTag: deployTime
@@ -228,11 +228,10 @@ resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
       DIRECT_LINE_SECRET_SECRET_NAME=$2
       KEY_VAULT_NAME=$3
       RESOURCE_GROUP_NAME=$4
+      EXPIRY=$5
 
       # Direct Line secret can only be retrieved via HTTP POST call, thus, "update" command is required.
       DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
-
-      EXPIRY=$(date -u --date='next week' +%FT%TZ)
 
       az keyvault secret set \
         --content-type "Azure Bot Services Direct Line secret" \
@@ -278,7 +277,7 @@ resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
   #disable-next-line use-stable-resource-identifiers
   name: '${mockBotDeploymentFamilyName}-save-secret-script'
   properties: {
-    arguments: '\\"${mockBotWithApp.outputs.botName}\\" \\"${mockBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
+    arguments: '\\"${mockBotWithApp.outputs.botName}\\" \\"${mockBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\" \\"${dateTimeAdd(deployTime, 'P7D')}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     forceUpdateTag: deployTime
@@ -290,11 +289,10 @@ resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
       DIRECT_LINE_SECRET_SECRET_NAME=$2
       KEY_VAULT_NAME=$3
       RESOURCE_GROUP_NAME=$4
+      EXPIRY=$5
 
       # Direct Line secret can only be retrieved via HTTP POST call, thus, "update" command is required.
       DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
-
-      EXPIRY=$(date -u --date='next week' +%FT%TZ)
 
       az keyvault secret set \
         --content-type "Azure Bot Services Direct Line secret" \
@@ -338,7 +336,7 @@ resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
   #disable-next-line use-stable-resource-identifiers
   name: '${todoBotWithApp.name}-save-secret-script'
   properties: {
-    arguments: '\\"${todoBotWithApp.outputs.botName}\\" \\"${todoBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
+    arguments: '\\"${todoBotWithApp.outputs.botName}\\" \\"${todoBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${resourceGroup().name}\\" \\"${dateTimeAdd(deployTime, 'P7D')}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     forceUpdateTag: deployTime
@@ -350,11 +348,10 @@ resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
       DIRECT_LINE_SECRET_SECRET_NAME=$2
       KEY_VAULT_NAME=$3
       RESOURCE_GROUP_NAME=$4
+      EXPIRY=$5
 
       # Direct Line secret can only be retrieved via HTTP POST call, thus, "update" command is required.
       DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
-
-      EXPIRY=$(date -u --date='next week' +%FT%TZ)
 
       az keyvault secret set \
         --content-type "Azure Bot Services Direct Line secret" \
