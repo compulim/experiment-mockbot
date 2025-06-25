@@ -181,6 +181,9 @@ resource speechServicesSubscriptionKey 'Microsoft.KeyVault/vaults/secrets@2023-0
   name: 'speech-services-subscription-key'
   parent: keyVault
   properties: {
+    attributes: {
+      exp: dateTimeToEpoch(dateTimeAdd(deployTime, 'P7D'))
+    }
     contentType: 'Azure Speech Services subscription key'
     value: speechServices.listKeys().key1
   }
