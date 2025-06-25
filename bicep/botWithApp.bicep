@@ -60,7 +60,7 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09
           isSecureSiteEnabled: true
           isV1Enabled: false
           isV3Enabled: true
-          siteName: 'Default Site'
+          siteName: 'Default Site - ${deployTime}'
           trustedOrigins: [
             'https://compulim.github.io'
           ]
