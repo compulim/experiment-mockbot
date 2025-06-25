@@ -90,6 +90,38 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: speechServices
 }
 
+resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${builderIdentity.id}': {}
+    }
+  }
+  kind: 'AzureCLI'
+  location: location
+  #disable-next-line use-stable-resource-identifiers
+  name: '${todoBotWithApp.name}-save-secret-script'
+  properties: {
+    arguments: '\\"${speechServices.name}\\" \\"${resourceGroup().name}\\"'
+    azCliVersion: '2.61.0'
+    cleanupPreference: 'Always'
+    forceUpdateTag: deployTime
+    retentionInterval: 'PT1H' // Minimal retention is 1 hour.
+    scriptContent: '''
+      set -eo pipefail
+
+      SPEECH_SERVICES_NAME=$1
+      RESOURCE_GROUP_NAME=$2
+
+      az cognitiveservices account keys regenerate \
+        --name $SPEECH_SERVICES_NAME \
+        --resource-group $RESOURCE_GROUP_NAME \
+        --key-name key1
+    '''
+    timeout: 'PT2M'
+  }
+}
+
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   location: location
   name: keyVaultName
@@ -122,6 +154,7 @@ resource echoBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' 
   name: '${echoBotDeploymentFamilyName}-direct-line-secret'
   parent: keyVault
   properties: {
+    contentType: 'Azure Bot Services Direct Line secret'
     value: 'PLACEHOLDER' // Creates an empty slot and we will fill it out later.
   }
 }
@@ -130,6 +163,7 @@ resource mockBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' 
   name: '${mockBotDeploymentFamilyName}-direct-line-secret'
   parent: keyVault
   properties: {
+    contentType: 'Azure Bot Services Direct Line secret'
     value: 'PLACEHOLDER' // Creates an empty slot and we will fill it out later.
   }
 }
@@ -138,6 +172,7 @@ resource todoBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' 
   name: '${todoBotDeploymentFamilyName}-direct-line-secret'
   parent: keyVault
   properties: {
+    contentType: 'Azure Bot Services Direct Line secret'
     value: 'PLACEHOLDER' // Creates an empty slot and we will fill it out later.
   }
 }
@@ -146,6 +181,7 @@ resource speechServicesSubscriptionKey 'Microsoft.KeyVault/vaults/secrets@2023-0
   name: 'speech-services-subscription-key'
   parent: keyVault
   properties: {
+    contentType: 'Azure Speech Services subscription key'
     value: speechServices.listKeys().key1
   }
 }
@@ -196,7 +232,11 @@ resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
       # Direct Line secret can only be retrieved via HTTP POST call, thus, "update" command is required.
       DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
 
+      EXPIRY=$(date -u --date='next week' +%FT%TZ)
+
       az keyvault secret set \
+        --content-type "Azure Bot Services Direct Line secret" \
+        --expires $EXPIRY \
         --name $DIRECT_LINE_SECRET_SECRET_NAME \
         --output none \
         --value $DIRECT_LINE_SECRET \
@@ -254,7 +294,11 @@ resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
       # Direct Line secret can only be retrieved via HTTP POST call, thus, "update" command is required.
       DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
 
+      EXPIRY=$(date -u --date='next week' +%FT%TZ)
+
       az keyvault secret set \
+        --content-type "Azure Bot Services Direct Line secret" \
+        --expires $EXPIRY \
         --name $DIRECT_LINE_SECRET_SECRET_NAME \
         --output none \
         --value $DIRECT_LINE_SECRET \
@@ -310,7 +354,11 @@ resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
       # Direct Line secret can only be retrieved via HTTP POST call, thus, "update" command is required.
       DIRECT_LINE_SECRET=$(az bot directline update --name $BOT_NAME --output json --resource-group $RESOURCE_GROUP_NAME | jq -r ".properties.properties.sites[0].key")
 
+      EXPIRY=$(date -u --date='next week' +%FT%TZ)
+
       az keyvault secret set \
+        --content-type "Azure Bot Services Direct Line secret" \
+        --expires $EXPIRY \
         --name $DIRECT_LINE_SECRET_SECRET_NAME \
         --output none \
         --value $DIRECT_LINE_SECRET \
