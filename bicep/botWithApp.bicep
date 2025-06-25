@@ -14,6 +14,9 @@ param botIdentityTenantId string
 param speechServicesRegion string = ''
 param speechServicesResourceId string = ''
 
+@secure()
+param dummyClientSecret string = newGuid()
+
 resource bot 'Microsoft.BotService/botServices@2022-09-15' = {
   kind: 'azurebot'
   location: 'global'
@@ -38,7 +41,7 @@ resource botDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2
   parent: bot
   properties: {
     clientId: 'dummy'
-    clientSecret: 'dummy'
+    clientSecret: dummyClientSecret
     id: 'dummy'
     name: 'Dummy'
     serviceProviderId: 'd05eaacf-1593-4603-9c6c-d4d8fffa46cb' // "GitHub"
