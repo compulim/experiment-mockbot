@@ -48,6 +48,39 @@ resource botDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2
   }
 }
 
+// We want to rotate Direct Line secret. However, AZ CLI cannot rotate ABS secrets and ABS ARM template cannot recreate site.
+// We need to purge Direct Line channel and recreate them.
+resource botPurgeDirectLineChannel 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${builderIdentityId}': {}
+    }
+  }
+  kind: 'AzureCLI'
+  location: location
+  #disable-next-line use-stable-resource-identifiers
+  name: '${deploymentFamilyName}-purge-direct-line-script'
+  properties: {
+    arguments: '\\"${deploymentFamilyName-bot}\\" \\"${resourceGroup().name}\\"'
+    azCliVersion: '2.61.0'
+    cleanupPreference: 'Always'
+    forceUpdateTag: deployTime
+    retentionInterval: 'PT1H' // Minimal retention is 1 hour.
+    scriptContent: '''
+      set -eo pipefail
+
+      BOT_NAME=$1
+      RESOURCE_GROUP_NAME=$2
+
+      az bot directline delete \
+        --name $BOT_NAME \
+        --resource-group $RESOURCE_GROUP_NAME
+    '''
+    timeout: 'PT2M'
+  }
+}
+
 resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
   name: 'DirectLineChannel' // ABS mistook this name as the properties.channelName. This must be "XXXChannel" otherwise it will throw CHANNEL_NOT_SUPPORTED error.
   parent: bot
@@ -60,7 +93,7 @@ resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09
           isSecureSiteEnabled: true
           isV1Enabled: false
           isV3Enabled: true
-          siteName: 'Default Site - ${deployTime}'
+          siteName: 'Default Site (${deployTime})'
           trustedOrigins: [
             'https://compulim.github.io'
           ]
