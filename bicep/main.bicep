@@ -100,7 +100,7 @@ resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@20
   kind: 'AzureCLI'
   location: location
   #disable-next-line use-stable-resource-identifiers
-  name: '${todoBotWithApp.name}-save-secret-script'
+  name: '${speechServices.name}-rotate-key-script'
   properties: {
     arguments: '\\"${speechServices.name}\\" \\"${resourceGroup().name}\\"'
     azCliVersion: '2.61.0'
