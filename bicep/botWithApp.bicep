@@ -15,7 +15,7 @@ param speechServicesRegion string = ''
 param speechServicesResourceId string = ''
 
 @secure()
-param dummyClientSecret string = newGuid()
+param dummyClientSecret string = 'DUMMY-SECRET-${newGuid()}'
 
 resource bot 'Microsoft.BotService/botServices@2022-09-15' = {
   kind: 'azurebot'
