@@ -62,7 +62,7 @@ resource botPurgeDirectLineChannel 'Microsoft.Resources/deploymentScripts@2023-0
   #disable-next-line use-stable-resource-identifiers
   name: '${deploymentFamilyName}-purge-direct-line-script'
   properties: {
-    arguments: '\\"${deploymentFamilyName-bot}\\" \\"${resourceGroup().name}\\"'
+    arguments: '\\"${deploymentFamilyName}-bot\\" \\"${resourceGroup().name}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     forceUpdateTag: deployTime
