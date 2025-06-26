@@ -62,7 +62,7 @@ resource botPurgeDirectLineChannel 'Microsoft.Resources/deploymentScripts@2023-0
   #disable-next-line use-stable-resource-identifiers
   name: '${deploymentFamilyName}-purge-direct-line-script'
   properties: {
-    arguments: '\\"${deploymentFamilyName}-bot\\" \\"${resourceGroup().name}\\"'
+    arguments: '\\"${deploymentFamilyName}-bot\\" \\"${resourceGroup().name}\\" \\"Default Site (${deployTime})\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     forceUpdateTag: deployTime
@@ -72,16 +72,13 @@ resource botPurgeDirectLineChannel 'Microsoft.Resources/deploymentScripts@2023-0
 
       BOT_NAME=$1
       RESOURCE_GROUP_NAME=$2
+      SITE_NAME=$3
 
-      # If "update" is not called, the "delete" below may fail.
-      # "update" seems will recreate the site if it does not exists, so the "delete" below will work.
-      az bot directline update \
+      # "create" will remove all other sites.
+      az bot directline create \
         --name $BOT_NAME \
-        --resource-group $RESOURCE_GROUP_NAME
-
-      az bot directline delete \
-        --name $BOT_NAME \
-        --resource-group $RESOURCE_GROUP_NAME
+        --resource-group $RESOURCE_GROUP_NAME \
+        --site-name $SITE_NAME
     '''
     timeout: 'PT2M'
   }
