@@ -58,7 +58,7 @@ resource botPurgeDirectLineChannel 'Microsoft.Resources/deploymentScripts@2023-0
     }
   }
   kind: 'AzureCLI'
-  location: 'westus'
+  location: location
   #disable-next-line use-stable-resource-identifiers
   name: '${deploymentFamilyName}-purge-direct-line-script'
   properties: {
@@ -78,7 +78,8 @@ resource botPurgeDirectLineChannel 'Microsoft.Resources/deploymentScripts@2023-0
       az bot directline create \
         --name $BOT_NAME \
         --resource-group $RESOURCE_GROUP_NAME \
-        --site-name $SITE_NAME
+        --location global \
+        --site-name "$SITE_NAME"
     '''
     timeout: 'PT2M'
   }
