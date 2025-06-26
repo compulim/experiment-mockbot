@@ -73,6 +73,12 @@ resource botPurgeDirectLineChannel 'Microsoft.Resources/deploymentScripts@2023-0
       BOT_NAME=$1
       RESOURCE_GROUP_NAME=$2
 
+      # If "update" is not called, the "delete" below may fail.
+      # "update" seems will recreate the site if it does not exists, so the "delete" below will work.
+      az bot directline update \
+        --name $BOT_NAME \
+        --resource-group $RESOURCE_GROUP_NAME
+
       az bot directline delete \
         --name $BOT_NAME \
         --resource-group $RESOURCE_GROUP_NAME
