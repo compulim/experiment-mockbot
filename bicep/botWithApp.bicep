@@ -86,6 +86,7 @@ resource botPurgeDirectLineChannel 'Microsoft.Resources/deploymentScripts@2023-0
 }
 
 resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
+  location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
   name: 'DirectLineChannel' // ABS mistook this name as the properties.channelName. This must be "XXXChannel" otherwise it will throw CHANNEL_NOT_SUPPORTED error.
   parent: bot
   properties: {
