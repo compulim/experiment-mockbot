@@ -58,7 +58,7 @@ resource botPurgeDirectLineChannel 'Microsoft.Resources/deploymentScripts@2023-0
     }
   }
   kind: 'AzureCLI'
-  location: location
+  location: 'westus'
   #disable-next-line use-stable-resource-identifiers
   name: '${deploymentFamilyName}-purge-direct-line-script'
   properties: {
