@@ -154,7 +154,10 @@ resource echoBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' 
   name: '${echoBotDeploymentFamilyName}-direct-line-secret'
   parent: keyVault
   properties: {
-    contentType: 'Azure Bot Services Direct Line secret'
+    attributes: {
+      exp: dateTimeToEpoch(dateTimeAdd(deployTime, 'PT15M'))
+    }
+    contentType: 'Azure Bot Services Direct Line secret placeholder'
     value: 'PLACEHOLDER' // Creates an empty slot and we will fill it out later.
   }
 }
@@ -163,7 +166,10 @@ resource mockBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' 
   name: '${mockBotDeploymentFamilyName}-direct-line-secret'
   parent: keyVault
   properties: {
-    contentType: 'Azure Bot Services Direct Line secret'
+    attributes: {
+      exp: dateTimeToEpoch(dateTimeAdd(deployTime, 'PT15M'))
+    }
+    contentType: 'Azure Bot Services Direct Line secret placeholder'
     value: 'PLACEHOLDER' // Creates an empty slot and we will fill it out later.
   }
 }
@@ -172,7 +178,10 @@ resource todoBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' 
   name: '${todoBotDeploymentFamilyName}-direct-line-secret'
   parent: keyVault
   properties: {
-    contentType: 'Azure Bot Services Direct Line secret'
+    attributes: {
+      exp: dateTimeToEpoch(dateTimeAdd(deployTime, 'PT15M'))
+    }
+    contentType: 'Azure Bot Services Direct Line secret placeholder'
     value: 'PLACEHOLDER' // Creates an empty slot and we will fill it out later.
   }
 }
