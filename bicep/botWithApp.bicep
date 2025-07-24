@@ -279,3 +279,6 @@ output appDefaultHostName string = app.properties.defaultHostName
 output appName string = app.name
 output appURL string = 'https://${app.properties.defaultHostName}/'
 output botName string = bot.name
+
+@secure()
+output directLineSecret string = botCreateDirectLineChannelScript.properties.outputs.key
