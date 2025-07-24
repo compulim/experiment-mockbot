@@ -60,7 +60,7 @@ resource botCreateDirectLineChannelScript 'Microsoft.Resources/deploymentScripts
   kind: 'AzureCLI'
   location: location
   #disable-next-line use-stable-resource-identifiers
-  name: '${deploymentFamilyName}-purge-direct-line-script'
+  name: '${deploymentFamilyName}-create-direct-line-channel-script'
   properties: {
     arguments: '\\"${deploymentFamilyName}-bot\\" \\"${resourceGroup().name}\\" \\"Default Site (${deployTime})\\"'
     azCliVersion: '2.61.0'
