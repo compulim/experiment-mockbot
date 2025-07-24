@@ -86,7 +86,7 @@ resource botCreateDirectLineChannelScript 'Microsoft.Resources/deploymentScripts
         --name $BOT_NAME \
         --resource-group $RESOURCE_GROUP_NAME \
         --with-secrets \
-        | jq '.setting.sites[0]' \
+        | jq '{ extensionKey1: .setting.extensionKey1, key: .setting.sites[0].key }' \
         | tee $AZ_SCRIPTS_OUTPUT_PATH
     '''
     timeout: 'PT2M'
