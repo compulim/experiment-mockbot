@@ -79,34 +79,43 @@ resource botPurgeDirectLineChannel 'Microsoft.Resources/deploymentScripts@2023-0
         --name $BOT_NAME \
         --resource-group $RESOURCE_GROUP_NAME \
         --location global \
-        --site-name "$SITE_NAME"
+        --site-name "$SITE_NAME" \
+        --trusted-origins https://compulim.github.io
+
+      az bot directline show \
+        --name $BOT_NAME \
+        --resource-group $RESOURCE_GROUP_NAME \
+        --with-secrets \
+        | jq '{ key: .setting.sites[0].key }' \
+        | tee $AZ_SCRIPTS_OUTPUT_PATH
     '''
     timeout: 'PT2M'
   }
 }
 
-resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
-  location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
-  name: 'DirectLineChannel' // ABS mistook this name as the properties.channelName. This must be "XXXChannel" otherwise it will throw CHANNEL_NOT_SUPPORTED error.
-  parent: bot
-  properties: {
-    channelName: 'DirectLineChannel'
-    properties: {
-      sites: [
-        {
-          isEnabled: true
-          isSecureSiteEnabled: true
-          isV1Enabled: false
-          isV3Enabled: true
-          siteName: 'Default Site (${deployTime})'
-          trustedOrigins: [
-            'https://compulim.github.io'
-          ]
-        }
-      ]
-    }
-  }
-}
+// This section is commented out, we are creating new Direct Line site using "az cli" instead, so we can do key rotation.
+// resource botDirectLineChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = {
+//   location: 'global' // Required. If not set, will error out with "The value for property 'location' in the input object cannot be empty."
+//   name: 'DirectLineChannel' // ABS mistook this name as the properties.channelName. This must be "XXXChannel" otherwise it will throw CHANNEL_NOT_SUPPORTED error.
+//   parent: bot
+//   properties: {
+//     channelName: 'DirectLineChannel'
+//     properties: {
+//       sites: [
+//         {
+//           isEnabled: true
+//           isSecureSiteEnabled: true
+//           isV1Enabled: false
+//           isV3Enabled: true
+//           siteName: 'Default Site (${deployTime})'
+//           trustedOrigins: [
+//             'https://compulim.github.io'
+//           ]
+//         }
+//       ]
+//     }
+//   }
+// }
 
 // Direct Line Speech is not working with `disableLocalAuth`, need investigations.
 resource botDirectLineSpeechChannel 'Microsoft.BotService/botServices/channels@2022-09-15' = if (speechServicesResourceId != '') {
@@ -196,7 +205,8 @@ resource app 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'DirectLineExtensionKey'
-          value: botDirectLineChannel.properties.properties.extensionKey1
+          // value: botDirectLineChannel.properties.properties.extensionKey1
+          value: botPurgeDirectLineChannel.properties.outputs.key
         }
         {
           name: 'MicrosoftAppId'
