@@ -50,7 +50,7 @@ resource botDummyOAuthConnection 'Microsoft.BotService/botServices/connections@2
 
 // We want to rotate Direct Line secret. However, AZ CLI cannot rotate ABS secrets and ABS ARM template cannot recreate site.
 // We need to purge Direct Line channel and recreate them.
-resource botPurgeDirectLineChannel 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+resource botCreateDirectLineChannelScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -86,7 +86,7 @@ resource botPurgeDirectLineChannel 'Microsoft.Resources/deploymentScripts@2023-0
         --name $BOT_NAME \
         --resource-group $RESOURCE_GROUP_NAME \
         --with-secrets \
-        | jq '{ key: .setting.sites[0].key }' \
+        | jq '.setting.sites[0]' \
         | tee $AZ_SCRIPTS_OUTPUT_PATH
     '''
     timeout: 'PT2M'
@@ -206,7 +206,7 @@ resource app 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'DirectLineExtensionKey'
           // value: botDirectLineChannel.properties.properties.extensionKey1
-          value: botPurgeDirectLineChannel.properties.outputs.key
+          value: botCreateDirectLineChannelScript.properties.outputs.extensionKey1
         }
         {
           name: 'MicrosoftAppId'
