@@ -509,7 +509,7 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
               name: 'TRUSTED_ORIGINS'
               // value: ''
               // value: 'https://compulim.github.io,https://localhost'
-              value: 'https://compulim.github.io,https://*.local-credentialless.webcontainer-app.io,https://webchat2,http://webchat2,http://webchat,http://localhost:5000,https://microsoft.github.io,http://localhost:5001'
+              value: 'https://compulim.github.io,https://*.local-credentialless.webcontainer-app.io,https://webchat2,http://webchat2,http://webchat,http://localhost:5000,https://microsoft.github.io,http://localhost:5001,http://localhost:8000'
             }
           ]
           image: '${registryServer}/${tokenAppImageName}'
