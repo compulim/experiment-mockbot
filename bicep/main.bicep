@@ -157,7 +157,7 @@ resource echoBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' 
     attributes: {
       exp: dateTimeToEpoch(dateTimeAdd(deployTime, 'PT15M'))
     }
-    contentType: 'Azure Bot Services Direct Line secret placeholder'
+    contentType: 'application/vnd.bag-StrongEncConnectionString'
     value: 'PLACEHOLDER' // Creates an empty slot and we will fill it out later.
   }
 }
@@ -169,7 +169,7 @@ resource mockBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' 
     attributes: {
       exp: dateTimeToEpoch(dateTimeAdd(deployTime, 'PT15M'))
     }
-    contentType: 'Azure Bot Services Direct Line secret placeholder'
+    contentType: 'application/vnd.bag-StrongEncConnectionString'
     value: 'PLACEHOLDER' // Creates an empty slot and we will fill it out later.
   }
 }
@@ -181,7 +181,7 @@ resource todoBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' 
     attributes: {
       exp: dateTimeToEpoch(dateTimeAdd(deployTime, 'PT15M'))
     }
-    contentType: 'Azure Bot Services Direct Line secret placeholder'
+    contentType: 'application/vnd.bag-StrongEncConnectionString'
     value: 'PLACEHOLDER' // Creates an empty slot and we will fill it out later.
   }
 }
@@ -193,7 +193,7 @@ resource speechServicesSubscriptionKey 'Microsoft.KeyVault/vaults/secrets@2023-0
     attributes: {
       exp: dateTimeToEpoch(dateTimeAdd(deployTime, 'P7D'))
     }
-    contentType: 'Azure Speech Services subscription key'
+    contentType: 'application/vnd.bag-StrongEncConnectionString'
     value: speechServices.listKeys().key1
   }
 }
@@ -242,7 +242,7 @@ resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
       EXPIRY=$4
 
       az keyvault secret set \
-        --content-type "Azure Bot Services Direct Line secret" \
+        --content-type "application/vnd.bag-StrongEncConnectionString" \
         --expires $EXPIRY \
         --name $DIRECT_LINE_SECRET_SECRET_NAME \
         --output none \
@@ -299,7 +299,7 @@ resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
       EXPIRY=$4
 
       az keyvault secret set \
-        --content-type "Azure Bot Services Direct Line secret" \
+        --content-type "application/vnd.bag-StrongEncConnectionString" \
         --expires $EXPIRY \
         --name $DIRECT_LINE_SECRET_SECRET_NAME \
         --output none \
@@ -354,7 +354,7 @@ resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
       EXPIRY=$4
 
       az keyvault secret set \
-        --content-type "Azure Bot Services Direct Line secret" \
+        --content-type "application/vnd.bag-StrongEncConnectionString" \
         --expires $EXPIRY \
         --name $DIRECT_LINE_SECRET_SECRET_NAME \
         --output none \
