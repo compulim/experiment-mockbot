@@ -122,9 +122,10 @@ resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@20
   }
 }
 
-// Key Vault with public access disabled. Access is controlled exclusively through Network Security Perimeter (NSP).
-// The NSP allows Azure services in the subscription (including deployment scripts and managed identities) to access
-// Key Vault through private connectivity without requiring public network access to be enabled.
+// Key Vault with public access enabled for deployment scripts.
+// Access is restricted via networkAcls to Azure services only.
+// NSP is configured in Learning mode (not Enforced) to allow deployment scripts while monitoring traffic.
+// To enable fully private access, a VNet and private endpoint would need to be added in the future.
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   location: location
   name: keyVaultName
@@ -149,7 +150,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
     }
-    publicNetworkAccess: 'Disabled'
+    publicNetworkAccess: 'Enabled'
     sku: {
       family: 'A'
       name: 'standard'
@@ -192,12 +193,14 @@ resource nspAccessRule 'Microsoft.Network/networkSecurityPerimeters/profiles/acc
   }
 }
 
-// Associate Key Vault with NSP
+// Associate Key Vault with NSP in Learning mode (not Enforced)
+// Learning mode allows monitoring and auditing without blocking deployment scripts.
+// This enables deployment scripts to access Key Vault while NSP observes traffic patterns.
 resource nspAssociation 'Microsoft.Network/networkSecurityPerimeters/resourceAssociations@2023-08-01-preview' = {
   parent: networkSecurityPerimeter
   name: '${keyVaultName}-association'
   properties: {
-    accessMode: 'Enforced'
+    accessMode: 'Learning'
     privateLinkResource: {
       id: keyVault.id
     }
