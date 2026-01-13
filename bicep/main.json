@@ -1,0 +1,1610 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "languageVersion": "2.0",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.39.26.7824",
+      "templateHash": "14180131849171939826"
+    },
+    "description": "Deploy to Azure"
+  },
+  "parameters": {
+    "deploymentFamilyName": {
+      "type": "string",
+      "metadata": {
+        "description": "Family name of the deployment."
+      }
+    },
+    "tokenAppImageName": {
+      "type": "string",
+      "metadata": {
+        "description": "Token service image name and tag."
+      }
+    },
+    "registryUsername": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Username to authenticate with private registry."
+      }
+    },
+    "registryServer": {
+      "type": "string",
+      "metadata": {
+        "description": "Registry server name"
+      }
+    },
+    "registryPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password to authenticate with private registry."
+      }
+    },
+    "builderIdentityName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the User-assigned Managed Identity to run this Bicep."
+      }
+    },
+    "deployTime": {
+      "type": "string",
+      "defaultValue": "[utcNow()]"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "westus"
+    },
+    "keyVaultName": {
+      "type": "string",
+      "defaultValue": "[format('{0}-key', parameters('deploymentFamilyName'))]"
+    },
+    "logAnalyticsName": {
+      "type": "string",
+      "defaultValue": "[format('{0}-log', parameters('deploymentFamilyName'))]"
+    },
+    "echoBotDeploymentFamilyName": {
+      "type": "string",
+      "defaultValue": "[format('{0}-echo-bot', parameters('deploymentFamilyName'))]"
+    },
+    "mockBotDeploymentFamilyName": {
+      "type": "string",
+      "defaultValue": "[format('{0}-mock-bot', parameters('deploymentFamilyName'))]"
+    },
+    "todoBotDeploymentFamilyName": {
+      "type": "string",
+      "defaultValue": "[format('{0}-todo-bot', parameters('deploymentFamilyName'))]"
+    },
+    "speechServicesName": {
+      "type": "string",
+      "defaultValue": "[format('{0}-speech', parameters('deploymentFamilyName'))]"
+    },
+    "tokenAppName": {
+      "type": "string",
+      "defaultValue": "[format('{0}-token-app', parameters('deploymentFamilyName'))]"
+    }
+  },
+  "resources": {
+    "builderIdentity": {
+      "existing": true,
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2023-07-31-preview",
+      "name": "[parameters('builderIdentityName')]"
+    },
+    "logAnalytics": {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2021-12-01-preview",
+      "name": "[parameters('logAnalyticsName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        }
+      }
+    },
+    "tokenAppIdentity": {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2023-07-31-preview",
+      "name": "[format('{0}-identity', parameters('tokenAppName'))]",
+      "location": "[parameters('location')]"
+    },
+    "speechServices": {
+      "type": "Microsoft.CognitiveServices/accounts",
+      "apiVersion": "2024-04-01-preview",
+      "name": "[parameters('speechServicesName')]",
+      "kind": "SpeechServices",
+      "location": "[parameters('location')]",
+      "properties": {
+        "disableLocalAuth": true
+      },
+      "sku": {
+        "name": "S0"
+      }
+    },
+    "speechServicesIdentity": {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2023-07-31-preview",
+      "name": "[format('{0}-identity', parameters('speechServicesName'))]",
+      "location": "[parameters('location')]"
+    },
+    "speechServicesUserRoleDefinition": {
+      "existing": true,
+      "type": "Microsoft.Authorization/roleDefinitions",
+      "apiVersion": "2022-04-01",
+      "subscriptionId": "[subscription().subscriptionId]",
+      "name": "f2dc8367-1007-4938-bd23-fe263f013447",
+      "metadata": {
+        "description": "This is the built-in Cognitive Services Speech User role. See https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#contributor"
+      }
+    },
+    "roleAssignment": {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', parameters('speechServicesName'))]",
+      "name": "[guid(resourceGroup().id, resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-identity', parameters('speechServicesName'))), subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f2dc8367-1007-4938-bd23-fe263f013447'))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f2dc8367-1007-4938-bd23-fe263f013447')]",
+        "principalId": "[reference('speechServicesIdentity').principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "speechServices",
+        "speechServicesIdentity"
+      ]
+    },
+    "speechServicesRotateKeyScript": {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2023-08-01",
+      "name": "[format('{0}-rotate-key-script', parameters('speechServicesName'))]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('builderIdentityName')))]": {}
+        }
+      },
+      "kind": "AzureCLI",
+      "location": "[parameters('location')]",
+      "properties": {
+        "arguments": "[format('\\\"{0}\\\" \\\"{1}\\\"', parameters('speechServicesName'), resourceGroup().name)]",
+        "azCliVersion": "2.61.0",
+        "cleanupPreference": "Always",
+        "forceUpdateTag": "[parameters('deployTime')]",
+        "retentionInterval": "PT1H",
+        "scriptContent": "      set -eo pipefail\n\n      SPEECH_SERVICES_NAME=$1\n      RESOURCE_GROUP_NAME=$2\n\n      az cognitiveservices account keys regenerate \\\n        --name $SPEECH_SERVICES_NAME \\\n        --resource-group $RESOURCE_GROUP_NAME \\\n        --key-name key1\n    ",
+        "timeout": "PT2M"
+      },
+      "dependsOn": [
+        "speechServices"
+      ]
+    },
+    "keyVault": {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2023-07-01",
+      "name": "[parameters('keyVaultName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "accessPolicies": [
+          {
+            "objectId": "[reference('tokenAppIdentity').principalId]",
+            "permissions": {
+              "secrets": [
+                "get"
+              ]
+            },
+            "tenantId": "[tenant().tenantId]"
+          },
+          {
+            "objectId": "[reference('builderIdentity').principalId]",
+            "permissions": {
+              "secrets": [
+                "set"
+              ]
+            },
+            "tenantId": "[tenant().tenantId]"
+          }
+        ],
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "defaultAction": "Deny"
+        },
+        "publicNetworkAccess": "Enabled",
+        "sku": {
+          "family": "A",
+          "name": "standard"
+        },
+        "tenantId": "[tenant().tenantId]"
+      },
+      "dependsOn": [
+        "builderIdentity",
+        "tokenAppIdentity"
+      ]
+    },
+    "networkSecurityPerimeter": {
+      "type": "Microsoft.Network/networkSecurityPerimeters",
+      "apiVersion": "2023-08-01-preview",
+      "name": "[format('{0}-nsp', parameters('deploymentFamilyName'))]",
+      "location": "[parameters('location')]",
+      "properties": {}
+    },
+    "nspProfile": {
+      "type": "Microsoft.Network/networkSecurityPerimeters/profiles",
+      "apiVersion": "2023-08-01-preview",
+      "name": "[format('{0}/{1}', format('{0}-nsp', parameters('deploymentFamilyName')), 'keyvault-profile')]",
+      "location": "[parameters('location')]",
+      "properties": {},
+      "dependsOn": [
+        "networkSecurityPerimeter"
+      ]
+    },
+    "nspAccessRule": {
+      "type": "Microsoft.Network/networkSecurityPerimeters/profiles/accessRules",
+      "apiVersion": "2023-08-01-preview",
+      "name": "[format('{0}/{1}/{2}', format('{0}-nsp', parameters('deploymentFamilyName')), 'keyvault-profile', 'allow-azure-services')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "direction": "Inbound",
+        "addressPrefixes": [],
+        "fullyQualifiedDomainNames": [],
+        "subscriptions": [
+          {
+            "id": "[subscription().subscriptionId]"
+          }
+        ]
+      },
+      "dependsOn": [
+        "nspProfile"
+      ]
+    },
+    "nspAssociation": {
+      "type": "Microsoft.Network/networkSecurityPerimeters/resourceAssociations",
+      "apiVersion": "2023-08-01-preview",
+      "name": "[format('{0}/{1}', format('{0}-nsp', parameters('deploymentFamilyName')), format('{0}-association', parameters('keyVaultName')))]",
+      "properties": {
+        "accessMode": "Enforced",
+        "privateLinkResource": {
+          "id": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+        },
+        "profile": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityPerimeters/profiles', format('{0}-nsp', parameters('deploymentFamilyName')), 'keyvault-profile')]"
+        }
+      },
+      "dependsOn": [
+        "keyVault",
+        "networkSecurityPerimeter",
+        "nspProfile"
+      ]
+    },
+    "echoBotDirectLineSecret": {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[format('{0}/{1}', parameters('keyVaultName'), format('{0}-direct-line-secret', parameters('echoBotDeploymentFamilyName')))]",
+      "properties": {
+        "attributes": {
+          "exp": "[dateTimeToEpoch(dateTimeAdd(parameters('deployTime'), 'PT15M'))]"
+        },
+        "contentType": "application/vnd.bag-StrongEncConnectionString",
+        "value": "PLACEHOLDER"
+      },
+      "dependsOn": [
+        "keyVault"
+      ]
+    },
+    "mockBotDirectLineSecret": {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[format('{0}/{1}', parameters('keyVaultName'), format('{0}-direct-line-secret', parameters('mockBotDeploymentFamilyName')))]",
+      "properties": {
+        "attributes": {
+          "exp": "[dateTimeToEpoch(dateTimeAdd(parameters('deployTime'), 'PT15M'))]"
+        },
+        "contentType": "application/vnd.bag-StrongEncConnectionString",
+        "value": "PLACEHOLDER"
+      },
+      "dependsOn": [
+        "keyVault"
+      ]
+    },
+    "todoBotDirectLineSecret": {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[format('{0}/{1}', parameters('keyVaultName'), format('{0}-direct-line-secret', parameters('todoBotDeploymentFamilyName')))]",
+      "properties": {
+        "attributes": {
+          "exp": "[dateTimeToEpoch(dateTimeAdd(parameters('deployTime'), 'PT15M'))]"
+        },
+        "contentType": "application/vnd.bag-StrongEncConnectionString",
+        "value": "PLACEHOLDER"
+      },
+      "dependsOn": [
+        "keyVault"
+      ]
+    },
+    "speechServicesSubscriptionKey": {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[format('{0}/{1}', parameters('keyVaultName'), 'speech-services-subscription-key')]",
+      "properties": {
+        "attributes": {
+          "exp": "[dateTimeToEpoch(dateTimeAdd(parameters('deployTime'), 'P7D'))]"
+        },
+        "contentType": "application/vnd.bag-StrongEncConnectionString",
+        "value": "[listKeys('speechServices', '2024-04-01-preview').key1]"
+      },
+      "dependsOn": [
+        "keyVault",
+        "speechServices"
+      ]
+    },
+    "echoBotIdentity": {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2023-07-31-preview",
+      "name": "[format('{0}-identity', parameters('echoBotDeploymentFamilyName'))]",
+      "location": "[parameters('location')]"
+    },
+    "echoBotKeyVaultSaveSecretScript": {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2023-08-01",
+      "name": "[format('{0}-save-secret-script', parameters('echoBotDeploymentFamilyName'))]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('builderIdentityName')))]": {}
+        }
+      },
+      "kind": "AzureCLI",
+      "location": "[parameters('location')]",
+      "properties": {
+        "arguments": "[format('\\\"{0}\\\" \\\"{1}\\\" \\\"{2}\\\" \\\"{3}\\\"', listOutputsWithSecureValues('echoBotWithApp', '2025-04-01').directLineSecret, format('{0}-direct-line-secret', parameters('echoBotDeploymentFamilyName')), parameters('keyVaultName'), dateTimeAdd(parameters('deployTime'), 'P7D'))]",
+        "azCliVersion": "2.61.0",
+        "cleanupPreference": "Always",
+        "forceUpdateTag": "[parameters('deployTime')]",
+        "retentionInterval": "PT1H",
+        "scriptContent": "      set -eo pipefail\n\n      DIRECT_LINE_SECRET=$1\n      DIRECT_LINE_SECRET_SECRET_NAME=$2\n      KEY_VAULT_NAME=$3\n      EXPIRY=$4\n\n      az keyvault secret set \\\n        --content-type \"application/vnd.bag-StrongEncConnectionString\" \\\n        --expires $EXPIRY \\\n        --name $DIRECT_LINE_SECRET_SECRET_NAME \\\n        --output none \\\n        --value $DIRECT_LINE_SECRET \\\n        --vault-name $KEY_VAULT_NAME\n    ",
+        "timeout": "PT2M"
+      },
+      "dependsOn": [
+        "echoBotDirectLineSecret",
+        "echoBotWithApp",
+        "keyVault"
+      ]
+    },
+    "mockBotIdentity": {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2023-07-31-preview",
+      "name": "[format('{0}-identity', parameters('mockBotDeploymentFamilyName'))]",
+      "location": "[parameters('location')]"
+    },
+    "mockBotKeyVaultSaveSecretScript": {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2023-08-01",
+      "name": "[format('{0}-save-secret-script', parameters('mockBotDeploymentFamilyName'))]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('builderIdentityName')))]": {}
+        }
+      },
+      "kind": "AzureCLI",
+      "location": "[parameters('location')]",
+      "properties": {
+        "arguments": "[format('\\\"{0}\\\" \\\"{1}\\\" \\\"{2}\\\" \\\"{3}\\\"', listOutputsWithSecureValues('mockBotWithApp', '2025-04-01').directLineSecret, format('{0}-direct-line-secret', parameters('mockBotDeploymentFamilyName')), parameters('keyVaultName'), dateTimeAdd(parameters('deployTime'), 'P7D'))]",
+        "azCliVersion": "2.61.0",
+        "cleanupPreference": "Always",
+        "forceUpdateTag": "[parameters('deployTime')]",
+        "retentionInterval": "PT1H",
+        "scriptContent": "      set -eo pipefail\n\n      DIRECT_LINE_SECRET=$1\n      DIRECT_LINE_SECRET_SECRET_NAME=$2\n      KEY_VAULT_NAME=$3\n      EXPIRY=$4\n\n      az keyvault secret set \\\n        --content-type \"application/vnd.bag-StrongEncConnectionString\" \\\n        --expires $EXPIRY \\\n        --name $DIRECT_LINE_SECRET_SECRET_NAME \\\n        --output none \\\n        --value $DIRECT_LINE_SECRET \\\n        --vault-name $KEY_VAULT_NAME\n    ",
+        "timeout": "PT2M"
+      },
+      "dependsOn": [
+        "keyVault",
+        "mockBotDirectLineSecret",
+        "mockBotWithApp"
+      ]
+    },
+    "todoBotIdentity": {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2023-07-31-preview",
+      "name": "[format('{0}-identity', parameters('todoBotDeploymentFamilyName'))]",
+      "location": "[parameters('location')]"
+    },
+    "todoBotKeyVaultSaveSecretScript": {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2023-08-01",
+      "name": "[format('{0}-save-secret-script', parameters('todoBotDeploymentFamilyName'))]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('builderIdentityName')))]": {}
+        }
+      },
+      "kind": "AzureCLI",
+      "location": "[parameters('location')]",
+      "properties": {
+        "arguments": "[format('\\\"{0}\\\" \\\"{1}\\\" \\\"{2}\\\" \\\"{3}\\\"', listOutputsWithSecureValues('todoBotWithApp', '2025-04-01').directLineSecret, format('{0}-direct-line-secret', parameters('todoBotDeploymentFamilyName')), parameters('keyVaultName'), dateTimeAdd(parameters('deployTime'), 'P7D'))]",
+        "azCliVersion": "2.61.0",
+        "cleanupPreference": "Always",
+        "forceUpdateTag": "[parameters('deployTime')]",
+        "retentionInterval": "PT1H",
+        "scriptContent": "      set -eo pipefail\n\n      DIRECT_LINE_SECRET=$1\n      DIRECT_LINE_SECRET_SECRET_NAME=$2\n      KEY_VAULT_NAME=$3\n      EXPIRY=$4\n\n      az keyvault secret set \\\n        --content-type \"application/vnd.bag-StrongEncConnectionString\" \\\n        --expires $EXPIRY \\\n        --name $DIRECT_LINE_SECRET_SECRET_NAME \\\n        --output none \\\n        --value $DIRECT_LINE_SECRET \\\n        --vault-name $KEY_VAULT_NAME\n    ",
+        "timeout": "PT2M"
+      },
+      "dependsOn": [
+        "keyVault",
+        "todoBotDirectLineSecret",
+        "todoBotWithApp"
+      ]
+    },
+    "tokenAppEnvironment": {
+      "type": "Microsoft.App/managedEnvironments",
+      "apiVersion": "2024-03-01",
+      "name": "[format('{0}-env', parameters('tokenAppName'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "appLogsConfiguration": {
+          "destination": "log-analytics",
+          "logAnalyticsConfiguration": {
+            "customerId": "[reference('logAnalytics').customerId]",
+            "sharedKey": "[listKeys('logAnalytics', '2021-12-01-preview').primarySharedKey]"
+          }
+        }
+      },
+      "dependsOn": [
+        "logAnalytics"
+      ]
+    },
+    "tokenApp": {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2024-03-01",
+      "name": "[parameters('tokenAppName')]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-identity', parameters('echoBotDeploymentFamilyName'))))]": {},
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-identity', parameters('mockBotDeploymentFamilyName'))))]": {},
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-identity', parameters('speechServicesName'))))]": {},
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-identity', parameters('todoBotDeploymentFamilyName'))))]": {},
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-identity', parameters('tokenAppName'))))]": {}
+        }
+      },
+      "location": "[parameters('location')]",
+      "properties": {
+        "configuration": {
+          "ingress": {
+            "clientCertificateMode": "ignore",
+            "external": true,
+            "targetPort": 8080,
+            "transport": "http"
+          },
+          "registries": [
+            {
+              "passwordSecretRef": "registry-password",
+              "server": "[parameters('registryServer')]",
+              "username": "[parameters('registryUsername')]"
+            }
+          ],
+          "secrets": [
+            {
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-identity', parameters('tokenAppName')))]",
+              "keyVaultUrl": "[reference('echoBotDirectLineSecret').secretUri]",
+              "name": "[format('{0}-direct-line-secret', parameters('echoBotDeploymentFamilyName'))]"
+            },
+            {
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-identity', parameters('tokenAppName')))]",
+              "keyVaultUrl": "[reference('mockBotDirectLineSecret').secretUri]",
+              "name": "[format('{0}-direct-line-secret', parameters('mockBotDeploymentFamilyName'))]"
+            },
+            {
+              "name": "registry-password",
+              "value": "[parameters('registryPassword')]"
+            },
+            {
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-identity', parameters('tokenAppName')))]",
+              "keyVaultUrl": "[reference('speechServicesSubscriptionKey').secretUri]",
+              "name": "speech-services-subscription-key"
+            },
+            {
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-identity', parameters('tokenAppName')))]",
+              "keyVaultUrl": "[reference('todoBotDirectLineSecret').secretUri]",
+              "name": "[format('{0}-direct-line-secret', parameters('todoBotDeploymentFamilyName'))]"
+            }
+          ]
+        },
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', format('{0}-env', parameters('tokenAppName')))]",
+        "template": {
+          "containers": [
+            {
+              "env": [
+                {
+                  "name": "ECHO_BOT_APP_HOST_NAME",
+                  "value": "[reference('echoBotWithApp').outputs.appDefaultHostName.value]"
+                },
+                {
+                  "name": "ECHO_BOT_AZURE_CLIENT_ID",
+                  "value": "[reference('echoBotIdentity').clientId]"
+                },
+                {
+                  "name": "ECHO_BOT_DIRECT_LINE_SECRET",
+                  "secretRef": "[format('{0}-direct-line-secret', parameters('echoBotDeploymentFamilyName'))]"
+                },
+                {
+                  "name": "MOCK_BOT_APP_HOST_NAME",
+                  "value": "[reference('mockBotWithApp').outputs.appDefaultHostName.value]"
+                },
+                {
+                  "name": "MOCK_BOT_AZURE_CLIENT_ID",
+                  "value": "[reference('mockBotIdentity').clientId]"
+                },
+                {
+                  "name": "MOCK_BOT_DIRECT_LINE_SECRET",
+                  "secretRef": "[format('{0}-direct-line-secret', parameters('mockBotDeploymentFamilyName'))]"
+                },
+                {
+                  "name": "SPEECH_SERVICES_AZURE_CLIENT_ID",
+                  "value": "[reference('speechServicesIdentity').clientId]"
+                },
+                {
+                  "name": "SPEECH_SERVICES_REGION",
+                  "value": "[parameters('location')]"
+                },
+                {
+                  "name": "SPEECH_SERVICES_RESOURCE_ID",
+                  "value": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('speechServicesName'))]"
+                },
+                {
+                  "name": "SPEECH_SERVICES_SUBSCRIPTION_KEY",
+                  "secretRef": "speech-services-subscription-key"
+                },
+                {
+                  "name": "TODO_BOT_APP_HOST_NAME",
+                  "value": "[reference('todoBotWithApp').outputs.appDefaultHostName.value]"
+                },
+                {
+                  "name": "TODO_BOT_AZURE_CLIENT_ID",
+                  "value": "[reference('todoBotIdentity').clientId]"
+                },
+                {
+                  "name": "TODO_BOT_DIRECT_LINE_SECRET",
+                  "secretRef": "[format('{0}-direct-line-secret', parameters('todoBotDeploymentFamilyName'))]"
+                },
+                {
+                  "name": "TRUSTED_ORIGINS",
+                  "value": "https://compulim.github.io,https://*.local-credentialless.webcontainer-app.io,https://webchat2,http://webchat2,http://webchat,http://localhost:5000,https://microsoft.github.io,http://localhost:5001,http://localhost:8000,http://localhost:5080"
+                }
+              ],
+              "image": "[format('{0}/{1}', parameters('registryServer'), parameters('tokenAppImageName'))]",
+              "name": "[parameters('tokenAppName')]",
+              "probes": [
+                {
+                  "httpGet": {
+                    "path": "/health.txt",
+                    "port": 8080
+                  },
+                  "type": "Liveness"
+                }
+              ],
+              "resources": {
+                "cpu": "0.25",
+                "memory": "0.5Gi"
+              }
+            }
+          ],
+          "scale": {
+            "maxReplicas": 1,
+            "minReplicas": 1
+          }
+        }
+      },
+      "dependsOn": [
+        "echoBotDirectLineSecret",
+        "echoBotIdentity",
+        "echoBotKeyVaultSaveSecretScript",
+        "echoBotWithApp",
+        "mockBotDirectLineSecret",
+        "mockBotIdentity",
+        "mockBotWithApp",
+        "speechServices",
+        "speechServicesIdentity",
+        "speechServicesSubscriptionKey",
+        "todoBotDirectLineSecret",
+        "todoBotIdentity",
+        "todoBotWithApp",
+        "tokenAppEnvironment",
+        "tokenAppIdentity"
+      ]
+    },
+    "echoBotWithApp": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[parameters('echoBotDeploymentFamilyName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "botIdentityId": {
+            "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-identity', parameters('echoBotDeploymentFamilyName')))]"
+          },
+          "botIdentityClientId": {
+            "value": "[reference('echoBotIdentity').clientId]"
+          },
+          "botIdentityTenantId": {
+            "value": "[reference('echoBotIdentity').tenantId]"
+          },
+          "builderIdentityId": {
+            "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('builderIdentityName'))]"
+          },
+          "deploymentFamilyName": {
+            "value": "[parameters('echoBotDeploymentFamilyName')]"
+          },
+          "deployTime": {
+            "value": "[parameters('deployTime')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.0",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "157952469400050373"
+            },
+            "description": "Deploy a bot with web apps"
+          },
+          "parameters": {
+            "builderIdentityId": {
+              "type": "string"
+            },
+            "deploymentFamilyName": {
+              "type": "string",
+              "maxLength": 40,
+              "metadata": {
+                "description": "Family name of the deployment."
+              }
+            },
+            "deployTime": {
+              "type": "string",
+              "defaultValue": "[utcNow()]"
+            },
+            "location": {
+              "type": "string"
+            },
+            "botIdentityClientId": {
+              "type": "string"
+            },
+            "botIdentityId": {
+              "type": "string"
+            },
+            "botIdentityTenantId": {
+              "type": "string"
+            },
+            "speechServicesRegion": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "speechServicesResourceId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "dummyClientSecret": {
+              "type": "securestring",
+              "defaultValue": "[format('DUMMY-SECRET-{0}', newGuid())]"
+            }
+          },
+          "resources": {
+            "bot": {
+              "type": "Microsoft.BotService/botServices",
+              "apiVersion": "2022-09-15",
+              "name": "[format('{0}-bot', parameters('deploymentFamilyName'))]",
+              "kind": "azurebot",
+              "location": "global",
+              "properties": {
+                "displayName": "[format('{0}-bot', parameters('deploymentFamilyName'))]",
+                "endpoint": "https://dummy.localhost/api/messages",
+                "isStreamingSupported": true,
+                "msaAppId": "[parameters('botIdentityClientId')]",
+                "msaAppMSIResourceId": "[parameters('botIdentityId')]",
+                "msaAppTenantId": "[parameters('botIdentityTenantId')]",
+                "msaAppType": "UserAssignedMSI"
+              },
+              "sku": {
+                "name": "S1"
+              }
+            },
+            "botDummyOAuthConnection": {
+              "type": "Microsoft.BotService/botServices/connections",
+              "apiVersion": "2022-09-15",
+              "name": "[format('{0}/{1}', format('{0}-bot', parameters('deploymentFamilyName')), format('{0}-oauth', format('{0}-bot', parameters('deploymentFamilyName'))))]",
+              "location": "global",
+              "properties": {
+                "clientId": "dummy",
+                "clientSecret": "[parameters('dummyClientSecret')]",
+                "id": "dummy",
+                "name": "Dummy",
+                "serviceProviderId": "d05eaacf-1593-4603-9c6c-d4d8fffa46cb"
+              },
+              "dependsOn": [
+                "bot"
+              ]
+            },
+            "botCreateDirectLineChannelScript": {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2023-08-01",
+              "name": "[format('{0}-create-direct-line-channel-script', parameters('deploymentFamilyName'))]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', parameters('builderIdentityId'))]": {}
+                }
+              },
+              "kind": "AzureCLI",
+              "location": "[parameters('location')]",
+              "properties": {
+                "arguments": "[format('\\\"{0}-bot\\\" \\\"{1}\\\" \\\"Default Site ({2})\\\"', parameters('deploymentFamilyName'), resourceGroup().name, parameters('deployTime'))]",
+                "azCliVersion": "2.61.0",
+                "cleanupPreference": "Always",
+                "forceUpdateTag": "[parameters('deployTime')]",
+                "retentionInterval": "PT1H",
+                "scriptContent": "      set -eo pipefail\n\n      BOT_NAME=$1\n      RESOURCE_GROUP_NAME=$2\n      SITE_NAME=$3\n\n      # \"create\" will remove all other sites.\n      az bot directline create \\\n        --name $BOT_NAME \\\n        --resource-group $RESOURCE_GROUP_NAME \\\n        --location global \\\n        --site-name \"$SITE_NAME\" \\\n        --trusted-origins https://compulim.github.io\n\n      az bot directline show \\\n        --name $BOT_NAME \\\n        --resource-group $RESOURCE_GROUP_NAME \\\n        --with-secrets \\\n        | jq '{ extensionKey1: .setting.extensionKey1, key: .setting.sites[0].key }' \\\n        | tee $AZ_SCRIPTS_OUTPUT_PATH\n    ",
+                "timeout": "PT2M"
+              }
+            },
+            "botDirectLineSpeechChannel": {
+              "condition": "[not(equals(parameters('speechServicesResourceId'), ''))]",
+              "type": "Microsoft.BotService/botServices/channels",
+              "apiVersion": "2022-09-15",
+              "name": "[format('{0}/{1}', format('{0}-bot', parameters('deploymentFamilyName')), 'DirectLineSpeechChannel')]",
+              "location": "global",
+              "properties": {
+                "channelName": "DirectLineSpeechChannel",
+                "properties": {
+                  "cognitiveServiceRegion": "[parameters('speechServicesRegion')]",
+                  "cognitiveServiceResourceId": "[parameters('speechServicesResourceId')]",
+                  "isEnabled": true
+                }
+              },
+              "dependsOn": [
+                "bot"
+              ]
+            },
+            "botWebChatChannel": {
+              "type": "Microsoft.BotService/botServices/channels",
+              "apiVersion": "2022-09-15",
+              "name": "[format('{0}/{1}', format('{0}-bot', parameters('deploymentFamilyName')), 'WebChatChannel')]",
+              "properties": {
+                "channelName": "WebChatChannel",
+                "properties": {
+                  "sites": []
+                }
+              },
+              "dependsOn": [
+                "bot"
+              ]
+            },
+            "appIdentity": {
+              "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+              "apiVersion": "2023-07-31-preview",
+              "name": "[format('{0}-app-identity', parameters('deploymentFamilyName'))]",
+              "location": "[parameters('location')]"
+            },
+            "appPlan": {
+              "type": "Microsoft.Web/serverfarms",
+              "apiVersion": "2023-12-01",
+              "name": "[format('{0}-app-plan', parameters('deploymentFamilyName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "zoneRedundant": false
+              },
+              "sku": {
+                "family": "S",
+                "name": "S1",
+                "size": "S1",
+                "tier": "Standard"
+              }
+            },
+            "app": {
+              "type": "Microsoft.Web/sites",
+              "apiVersion": "2023-12-01",
+              "name": "[format('{0}-app', parameters('deploymentFamilyName'))]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-app-identity', parameters('deploymentFamilyName'))))]": {},
+                  "[format('{0}', parameters('botIdentityId'))]": {}
+                }
+              },
+              "location": "[parameters('location')]",
+              "properties": {
+                "clientAffinityEnabled": false,
+                "httpsOnly": true,
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', format('{0}-app-plan', parameters('deploymentFamilyName')))]",
+                "siteConfig": {
+                  "alwaysOn": true,
+                  "appSettings": [
+                    {
+                      "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                      "value": "~20"
+                    },
+                    {
+                      "name": "DIRECTLINE_EXTENSION_VERSION",
+                      "value": "latest"
+                    },
+                    {
+                      "name": "DirectLineExtensionKey",
+                      "value": "[reference('botCreateDirectLineChannelScript').outputs.extensionKey1]"
+                    },
+                    {
+                      "name": "MicrosoftAppId",
+                      "value": "[parameters('botIdentityClientId')]"
+                    },
+                    {
+                      "name": "MicrosoftAppTenantId",
+                      "value": "[parameters('botIdentityTenantId')]"
+                    },
+                    {
+                      "name": "MicrosoftAppType",
+                      "value": "UserAssignedMSI"
+                    },
+                    {
+                      "name": "OAUTH_CONNECTION_NAME",
+                      "value": "[format('{0}-oauth', format('{0}-bot', parameters('deploymentFamilyName')))]"
+                    },
+                    {
+                      "name": "WEBSITE_RUN_FROM_PACKAGE",
+                      "value": "1"
+                    }
+                  ],
+                  "ftpsState": "Disabled",
+                  "metadata": [
+                    {
+                      "name": "CURRENT_STACK",
+                      "value": "node"
+                    }
+                  ],
+                  "webSocketsEnabled": true
+                }
+              },
+              "dependsOn": [
+                "appIdentity",
+                "appPlan",
+                "botCreateDirectLineChannelScript",
+                "botDummyOAuthConnection"
+              ]
+            },
+            "botReconfigureScript": {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2023-08-01",
+              "name": "[format('{0}-reconfigure-script', parameters('deploymentFamilyName'))]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', parameters('builderIdentityId'))]": {}
+                }
+              },
+              "kind": "AzureCLI",
+              "location": "[parameters('location')]",
+              "properties": {
+                "arguments": "[format('\\\"{0}\\\" \\\"{1}\\\" \\\"{2}\\\"', reference('app').defaultHostName, format('{0}-bot', parameters('deploymentFamilyName')), resourceGroup().name)]",
+                "azCliVersion": "2.61.0",
+                "cleanupPreference": "Always",
+                "forceUpdateTag": "[parameters('deployTime')]",
+                "retentionInterval": "PT1H",
+                "scriptContent": "      set -eo pipefail\n\n      BOT_APP_NAME=$1\n      BOT_NAME=$2\n      RESOURCE_GROUP_NAME=$3\n\n      az bot update \\\n        --name $BOT_NAME \\\n        --resource-group $RESOURCE_GROUP_NAME \\\n        --endpoint https://$BOT_APP_NAME/api/messages\n    ",
+                "timeout": "PT2M"
+              },
+              "dependsOn": [
+                "app",
+                "bot"
+              ]
+            }
+          },
+          "outputs": {
+            "appDefaultHostName": {
+              "type": "string",
+              "value": "[reference('app').defaultHostName]"
+            },
+            "appName": {
+              "type": "string",
+              "value": "[format('{0}-app', parameters('deploymentFamilyName'))]"
+            },
+            "appURL": {
+              "type": "string",
+              "value": "[format('https://{0}/', reference('app').defaultHostName)]"
+            },
+            "botName": {
+              "type": "string",
+              "value": "[format('{0}-bot', parameters('deploymentFamilyName'))]"
+            },
+            "directLineSecret": {
+              "type": "securestring",
+              "value": "[reference('botCreateDirectLineChannelScript').outputs.key]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "echoBotIdentity"
+      ]
+    },
+    "mockBotWithApp": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[parameters('mockBotDeploymentFamilyName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "botIdentityClientId": {
+            "value": "[reference('mockBotIdentity').clientId]"
+          },
+          "botIdentityId": {
+            "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-identity', parameters('mockBotDeploymentFamilyName')))]"
+          },
+          "botIdentityTenantId": {
+            "value": "[reference('mockBotIdentity').tenantId]"
+          },
+          "builderIdentityId": {
+            "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('builderIdentityName'))]"
+          },
+          "deploymentFamilyName": {
+            "value": "[parameters('mockBotDeploymentFamilyName')]"
+          },
+          "deployTime": {
+            "value": "[parameters('deployTime')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "speechServicesRegion": {
+            "value": "[reference('speechServices', '2024-04-01-preview', 'full').location]"
+          },
+          "speechServicesResourceId": {
+            "value": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('speechServicesName'))]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.0",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "157952469400050373"
+            },
+            "description": "Deploy a bot with web apps"
+          },
+          "parameters": {
+            "builderIdentityId": {
+              "type": "string"
+            },
+            "deploymentFamilyName": {
+              "type": "string",
+              "maxLength": 40,
+              "metadata": {
+                "description": "Family name of the deployment."
+              }
+            },
+            "deployTime": {
+              "type": "string",
+              "defaultValue": "[utcNow()]"
+            },
+            "location": {
+              "type": "string"
+            },
+            "botIdentityClientId": {
+              "type": "string"
+            },
+            "botIdentityId": {
+              "type": "string"
+            },
+            "botIdentityTenantId": {
+              "type": "string"
+            },
+            "speechServicesRegion": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "speechServicesResourceId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "dummyClientSecret": {
+              "type": "securestring",
+              "defaultValue": "[format('DUMMY-SECRET-{0}', newGuid())]"
+            }
+          },
+          "resources": {
+            "bot": {
+              "type": "Microsoft.BotService/botServices",
+              "apiVersion": "2022-09-15",
+              "name": "[format('{0}-bot', parameters('deploymentFamilyName'))]",
+              "kind": "azurebot",
+              "location": "global",
+              "properties": {
+                "displayName": "[format('{0}-bot', parameters('deploymentFamilyName'))]",
+                "endpoint": "https://dummy.localhost/api/messages",
+                "isStreamingSupported": true,
+                "msaAppId": "[parameters('botIdentityClientId')]",
+                "msaAppMSIResourceId": "[parameters('botIdentityId')]",
+                "msaAppTenantId": "[parameters('botIdentityTenantId')]",
+                "msaAppType": "UserAssignedMSI"
+              },
+              "sku": {
+                "name": "S1"
+              }
+            },
+            "botDummyOAuthConnection": {
+              "type": "Microsoft.BotService/botServices/connections",
+              "apiVersion": "2022-09-15",
+              "name": "[format('{0}/{1}', format('{0}-bot', parameters('deploymentFamilyName')), format('{0}-oauth', format('{0}-bot', parameters('deploymentFamilyName'))))]",
+              "location": "global",
+              "properties": {
+                "clientId": "dummy",
+                "clientSecret": "[parameters('dummyClientSecret')]",
+                "id": "dummy",
+                "name": "Dummy",
+                "serviceProviderId": "d05eaacf-1593-4603-9c6c-d4d8fffa46cb"
+              },
+              "dependsOn": [
+                "bot"
+              ]
+            },
+            "botCreateDirectLineChannelScript": {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2023-08-01",
+              "name": "[format('{0}-create-direct-line-channel-script', parameters('deploymentFamilyName'))]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', parameters('builderIdentityId'))]": {}
+                }
+              },
+              "kind": "AzureCLI",
+              "location": "[parameters('location')]",
+              "properties": {
+                "arguments": "[format('\\\"{0}-bot\\\" \\\"{1}\\\" \\\"Default Site ({2})\\\"', parameters('deploymentFamilyName'), resourceGroup().name, parameters('deployTime'))]",
+                "azCliVersion": "2.61.0",
+                "cleanupPreference": "Always",
+                "forceUpdateTag": "[parameters('deployTime')]",
+                "retentionInterval": "PT1H",
+                "scriptContent": "      set -eo pipefail\n\n      BOT_NAME=$1\n      RESOURCE_GROUP_NAME=$2\n      SITE_NAME=$3\n\n      # \"create\" will remove all other sites.\n      az bot directline create \\\n        --name $BOT_NAME \\\n        --resource-group $RESOURCE_GROUP_NAME \\\n        --location global \\\n        --site-name \"$SITE_NAME\" \\\n        --trusted-origins https://compulim.github.io\n\n      az bot directline show \\\n        --name $BOT_NAME \\\n        --resource-group $RESOURCE_GROUP_NAME \\\n        --with-secrets \\\n        | jq '{ extensionKey1: .setting.extensionKey1, key: .setting.sites[0].key }' \\\n        | tee $AZ_SCRIPTS_OUTPUT_PATH\n    ",
+                "timeout": "PT2M"
+              }
+            },
+            "botDirectLineSpeechChannel": {
+              "condition": "[not(equals(parameters('speechServicesResourceId'), ''))]",
+              "type": "Microsoft.BotService/botServices/channels",
+              "apiVersion": "2022-09-15",
+              "name": "[format('{0}/{1}', format('{0}-bot', parameters('deploymentFamilyName')), 'DirectLineSpeechChannel')]",
+              "location": "global",
+              "properties": {
+                "channelName": "DirectLineSpeechChannel",
+                "properties": {
+                  "cognitiveServiceRegion": "[parameters('speechServicesRegion')]",
+                  "cognitiveServiceResourceId": "[parameters('speechServicesResourceId')]",
+                  "isEnabled": true
+                }
+              },
+              "dependsOn": [
+                "bot"
+              ]
+            },
+            "botWebChatChannel": {
+              "type": "Microsoft.BotService/botServices/channels",
+              "apiVersion": "2022-09-15",
+              "name": "[format('{0}/{1}', format('{0}-bot', parameters('deploymentFamilyName')), 'WebChatChannel')]",
+              "properties": {
+                "channelName": "WebChatChannel",
+                "properties": {
+                  "sites": []
+                }
+              },
+              "dependsOn": [
+                "bot"
+              ]
+            },
+            "appIdentity": {
+              "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+              "apiVersion": "2023-07-31-preview",
+              "name": "[format('{0}-app-identity', parameters('deploymentFamilyName'))]",
+              "location": "[parameters('location')]"
+            },
+            "appPlan": {
+              "type": "Microsoft.Web/serverfarms",
+              "apiVersion": "2023-12-01",
+              "name": "[format('{0}-app-plan', parameters('deploymentFamilyName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "zoneRedundant": false
+              },
+              "sku": {
+                "family": "S",
+                "name": "S1",
+                "size": "S1",
+                "tier": "Standard"
+              }
+            },
+            "app": {
+              "type": "Microsoft.Web/sites",
+              "apiVersion": "2023-12-01",
+              "name": "[format('{0}-app', parameters('deploymentFamilyName'))]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-app-identity', parameters('deploymentFamilyName'))))]": {},
+                  "[format('{0}', parameters('botIdentityId'))]": {}
+                }
+              },
+              "location": "[parameters('location')]",
+              "properties": {
+                "clientAffinityEnabled": false,
+                "httpsOnly": true,
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', format('{0}-app-plan', parameters('deploymentFamilyName')))]",
+                "siteConfig": {
+                  "alwaysOn": true,
+                  "appSettings": [
+                    {
+                      "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                      "value": "~20"
+                    },
+                    {
+                      "name": "DIRECTLINE_EXTENSION_VERSION",
+                      "value": "latest"
+                    },
+                    {
+                      "name": "DirectLineExtensionKey",
+                      "value": "[reference('botCreateDirectLineChannelScript').outputs.extensionKey1]"
+                    },
+                    {
+                      "name": "MicrosoftAppId",
+                      "value": "[parameters('botIdentityClientId')]"
+                    },
+                    {
+                      "name": "MicrosoftAppTenantId",
+                      "value": "[parameters('botIdentityTenantId')]"
+                    },
+                    {
+                      "name": "MicrosoftAppType",
+                      "value": "UserAssignedMSI"
+                    },
+                    {
+                      "name": "OAUTH_CONNECTION_NAME",
+                      "value": "[format('{0}-oauth', format('{0}-bot', parameters('deploymentFamilyName')))]"
+                    },
+                    {
+                      "name": "WEBSITE_RUN_FROM_PACKAGE",
+                      "value": "1"
+                    }
+                  ],
+                  "ftpsState": "Disabled",
+                  "metadata": [
+                    {
+                      "name": "CURRENT_STACK",
+                      "value": "node"
+                    }
+                  ],
+                  "webSocketsEnabled": true
+                }
+              },
+              "dependsOn": [
+                "appIdentity",
+                "appPlan",
+                "botCreateDirectLineChannelScript",
+                "botDummyOAuthConnection"
+              ]
+            },
+            "botReconfigureScript": {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2023-08-01",
+              "name": "[format('{0}-reconfigure-script', parameters('deploymentFamilyName'))]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', parameters('builderIdentityId'))]": {}
+                }
+              },
+              "kind": "AzureCLI",
+              "location": "[parameters('location')]",
+              "properties": {
+                "arguments": "[format('\\\"{0}\\\" \\\"{1}\\\" \\\"{2}\\\"', reference('app').defaultHostName, format('{0}-bot', parameters('deploymentFamilyName')), resourceGroup().name)]",
+                "azCliVersion": "2.61.0",
+                "cleanupPreference": "Always",
+                "forceUpdateTag": "[parameters('deployTime')]",
+                "retentionInterval": "PT1H",
+                "scriptContent": "      set -eo pipefail\n\n      BOT_APP_NAME=$1\n      BOT_NAME=$2\n      RESOURCE_GROUP_NAME=$3\n\n      az bot update \\\n        --name $BOT_NAME \\\n        --resource-group $RESOURCE_GROUP_NAME \\\n        --endpoint https://$BOT_APP_NAME/api/messages\n    ",
+                "timeout": "PT2M"
+              },
+              "dependsOn": [
+                "app",
+                "bot"
+              ]
+            }
+          },
+          "outputs": {
+            "appDefaultHostName": {
+              "type": "string",
+              "value": "[reference('app').defaultHostName]"
+            },
+            "appName": {
+              "type": "string",
+              "value": "[format('{0}-app', parameters('deploymentFamilyName'))]"
+            },
+            "appURL": {
+              "type": "string",
+              "value": "[format('https://{0}/', reference('app').defaultHostName)]"
+            },
+            "botName": {
+              "type": "string",
+              "value": "[format('{0}-bot', parameters('deploymentFamilyName'))]"
+            },
+            "directLineSecret": {
+              "type": "securestring",
+              "value": "[reference('botCreateDirectLineChannelScript').outputs.key]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "mockBotIdentity",
+        "speechServices"
+      ]
+    },
+    "todoBotWithApp": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[parameters('todoBotDeploymentFamilyName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "botIdentityId": {
+            "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-identity', parameters('todoBotDeploymentFamilyName')))]"
+          },
+          "botIdentityClientId": {
+            "value": "[reference('todoBotIdentity').clientId]"
+          },
+          "botIdentityTenantId": {
+            "value": "[reference('todoBotIdentity').tenantId]"
+          },
+          "builderIdentityId": {
+            "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('builderIdentityName'))]"
+          },
+          "deploymentFamilyName": {
+            "value": "[parameters('todoBotDeploymentFamilyName')]"
+          },
+          "deployTime": {
+            "value": "[parameters('deployTime')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.0",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "157952469400050373"
+            },
+            "description": "Deploy a bot with web apps"
+          },
+          "parameters": {
+            "builderIdentityId": {
+              "type": "string"
+            },
+            "deploymentFamilyName": {
+              "type": "string",
+              "maxLength": 40,
+              "metadata": {
+                "description": "Family name of the deployment."
+              }
+            },
+            "deployTime": {
+              "type": "string",
+              "defaultValue": "[utcNow()]"
+            },
+            "location": {
+              "type": "string"
+            },
+            "botIdentityClientId": {
+              "type": "string"
+            },
+            "botIdentityId": {
+              "type": "string"
+            },
+            "botIdentityTenantId": {
+              "type": "string"
+            },
+            "speechServicesRegion": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "speechServicesResourceId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "dummyClientSecret": {
+              "type": "securestring",
+              "defaultValue": "[format('DUMMY-SECRET-{0}', newGuid())]"
+            }
+          },
+          "resources": {
+            "bot": {
+              "type": "Microsoft.BotService/botServices",
+              "apiVersion": "2022-09-15",
+              "name": "[format('{0}-bot', parameters('deploymentFamilyName'))]",
+              "kind": "azurebot",
+              "location": "global",
+              "properties": {
+                "displayName": "[format('{0}-bot', parameters('deploymentFamilyName'))]",
+                "endpoint": "https://dummy.localhost/api/messages",
+                "isStreamingSupported": true,
+                "msaAppId": "[parameters('botIdentityClientId')]",
+                "msaAppMSIResourceId": "[parameters('botIdentityId')]",
+                "msaAppTenantId": "[parameters('botIdentityTenantId')]",
+                "msaAppType": "UserAssignedMSI"
+              },
+              "sku": {
+                "name": "S1"
+              }
+            },
+            "botDummyOAuthConnection": {
+              "type": "Microsoft.BotService/botServices/connections",
+              "apiVersion": "2022-09-15",
+              "name": "[format('{0}/{1}', format('{0}-bot', parameters('deploymentFamilyName')), format('{0}-oauth', format('{0}-bot', parameters('deploymentFamilyName'))))]",
+              "location": "global",
+              "properties": {
+                "clientId": "dummy",
+                "clientSecret": "[parameters('dummyClientSecret')]",
+                "id": "dummy",
+                "name": "Dummy",
+                "serviceProviderId": "d05eaacf-1593-4603-9c6c-d4d8fffa46cb"
+              },
+              "dependsOn": [
+                "bot"
+              ]
+            },
+            "botCreateDirectLineChannelScript": {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2023-08-01",
+              "name": "[format('{0}-create-direct-line-channel-script', parameters('deploymentFamilyName'))]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', parameters('builderIdentityId'))]": {}
+                }
+              },
+              "kind": "AzureCLI",
+              "location": "[parameters('location')]",
+              "properties": {
+                "arguments": "[format('\\\"{0}-bot\\\" \\\"{1}\\\" \\\"Default Site ({2})\\\"', parameters('deploymentFamilyName'), resourceGroup().name, parameters('deployTime'))]",
+                "azCliVersion": "2.61.0",
+                "cleanupPreference": "Always",
+                "forceUpdateTag": "[parameters('deployTime')]",
+                "retentionInterval": "PT1H",
+                "scriptContent": "      set -eo pipefail\n\n      BOT_NAME=$1\n      RESOURCE_GROUP_NAME=$2\n      SITE_NAME=$3\n\n      # \"create\" will remove all other sites.\n      az bot directline create \\\n        --name $BOT_NAME \\\n        --resource-group $RESOURCE_GROUP_NAME \\\n        --location global \\\n        --site-name \"$SITE_NAME\" \\\n        --trusted-origins https://compulim.github.io\n\n      az bot directline show \\\n        --name $BOT_NAME \\\n        --resource-group $RESOURCE_GROUP_NAME \\\n        --with-secrets \\\n        | jq '{ extensionKey1: .setting.extensionKey1, key: .setting.sites[0].key }' \\\n        | tee $AZ_SCRIPTS_OUTPUT_PATH\n    ",
+                "timeout": "PT2M"
+              }
+            },
+            "botDirectLineSpeechChannel": {
+              "condition": "[not(equals(parameters('speechServicesResourceId'), ''))]",
+              "type": "Microsoft.BotService/botServices/channels",
+              "apiVersion": "2022-09-15",
+              "name": "[format('{0}/{1}', format('{0}-bot', parameters('deploymentFamilyName')), 'DirectLineSpeechChannel')]",
+              "location": "global",
+              "properties": {
+                "channelName": "DirectLineSpeechChannel",
+                "properties": {
+                  "cognitiveServiceRegion": "[parameters('speechServicesRegion')]",
+                  "cognitiveServiceResourceId": "[parameters('speechServicesResourceId')]",
+                  "isEnabled": true
+                }
+              },
+              "dependsOn": [
+                "bot"
+              ]
+            },
+            "botWebChatChannel": {
+              "type": "Microsoft.BotService/botServices/channels",
+              "apiVersion": "2022-09-15",
+              "name": "[format('{0}/{1}', format('{0}-bot', parameters('deploymentFamilyName')), 'WebChatChannel')]",
+              "properties": {
+                "channelName": "WebChatChannel",
+                "properties": {
+                  "sites": []
+                }
+              },
+              "dependsOn": [
+                "bot"
+              ]
+            },
+            "appIdentity": {
+              "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+              "apiVersion": "2023-07-31-preview",
+              "name": "[format('{0}-app-identity', parameters('deploymentFamilyName'))]",
+              "location": "[parameters('location')]"
+            },
+            "appPlan": {
+              "type": "Microsoft.Web/serverfarms",
+              "apiVersion": "2023-12-01",
+              "name": "[format('{0}-app-plan', parameters('deploymentFamilyName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "zoneRedundant": false
+              },
+              "sku": {
+                "family": "S",
+                "name": "S1",
+                "size": "S1",
+                "tier": "Standard"
+              }
+            },
+            "app": {
+              "type": "Microsoft.Web/sites",
+              "apiVersion": "2023-12-01",
+              "name": "[format('{0}-app', parameters('deploymentFamilyName'))]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-app-identity', parameters('deploymentFamilyName'))))]": {},
+                  "[format('{0}', parameters('botIdentityId'))]": {}
+                }
+              },
+              "location": "[parameters('location')]",
+              "properties": {
+                "clientAffinityEnabled": false,
+                "httpsOnly": true,
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', format('{0}-app-plan', parameters('deploymentFamilyName')))]",
+                "siteConfig": {
+                  "alwaysOn": true,
+                  "appSettings": [
+                    {
+                      "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                      "value": "~20"
+                    },
+                    {
+                      "name": "DIRECTLINE_EXTENSION_VERSION",
+                      "value": "latest"
+                    },
+                    {
+                      "name": "DirectLineExtensionKey",
+                      "value": "[reference('botCreateDirectLineChannelScript').outputs.extensionKey1]"
+                    },
+                    {
+                      "name": "MicrosoftAppId",
+                      "value": "[parameters('botIdentityClientId')]"
+                    },
+                    {
+                      "name": "MicrosoftAppTenantId",
+                      "value": "[parameters('botIdentityTenantId')]"
+                    },
+                    {
+                      "name": "MicrosoftAppType",
+                      "value": "UserAssignedMSI"
+                    },
+                    {
+                      "name": "OAUTH_CONNECTION_NAME",
+                      "value": "[format('{0}-oauth', format('{0}-bot', parameters('deploymentFamilyName')))]"
+                    },
+                    {
+                      "name": "WEBSITE_RUN_FROM_PACKAGE",
+                      "value": "1"
+                    }
+                  ],
+                  "ftpsState": "Disabled",
+                  "metadata": [
+                    {
+                      "name": "CURRENT_STACK",
+                      "value": "node"
+                    }
+                  ],
+                  "webSocketsEnabled": true
+                }
+              },
+              "dependsOn": [
+                "appIdentity",
+                "appPlan",
+                "botCreateDirectLineChannelScript",
+                "botDummyOAuthConnection"
+              ]
+            },
+            "botReconfigureScript": {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2023-08-01",
+              "name": "[format('{0}-reconfigure-script', parameters('deploymentFamilyName'))]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', parameters('builderIdentityId'))]": {}
+                }
+              },
+              "kind": "AzureCLI",
+              "location": "[parameters('location')]",
+              "properties": {
+                "arguments": "[format('\\\"{0}\\\" \\\"{1}\\\" \\\"{2}\\\"', reference('app').defaultHostName, format('{0}-bot', parameters('deploymentFamilyName')), resourceGroup().name)]",
+                "azCliVersion": "2.61.0",
+                "cleanupPreference": "Always",
+                "forceUpdateTag": "[parameters('deployTime')]",
+                "retentionInterval": "PT1H",
+                "scriptContent": "      set -eo pipefail\n\n      BOT_APP_NAME=$1\n      BOT_NAME=$2\n      RESOURCE_GROUP_NAME=$3\n\n      az bot update \\\n        --name $BOT_NAME \\\n        --resource-group $RESOURCE_GROUP_NAME \\\n        --endpoint https://$BOT_APP_NAME/api/messages\n    ",
+                "timeout": "PT2M"
+              },
+              "dependsOn": [
+                "app",
+                "bot"
+              ]
+            }
+          },
+          "outputs": {
+            "appDefaultHostName": {
+              "type": "string",
+              "value": "[reference('app').defaultHostName]"
+            },
+            "appName": {
+              "type": "string",
+              "value": "[format('{0}-app', parameters('deploymentFamilyName'))]"
+            },
+            "appURL": {
+              "type": "string",
+              "value": "[format('https://{0}/', reference('app').defaultHostName)]"
+            },
+            "botName": {
+              "type": "string",
+              "value": "[format('{0}-bot', parameters('deploymentFamilyName'))]"
+            },
+            "directLineSecret": {
+              "type": "securestring",
+              "value": "[reference('botCreateDirectLineChannelScript').outputs.key]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "todoBotIdentity"
+      ]
+    }
+  },
+  "outputs": {
+    "echoBotAppName": {
+      "type": "string",
+      "value": "[reference('echoBotWithApp').outputs.appName.value]"
+    },
+    "echoBotAppURL": {
+      "type": "string",
+      "value": "[reference('echoBotWithApp').outputs.appURL.value]"
+    },
+    "mockBotAppName": {
+      "type": "string",
+      "value": "[reference('mockBotWithApp').outputs.appName.value]"
+    },
+    "mockBotAppURL": {
+      "type": "string",
+      "value": "[reference('mockBotWithApp').outputs.appURL.value]"
+    },
+    "todoBotAppName": {
+      "type": "string",
+      "value": "[reference('todoBotWithApp').outputs.appName.value]"
+    },
+    "todoBotAppURL": {
+      "type": "string",
+      "value": "[reference('todoBotWithApp').outputs.appURL.value]"
+    },
+    "tokenAppURL": {
+      "type": "string",
+      "value": "[format('https://{0}/', reference('tokenApp').configuration.ingress.fqdn)]"
+    }
+  }
+}

@@ -146,7 +146,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
     }
-    publicNetworkAccess: 'Disabled'
+    publicNetworkAccess: 'Enabled'
     sku: {
       family: 'A'
       name: 'standard'
@@ -170,14 +170,15 @@ resource nspProfile 'Microsoft.Network/networkSecurityPerimeters/profiles@2023-0
   properties: {}
 }
 
-// NSP Access Rule - Allow inbound from token app's managed environment
+// NSP Access Rule - Allow inbound from token app's managed environment and deployment scripts
 resource nspAccessRule 'Microsoft.Network/networkSecurityPerimeters/profiles/accessRules@2023-08-01-preview' = {
   parent: nspProfile
   location: location
-  name: 'allow-token-app'
+  name: 'allow-azure-services'
   properties: {
     direction: 'Inbound'
     addressPrefixes: []
+    fullyQualifiedDomainNames: []
     subscriptions: [
       {
         id: subscription().subscriptionId
