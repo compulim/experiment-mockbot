@@ -32,10 +32,6 @@ param mockBotDeploymentFamilyName string = '${deploymentFamilyName}-mock-bot'
 param todoBotDeploymentFamilyName string = '${deploymentFamilyName}-todo-bot'
 param speechServicesName string = '${deploymentFamilyName}-speech'
 param tokenAppName string = '${deploymentFamilyName}-token-app'
-param vnetName string = '${deploymentFamilyName}-vnet'
-param vnetAddressPrefix string = '10.0.0.0/16'
-param subnetName string = 'deployment-subnet'
-param subnetAddressPrefix string = '10.0.1.0/24'
 
 resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' existing = {
   name: builderIdentityName
@@ -49,45 +45,6 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-previ
       name: 'PerGB2018'
     }
   }
-}
-
-// Virtual Network for private endpoints and deployment scripts
-resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
-  location: location
-  name: vnetName
-  properties: {
-    addressSpace: {
-      addressPrefixes: [
-        vnetAddressPrefix
-      ]
-    }
-    subnets: [
-      {
-        name: subnetName
-        properties: {
-          addressPrefix: subnetAddressPrefix
-          serviceEndpoints: [
-            {
-              service: 'Microsoft.KeyVault'
-            }
-          ]
-          delegations: [
-            {
-              name: 'delegation'
-              properties: {
-                serviceName: 'Microsoft.ContainerInstance/containerGroups'
-              }
-            }
-          ]
-        }
-      }
-    ]
-  }
-}
-
-resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-11-01' existing = {
-  parent: vnet
-  name: subnetName
 }
 
 resource tokenAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
@@ -148,13 +105,6 @@ resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@20
     arguments: '\\"${speechServices.name}\\" \\"${resourceGroup().name}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
-    containerSettings: {
-      subnetIds: [
-        {
-          id: subnet.id
-        }
-      ]
-    }
     forceUpdateTag: deployTime
     retentionInterval: 'PT1H' // Minimal retention is 1 hour.
     scriptContent: '''
@@ -172,9 +122,6 @@ resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@20
   }
 }
 
-// Key Vault with public access disabled. Access via private endpoint only.
-// Deployment scripts use VNet integration to access through the private endpoint.
-// NSP in Enforced mode ensures no public access.
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   location: location
   name: keyVaultName
@@ -195,129 +142,11 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
         tenantId: tenant().tenantId
       }
     ]
-    networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Deny'
-      virtualNetworkRules: [
-        {
-          id: subnet.id
-          ignoreMissingVnetServiceEndpoint: false
-        }
-      ]
-    }
-    publicNetworkAccess: 'Disabled'
     sku: {
       family: 'A'
       name: 'standard'
     }
     tenantId: tenant().tenantId
-  }
-}
-
-// Network Security Perimeter for Key Vault
-resource networkSecurityPerimeter 'Microsoft.Network/networkSecurityPerimeters@2023-08-01-preview' = {
-  location: location
-  name: '${deploymentFamilyName}-nsp'
-  properties: {}
-}
-
-// NSP Profile
-resource nspProfile 'Microsoft.Network/networkSecurityPerimeters/profiles@2023-08-01-preview' = {
-  parent: networkSecurityPerimeter
-  location: location
-  name: 'keyvault-profile'
-  properties: {}
-}
-
-// NSP Access Rule - Allow inbound from Azure services in the subscription
-// This includes the token app's managed environment and deployment scripts
-resource nspAccessRule 'Microsoft.Network/networkSecurityPerimeters/profiles/accessRules@2023-08-01-preview' = {
-  parent: nspProfile
-  location: location
-  name: 'allow-azure-services'
-  properties: {
-    direction: 'Inbound'
-    addressPrefixes: []
-    // FQDN filtering is not used; access is controlled by subscription-based filtering
-    fullyQualifiedDomainNames: []
-    subscriptions: [
-      {
-        id: subscription().subscriptionId
-      }
-    ]
-  }
-}
-
-// Associate Key Vault with NSP in Enforced mode
-// With VNet and private endpoint configured, NSP can now enforce private-only access
-resource nspAssociation 'Microsoft.Network/networkSecurityPerimeters/resourceAssociations@2023-08-01-preview' = {
-  parent: networkSecurityPerimeter
-  name: '${keyVaultName}-association'
-  properties: {
-    accessMode: 'Enforced'
-    privateLinkResource: {
-      id: keyVault.id
-    }
-    profile: {
-      id: nspProfile.id
-    }
-  }
-}
-
-// Private DNS Zone for Key Vault
-resource keyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  location: 'global'
-  name: 'privatelink.vaultcore.azure.net'
-}
-
-// Link Private DNS Zone to VNet
-resource keyVaultPrivateDnsZoneVnetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-  parent: keyVaultPrivateDnsZone
-  location: 'global'
-  name: '${vnetName}-link'
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: vnet.id
-    }
-  }
-}
-
-// Private Endpoint for Key Vault
-resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01' = {
-  location: location
-  name: '${keyVaultName}-pe'
-  properties: {
-    privateLinkServiceConnections: [
-      {
-        name: '${keyVaultName}-connection'
-        properties: {
-          groupIds: [
-            'vault'
-          ]
-          privateLinkServiceId: keyVault.id
-        }
-      }
-    ]
-    subnet: {
-      id: subnet.id
-    }
-  }
-}
-
-// Private DNS Zone Group for automatic DNS registration
-resource keyVaultPrivateEndpointDnsGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = {
-  parent: keyVaultPrivateEndpoint
-  name: 'default'
-  properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: 'privatelink-vaultcore-azure-net'
-        properties: {
-          privateDnsZoneId: keyVaultPrivateDnsZone.id
-        }
-      }
-    ]
   }
 }
 
@@ -402,13 +231,6 @@ resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
     arguments: '\\"${echoBotWithApp.outputs.directLineSecret}\\" \\"${echoBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${dateTimeAdd(deployTime, 'P7D')}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
-    containerSettings: {
-      subnetIds: [
-        {
-          id: subnet.id
-        }
-      ]
-    }
     forceUpdateTag: deployTime
     retentionInterval: 'PT1H' // Minimal retention is 1 hour.
     scriptContent: '''
@@ -466,13 +288,6 @@ resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
     arguments: '\\"${mockBotWithApp.outputs.directLineSecret}\\" \\"${mockBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${dateTimeAdd(deployTime, 'P7D')}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
-    containerSettings: {
-      subnetIds: [
-        {
-          id: subnet.id
-        }
-      ]
-    }
     forceUpdateTag: deployTime
     retentionInterval: 'PT1H' // Minimal retention is 1 hour.
     scriptContent: '''
@@ -528,13 +343,6 @@ resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
     arguments: '\\"${todoBotWithApp.outputs.directLineSecret}\\" \\"${todoBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${dateTimeAdd(deployTime, 'P7D')}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
-    containerSettings: {
-      subnetIds: [
-        {
-          id: subnet.id
-        }
-      ]
-    }
     forceUpdateTag: deployTime
     retentionInterval: 'PT1H' // Minimal retention is 1 hour.
     scriptContent: '''
