@@ -122,6 +122,9 @@ resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@20
   }
 }
 
+// Key Vault with public access disabled. Access is controlled exclusively through Network Security Perimeter (NSP).
+// The NSP allows Azure services in the subscription (including deployment scripts and managed identities) to access
+// Key Vault through private connectivity without requiring public network access to be enabled.
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   location: location
   name: keyVaultName
