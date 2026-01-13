@@ -142,11 +142,62 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
         tenantId: tenant().tenantId
       }
     ]
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: 'Deny'
+    }
+    publicNetworkAccess: 'Disabled'
     sku: {
       family: 'A'
       name: 'standard'
     }
     tenantId: tenant().tenantId
+  }
+}
+
+// Network Security Perimeter for Key Vault
+resource networkSecurityPerimeter 'Microsoft.Network/networkSecurityPerimeters@2023-08-01-preview' = {
+  location: location
+  name: '${deploymentFamilyName}-nsp'
+  properties: {}
+}
+
+// NSP Profile
+resource nspProfile 'Microsoft.Network/networkSecurityPerimeters/profiles@2023-08-01-preview' = {
+  parent: networkSecurityPerimeter
+  location: location
+  name: 'keyvault-profile'
+  properties: {}
+}
+
+// NSP Access Rule - Allow inbound from token app's managed environment
+resource nspAccessRule 'Microsoft.Network/networkSecurityPerimeters/profiles/accessRules@2023-08-01-preview' = {
+  parent: nspProfile
+  location: location
+  name: 'allow-token-app'
+  properties: {
+    direction: 'Inbound'
+    addressPrefixes: []
+    subscriptions: [
+      {
+        id: subscription().subscriptionId
+      }
+    ]
+  }
+}
+
+// Associate Key Vault with NSP
+resource nspAssociation 'Microsoft.Network/networkSecurityPerimeters/resourceAssociations@2023-08-01-preview' = {
+  parent: networkSecurityPerimeter
+  name: '${keyVaultName}-association'
+  properties: {
+    accessMode: 'Enforced'
+    privateLinkResource: {
+      id: keyVault.id
+    }
+    profile: {
+      id: nspProfile.id
+    }
   }
 }
 
