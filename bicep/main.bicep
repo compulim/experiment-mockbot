@@ -85,6 +85,81 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
   }
 }
 
+// Storage account for deployment scripts
+resource deploymentScriptStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  location: location
+  name: '${replace(deploymentFamilyName, '-', '')}dssa'
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    allowBlobPublicAccess: false
+    minimumTlsVersion: 'TLS1_2'
+    networkAcls: {
+      defaultAction: 'Deny'
+    }
+    publicNetworkAccess: 'Disabled'
+  }
+}
+
+// Private endpoint for storage account
+resource storagePrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01' = {
+  location: location
+  name: '${deploymentScriptStorageAccount.name}-endpoint'
+  properties: {
+    subnet: {
+      id: vnet.properties.subnets[0].id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: '${deploymentScriptStorageAccount.name}-plsc'
+        properties: {
+          privateLinkServiceId: deploymentScriptStorageAccount.id
+          groupIds: [
+            'blob'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+// Private DNS Zone for Storage
+resource storagePrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  location: 'global'
+  name: 'privatelink.blob.${environment().suffixes.storage}'
+}
+
+// Link Storage DNS Zone to VNet
+resource storagePrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  location: 'global'
+  name: '${vnetName}-storage-link'
+  parent: storagePrivateDnsZone
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.id
+    }
+  }
+}
+
+// DNS Zone Group for Storage Private Endpoint
+resource storagePrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = {
+  name: 'default'
+  parent: storagePrivateEndpoint
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'privatelink-blob-core-windows-net'
+        properties: {
+          privateDnsZoneId: storagePrivateDnsZone.id
+        }
+      }
+    ]
+  }
+}
+
 resource tokenAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
   name: '${tokenAppName}-identity'
@@ -144,6 +219,7 @@ resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@20
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     containerSettings: {
+      containerGroupName: '${speechServices.name}-rotate-key-aci'
       subnetIds: [
         {
           id: vnet.properties.subnets[0].id
@@ -163,6 +239,10 @@ resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@20
         --resource-group $RESOURCE_GROUP_NAME \
         --key-name key1
     '''
+    storageAccountSettings: {
+      storageAccountName: deploymentScriptStorageAccount.name
+      storageAccountKey: deploymentScriptStorageAccount.listKeys().keys[0].value
+    }
     timeout: 'PT2M'
   }
 }
@@ -383,6 +463,8 @@ module echoBotWithApp 'botWithApp.bicep' = {
     deploymentFamilyName: echoBotDeploymentFamilyName
     deployTime: deployTime
     location: location
+    storageAccountKey: deploymentScriptStorageAccount.listKeys().keys[0].value
+    storageAccountName: deploymentScriptStorageAccount.name
     vnetSubnetId: vnet.properties.subnets[0].id
   }
 }
@@ -403,6 +485,7 @@ resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     containerSettings: {
+      containerGroupName: '${echoBotWithApp.name}-save-secret-aci'
       subnetIds: [
         {
           id: vnet.properties.subnets[0].id
@@ -427,6 +510,10 @@ resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
         --value $DIRECT_LINE_SECRET \
         --vault-name $KEY_VAULT_NAME
     '''
+    storageAccountSettings: {
+      storageAccountName: deploymentScriptStorageAccount.name
+      storageAccountKey: deploymentScriptStorageAccount.listKeys().keys[0].value
+    }
     timeout: 'PT2M'
   }
 }
@@ -448,6 +535,8 @@ module mockBotWithApp 'botWithApp.bicep' = {
     location: location
     speechServicesRegion: speechServices.location
     speechServicesResourceId: speechServices.id
+    storageAccountKey: deploymentScriptStorageAccount.listKeys().keys[0].value
+    storageAccountName: deploymentScriptStorageAccount.name
     vnetSubnetId: vnet.properties.subnets[0].id
   }
 }
@@ -468,6 +557,7 @@ resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     containerSettings: {
+      containerGroupName: '${mockBotDeploymentFamilyName}-save-secret-aci'
       subnetIds: [
         {
           id: vnet.properties.subnets[0].id
@@ -492,6 +582,10 @@ resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
         --value $DIRECT_LINE_SECRET \
         --vault-name $KEY_VAULT_NAME
     '''
+    storageAccountSettings: {
+      storageAccountName: deploymentScriptStorageAccount.name
+      storageAccountKey: deploymentScriptStorageAccount.listKeys().keys[0].value
+    }
     timeout: 'PT2M'
   }
 }
@@ -511,6 +605,8 @@ module todoBotWithApp 'botWithApp.bicep' = {
     deploymentFamilyName: todoBotDeploymentFamilyName
     deployTime: deployTime
     location: location
+    storageAccountKey: deploymentScriptStorageAccount.listKeys().keys[0].value
+    storageAccountName: deploymentScriptStorageAccount.name
     vnetSubnetId: vnet.properties.subnets[0].id
   }
 }
@@ -531,6 +627,7 @@ resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     containerSettings: {
+      containerGroupName: '${todoBotWithApp.name}-save-secret-aci'
       subnetIds: [
         {
           id: vnet.properties.subnets[0].id
@@ -555,6 +652,10 @@ resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
         --value $DIRECT_LINE_SECRET \
         --vault-name $KEY_VAULT_NAME
     '''
+    storageAccountSettings: {
+      storageAccountName: deploymentScriptStorageAccount.name
+      storageAccountKey: deploymentScriptStorageAccount.listKeys().keys[0].value
+    }
     timeout: 'PT2M'
   }
 }

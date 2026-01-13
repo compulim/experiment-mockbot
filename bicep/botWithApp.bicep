@@ -2,6 +2,10 @@ metadata description = 'Deploy a bot with web apps'
 
 param builderIdentityId string
 param vnetSubnetId string = ''
+param storageAccountName string = ''
+
+@secure()
+param storageAccountKey string = ''
 
 @description('Family name of the deployment.')
 @maxLength(40)
@@ -67,6 +71,7 @@ resource botCreateDirectLineChannelScript 'Microsoft.Resources/deploymentScripts
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     containerSettings: vnetSubnetId != '' ? {
+      containerGroupName: '${deploymentFamilyName}-create-dl-aci'
       subnetIds: [
         {
           id: vnetSubnetId
@@ -97,6 +102,10 @@ resource botCreateDirectLineChannelScript 'Microsoft.Resources/deploymentScripts
         | jq '{ extensionKey1: .setting.extensionKey1, key: .setting.sites[0].key }' \
         | tee $AZ_SCRIPTS_OUTPUT_PATH
     '''
+    storageAccountSettings: storageAccountName != '' ? {
+      storageAccountName: storageAccountName
+      storageAccountKey: storageAccountKey
+    } : null
     timeout: 'PT2M'
   }
 }
@@ -266,6 +275,7 @@ resource botReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
     containerSettings: vnetSubnetId != '' ? {
+      containerGroupName: '${deploymentFamilyName}-reconfigure-aci'
       subnetIds: [
         {
           id: vnetSubnetId
@@ -286,6 +296,10 @@ resource botReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01'
         --resource-group $RESOURCE_GROUP_NAME \
         --endpoint https://$BOT_APP_NAME/api/messages
     '''
+    storageAccountSettings: storageAccountName != '' ? {
+      storageAccountName: storageAccountName
+      storageAccountKey: storageAccountKey
+    } : null
     timeout: 'PT2M'
   }
 }
