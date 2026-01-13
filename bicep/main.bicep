@@ -170,7 +170,8 @@ resource nspProfile 'Microsoft.Network/networkSecurityPerimeters/profiles@2023-0
   properties: {}
 }
 
-// NSP Access Rule - Allow inbound from token app's managed environment and deployment scripts
+// NSP Access Rule - Allow inbound from Azure services in the subscription
+// This includes the token app's managed environment and deployment scripts
 resource nspAccessRule 'Microsoft.Network/networkSecurityPerimeters/profiles/accessRules@2023-08-01-preview' = {
   parent: nspProfile
   location: location
@@ -178,6 +179,7 @@ resource nspAccessRule 'Microsoft.Network/networkSecurityPerimeters/profiles/acc
   properties: {
     direction: 'Inbound'
     addressPrefixes: []
+    // FQDN filtering is not used; access is controlled by subscription-based filtering
     fullyQualifiedDomainNames: []
     subscriptions: [
       {
