@@ -419,6 +419,45 @@ resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
   }
 }
 
+// Disable public network access on Key Vault after all secrets are saved
+resource keyVaultDisablePublicAccessScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  dependsOn: [
+    echoBotKeyVaultSaveSecretScript
+    mockBotKeyVaultSaveSecretScript
+    todoBotKeyVaultSaveSecretScript
+    speechServicesRotateKeyScript
+  ]
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${builderIdentity.id}': {}
+    }
+  }
+  kind: 'AzureCLI'
+  location: location
+  #disable-next-line use-stable-resource-identifiers
+  name: '${keyVault.name}-disable-public-access-script'
+  properties: {
+    arguments: '\\"${keyVault.name}\\" \\"${resourceGroup().name}\\"'
+    azCliVersion: '2.61.0'
+    cleanupPreference: 'Always'
+    forceUpdateTag: deployTime
+    retentionInterval: 'PT1H' // Minimal retention is 1 hour.
+    scriptContent: '''
+      set -eo pipefail
+
+      KEY_VAULT_NAME=$1
+      RESOURCE_GROUP_NAME=$2
+
+      az keyvault update \
+        --name $KEY_VAULT_NAME \
+        --resource-group $RESOURCE_GROUP_NAME \
+        --public-network-access Disabled
+    '''
+    timeout: 'PT2M'
+  }
+}
+
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.app/managedenvironments?pivots=deployment-language-bicep
 resource tokenAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   location: location
