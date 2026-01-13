@@ -160,6 +160,23 @@ resource storagePrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateD
   }
 }
 
+// Storage Blob Data Contributor role for builder identity
+@description('This is the built-in Storage Blob Data Contributor role. See https://docs.microsoft.com/azure/role-based-access-control/built-in-roles')
+resource storageBlobDataContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  scope: subscription()
+  name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+}
+
+resource builderStorageRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(deploymentScriptStorageAccount.id, builderIdentity.id, storageBlobDataContributorRoleDefinition.id)
+  properties: {
+    roleDefinitionId: storageBlobDataContributorRoleDefinition.id
+    principalId: builderIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+  scope: deploymentScriptStorageAccount
+}
+
 resource tokenAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
   name: '${tokenAppName}-identity'
@@ -241,7 +258,6 @@ resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@20
     '''
     storageAccountSettings: {
       storageAccountName: deploymentScriptStorageAccount.name
-      storageAccountKey: deploymentScriptStorageAccount.listKeys().keys[0].value
     }
     timeout: 'PT2M'
   }
@@ -463,7 +479,6 @@ module echoBotWithApp 'botWithApp.bicep' = {
     deploymentFamilyName: echoBotDeploymentFamilyName
     deployTime: deployTime
     location: location
-    storageAccountKey: deploymentScriptStorageAccount.listKeys().keys[0].value
     storageAccountName: deploymentScriptStorageAccount.name
     vnetSubnetId: vnet.properties.subnets[0].id
   }
@@ -512,7 +527,6 @@ resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
     '''
     storageAccountSettings: {
       storageAccountName: deploymentScriptStorageAccount.name
-      storageAccountKey: deploymentScriptStorageAccount.listKeys().keys[0].value
     }
     timeout: 'PT2M'
   }
@@ -535,7 +549,6 @@ module mockBotWithApp 'botWithApp.bicep' = {
     location: location
     speechServicesRegion: speechServices.location
     speechServicesResourceId: speechServices.id
-    storageAccountKey: deploymentScriptStorageAccount.listKeys().keys[0].value
     storageAccountName: deploymentScriptStorageAccount.name
     vnetSubnetId: vnet.properties.subnets[0].id
   }
@@ -584,7 +597,6 @@ resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
     '''
     storageAccountSettings: {
       storageAccountName: deploymentScriptStorageAccount.name
-      storageAccountKey: deploymentScriptStorageAccount.listKeys().keys[0].value
     }
     timeout: 'PT2M'
   }
@@ -605,7 +617,6 @@ module todoBotWithApp 'botWithApp.bicep' = {
     deploymentFamilyName: todoBotDeploymentFamilyName
     deployTime: deployTime
     location: location
-    storageAccountKey: deploymentScriptStorageAccount.listKeys().keys[0].value
     storageAccountName: deploymentScriptStorageAccount.name
     vnetSubnetId: vnet.properties.subnets[0].id
   }
@@ -654,7 +665,6 @@ resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
     '''
     storageAccountSettings: {
       storageAccountName: deploymentScriptStorageAccount.name
-      storageAccountKey: deploymentScriptStorageAccount.listKeys().keys[0].value
     }
     timeout: 'PT2M'
   }

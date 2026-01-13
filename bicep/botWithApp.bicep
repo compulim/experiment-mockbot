@@ -4,9 +4,6 @@ param builderIdentityId string
 param vnetSubnetId string = ''
 param storageAccountName string = ''
 
-@secure()
-param storageAccountKey string = ''
-
 @description('Family name of the deployment.')
 @maxLength(40)
 param deploymentFamilyName string
@@ -104,7 +101,6 @@ resource botCreateDirectLineChannelScript 'Microsoft.Resources/deploymentScripts
     '''
     storageAccountSettings: storageAccountName != '' ? {
       storageAccountName: storageAccountName
-      storageAccountKey: storageAccountKey
     } : null
     timeout: 'PT2M'
   }
@@ -298,7 +294,6 @@ resource botReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01'
     '''
     storageAccountSettings: storageAccountName != '' ? {
       storageAccountName: storageAccountName
-      storageAccountKey: storageAccountKey
     } : null
     timeout: 'PT2M'
   }
