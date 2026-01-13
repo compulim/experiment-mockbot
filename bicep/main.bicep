@@ -166,7 +166,7 @@ resource networkSecurityPerimeter 'Microsoft.Network/networkSecurityPerimeters@2
 resource nspProfile 'Microsoft.Network/networkSecurityPerimeters/profiles@2023-08-01-preview' = {
   parent: networkSecurityPerimeter
   location: location
-  name: 'profile1'
+  name: 'keyvault-profile'
   properties: {}
 }
 
