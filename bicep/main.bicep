@@ -143,6 +143,13 @@ resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@20
     arguments: '\\"${speechServices.name}\\" \\"${resourceGroup().name}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
+    containerSettings: {
+      subnetIds: [
+        {
+          id: vnet.properties.subnets[0].id
+        }
+      ]
+    }
     forceUpdateTag: deployTime
     retentionInterval: 'PT1H' // Minimal retention is 1 hour.
     scriptContent: '''
@@ -294,7 +301,7 @@ resource speechServicesSubscriptionKey 'Microsoft.KeyVault/vaults/secrets@2023-0
 // Private Endpoint for Key Vault
 resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01' = {
   location: location
-  name: '${keyVaultName}-pe'
+  name: '${keyVaultName}-endpoint'
   properties: {
     subnet: {
       id: vnet.properties.subnets[0].id
@@ -377,6 +384,7 @@ module echoBotWithApp 'botWithApp.bicep' = {
     deploymentFamilyName: echoBotDeploymentFamilyName
     deployTime: deployTime
     location: location
+    vnetSubnetId: vnet.properties.subnets[0].id
   }
 }
 
@@ -395,6 +403,13 @@ resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
     arguments: '\\"${echoBotWithApp.outputs.directLineSecret}\\" \\"${echoBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${dateTimeAdd(deployTime, 'P7D')}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
+    containerSettings: {
+      subnetIds: [
+        {
+          id: vnet.properties.subnets[0].id
+        }
+      ]
+    }
     forceUpdateTag: deployTime
     retentionInterval: 'PT1H' // Minimal retention is 1 hour.
     scriptContent: '''
@@ -434,6 +449,7 @@ module mockBotWithApp 'botWithApp.bicep' = {
     location: location
     speechServicesRegion: speechServices.location
     speechServicesResourceId: speechServices.id
+    vnetSubnetId: vnet.properties.subnets[0].id
   }
 }
 
@@ -452,6 +468,13 @@ resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
     arguments: '\\"${mockBotWithApp.outputs.directLineSecret}\\" \\"${mockBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${dateTimeAdd(deployTime, 'P7D')}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
+    containerSettings: {
+      subnetIds: [
+        {
+          id: vnet.properties.subnets[0].id
+        }
+      ]
+    }
     forceUpdateTag: deployTime
     retentionInterval: 'PT1H' // Minimal retention is 1 hour.
     scriptContent: '''
@@ -489,6 +512,7 @@ module todoBotWithApp 'botWithApp.bicep' = {
     deploymentFamilyName: todoBotDeploymentFamilyName
     deployTime: deployTime
     location: location
+    vnetSubnetId: vnet.properties.subnets[0].id
   }
 }
 
@@ -507,6 +531,13 @@ resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
     arguments: '\\"${todoBotWithApp.outputs.directLineSecret}\\" \\"${todoBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${dateTimeAdd(deployTime, 'P7D')}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
+    containerSettings: {
+      subnetIds: [
+        {
+          id: vnet.properties.subnets[0].id
+        }
+      ]
+    }
     forceUpdateTag: deployTime
     retentionInterval: 'PT1H' // Minimal retention is 1 hour.
     scriptContent: '''

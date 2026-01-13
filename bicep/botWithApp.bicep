@@ -1,6 +1,7 @@
 metadata description = 'Deploy a bot with web apps'
 
 param builderIdentityId string
+param vnetSubnetId string = ''
 
 @description('Family name of the deployment.')
 @maxLength(40)
@@ -65,6 +66,13 @@ resource botCreateDirectLineChannelScript 'Microsoft.Resources/deploymentScripts
     arguments: '\\"${deploymentFamilyName}-bot\\" \\"${resourceGroup().name}\\" \\"Default Site (${deployTime})\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
+    containerSettings: vnetSubnetId != '' ? {
+      subnetIds: [
+        {
+          id: vnetSubnetId
+        }
+      ]
+    } : null
     forceUpdateTag: deployTime
     retentionInterval: 'PT1H' // Minimal retention is 1 hour.
     scriptContent: '''
@@ -257,6 +265,13 @@ resource botReconfigureScript 'Microsoft.Resources/deploymentScripts@2023-08-01'
     arguments: '\\"${app.properties.defaultHostName}\\" \\"${bot.name}\\" \\"${resourceGroup().name}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
+    containerSettings: vnetSubnetId != '' ? {
+      subnetIds: [
+        {
+          id: vnetSubnetId
+        }
+      ]
+    } : null
     forceUpdateTag: deployTime
     retentionInterval: 'PT1H' // Minimal retention is 1 hour.
     scriptContent: '''
