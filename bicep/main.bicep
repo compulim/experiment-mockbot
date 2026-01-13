@@ -238,7 +238,6 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
       }
     ]
     networkAcls: {
-      bypass: 'AzureServices'
       defaultAction: 'Deny'
     }
     publicNetworkAccess: 'Disabled'
