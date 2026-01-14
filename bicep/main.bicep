@@ -732,7 +732,7 @@ resource tokenAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
         customerId: logAnalytics.properties.customerId
         sharedKey: logAnalytics.listKeys().primarySharedKey
       }
-    y}
+    }
     vnetConfiguration: {
       infrastructureSubnetId: virtualNetwork::containerAppsEndpointSubnet.id
     }
