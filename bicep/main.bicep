@@ -32,6 +32,8 @@ param mockBotDeploymentFamilyName string = '${deploymentFamilyName}-mock-bot'
 param todoBotDeploymentFamilyName string = '${deploymentFamilyName}-todo-bot'
 param speechServicesName string = '${deploymentFamilyName}-speech'
 param tokenAppName string = '${deploymentFamilyName}-token-app'
+param vnetName string = '${deploymentFamilyName}-vnet'
+param nspName string = '${deploymentFamilyName}-nsp'
 
 resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' existing = {
   name: builderIdentityName
@@ -45,6 +47,134 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-previ
       name: 'PerGB2018'
     }
   }
+}
+
+// Virtual Network for private endpoint
+resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
+  location: location
+  name: vnetName
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/16'
+      ]
+    }
+    subnets: [
+      {
+        name: 'default'
+        properties: {
+          addressPrefix: '10.0.0.0/24'
+          privateEndpointNetworkPolicies: 'Disabled'
+        }
+      }
+      {
+        name: 'container-apps'
+        properties: {
+          addressPrefix: '10.0.1.0/24'
+          delegations: [
+            {
+              name: 'Microsoft.App.environments'
+              properties: {
+                serviceName: 'Microsoft.App/environments'
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+
+// Storage account for deployment scripts
+resource deploymentScriptStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  location: location
+  name: '${replace(deploymentFamilyName, '-', '')}dssa'
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    allowBlobPublicAccess: false
+    minimumTlsVersion: 'TLS1_2'
+    networkAcls: {
+      defaultAction: 'Deny'
+    }
+    publicNetworkAccess: 'Disabled'
+  }
+}
+
+// Private endpoint for storage account
+resource storagePrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01' = {
+  location: location
+  name: '${deploymentScriptStorageAccount.name}-endpoint'
+  properties: {
+    subnet: {
+      id: vnet.properties.subnets[0].id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: '${deploymentScriptStorageAccount.name}-plsc'
+        properties: {
+          privateLinkServiceId: deploymentScriptStorageAccount.id
+          groupIds: [
+            'blob'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+// Private DNS Zone for Storage
+resource storagePrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  location: 'global'
+  name: 'privatelink.blob.${environment().suffixes.storage}'
+}
+
+// Link Storage DNS Zone to VNet
+resource storagePrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  location: 'global'
+  name: '${vnetName}-storage-link'
+  parent: storagePrivateDnsZone
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.id
+    }
+  }
+}
+
+// DNS Zone Group for Storage Private Endpoint
+resource storagePrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = {
+  name: 'default'
+  parent: storagePrivateEndpoint
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'privatelink-blob-core-windows-net'
+        properties: {
+          privateDnsZoneId: storagePrivateDnsZone.id
+        }
+      }
+    ]
+  }
+}
+
+// Storage Blob Data Contributor role for builder identity
+@description('This is the built-in Storage Blob Data Contributor role. See https://docs.microsoft.com/azure/role-based-access-control/built-in-roles')
+resource storageBlobDataContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  scope: subscription()
+  name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+}
+
+resource builderStorageRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(deploymentScriptStorageAccount.id, builderIdentity.id, storageBlobDataContributorRoleDefinition.id)
+  properties: {
+    roleDefinitionId: storageBlobDataContributorRoleDefinition.id
+    principalId: builderIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+  scope: deploymentScriptStorageAccount
 }
 
 resource tokenAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
@@ -105,6 +235,14 @@ resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@20
     arguments: '\\"${speechServices.name}\\" \\"${resourceGroup().name}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
+    containerSettings: {
+      containerGroupName: '${speechServices.name}-rotate-key-aci'
+      subnetIds: [
+        {
+          id: vnet.properties.subnets[0].id
+        }
+      ]
+    }
     forceUpdateTag: deployTime
     retentionInterval: 'PT1H' // Minimal retention is 1 hour.
     scriptContent: '''
@@ -118,7 +256,60 @@ resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@20
         --resource-group $RESOURCE_GROUP_NAME \
         --key-name key1
     '''
+    storageAccountSettings: {
+      storageAccountName: deploymentScriptStorageAccount.name
+    }
     timeout: 'PT2M'
+  }
+}
+
+// Network Security Perimeter
+resource nsp 'Microsoft.Network/networkSecurityPerimeters@2023-08-01-preview' = {
+  location: location
+  name: nspName
+  properties: {}
+}
+
+// NSP Profile for Key Vault
+resource nspProfile 'Microsoft.Network/networkSecurityPerimeters/profiles@2023-08-01-preview' = {
+  name: 'default'
+  parent: nsp
+  properties: {}
+}
+
+// NSP Access Rule to allow token app identity
+resource nspAccessRuleTokenApp 'Microsoft.Network/networkSecurityPerimeters/profiles/accessRules@2023-08-01-preview' = {
+  name: 'allow-token-app'
+  parent: nspProfile
+  properties: {
+    direction: 'Inbound'
+    addressPrefixes: []
+    subscriptions: [
+      {
+        id: subscription().subscriptionId
+      }
+    ]
+    fullyQualifiedDomainNames: []
+    emailAddresses: []
+    phoneNumbers: []
+  }
+}
+
+// NSP Access Rule to allow builder identity
+resource nspAccessRuleBuilder 'Microsoft.Network/networkSecurityPerimeters/profiles/accessRules@2023-08-01-preview' = {
+  name: 'allow-builder'
+  parent: nspProfile
+  properties: {
+    direction: 'Inbound'
+    addressPrefixes: []
+    subscriptions: [
+      {
+        id: subscription().subscriptionId
+      }
+    ]
+    fullyQualifiedDomainNames: []
+    emailAddresses: []
+    phoneNumbers: []
   }
 }
 
@@ -142,6 +333,10 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
         tenantId: tenant().tenantId
       }
     ]
+    networkAcls: {
+      defaultAction: 'Deny'
+    }
+    publicNetworkAccess: 'Disabled'
     sku: {
       family: 'A'
       name: 'standard'
@@ -198,6 +393,77 @@ resource speechServicesSubscriptionKey 'Microsoft.KeyVault/vaults/secrets@2023-0
   }
 }
 
+// Private Endpoint for Key Vault
+resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01' = {
+  location: location
+  name: '${keyVaultName}-endpoint'
+  properties: {
+    subnet: {
+      id: vnet.properties.subnets[0].id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: '${keyVaultName}-plsc'
+        properties: {
+          privateLinkServiceId: keyVault.id
+          groupIds: [
+            'vault'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+// Private DNS Zone for Key Vault
+resource keyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  location: 'global'
+  name: 'privatelink.vaultcore.azure.net'
+}
+
+// Link DNS Zone to VNet
+resource keyVaultPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  location: 'global'
+  name: '${vnetName}-link'
+  parent: keyVaultPrivateDnsZone
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.id
+    }
+  }
+}
+
+// DNS Zone Group for Private Endpoint
+resource keyVaultPrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = {
+  name: 'default'
+  parent: keyVaultPrivateEndpoint
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'privatelink-vaultcore-azure-net'
+        properties: {
+          privateDnsZoneId: keyVaultPrivateDnsZone.id
+        }
+      }
+    ]
+  }
+}
+
+// Associate Key Vault with NSP
+resource nspAssociation 'Microsoft.Network/networkSecurityPerimeters/resourceAssociations@2023-08-01-preview' = {
+  name: '${keyVaultName}-association'
+  parent: nsp
+  properties: {
+    privateLinkResource: {
+      id: keyVault.id
+    }
+    profile: {
+      id: nspProfile.id
+    }
+  }
+}
+
 resource echoBotIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
   name: '${echoBotDeploymentFamilyName}-identity'
@@ -213,6 +479,8 @@ module echoBotWithApp 'botWithApp.bicep' = {
     deploymentFamilyName: echoBotDeploymentFamilyName
     deployTime: deployTime
     location: location
+    storageAccountName: deploymentScriptStorageAccount.name
+    vnetSubnetId: vnet.properties.subnets[0].id
   }
 }
 
@@ -231,6 +499,14 @@ resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
     arguments: '\\"${echoBotWithApp.outputs.directLineSecret}\\" \\"${echoBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${dateTimeAdd(deployTime, 'P7D')}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
+    containerSettings: {
+      containerGroupName: '${echoBotWithApp.name}-save-secret-aci'
+      subnetIds: [
+        {
+          id: vnet.properties.subnets[0].id
+        }
+      ]
+    }
     forceUpdateTag: deployTime
     retentionInterval: 'PT1H' // Minimal retention is 1 hour.
     scriptContent: '''
@@ -249,6 +525,9 @@ resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
         --value $DIRECT_LINE_SECRET \
         --vault-name $KEY_VAULT_NAME
     '''
+    storageAccountSettings: {
+      storageAccountName: deploymentScriptStorageAccount.name
+    }
     timeout: 'PT2M'
   }
 }
@@ -270,6 +549,8 @@ module mockBotWithApp 'botWithApp.bicep' = {
     location: location
     speechServicesRegion: speechServices.location
     speechServicesResourceId: speechServices.id
+    storageAccountName: deploymentScriptStorageAccount.name
+    vnetSubnetId: vnet.properties.subnets[0].id
   }
 }
 
@@ -288,6 +569,14 @@ resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
     arguments: '\\"${mockBotWithApp.outputs.directLineSecret}\\" \\"${mockBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${dateTimeAdd(deployTime, 'P7D')}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
+    containerSettings: {
+      containerGroupName: '${mockBotDeploymentFamilyName}-save-secret-aci'
+      subnetIds: [
+        {
+          id: vnet.properties.subnets[0].id
+        }
+      ]
+    }
     forceUpdateTag: deployTime
     retentionInterval: 'PT1H' // Minimal retention is 1 hour.
     scriptContent: '''
@@ -306,6 +595,9 @@ resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
         --value $DIRECT_LINE_SECRET \
         --vault-name $KEY_VAULT_NAME
     '''
+    storageAccountSettings: {
+      storageAccountName: deploymentScriptStorageAccount.name
+    }
     timeout: 'PT2M'
   }
 }
@@ -325,6 +617,8 @@ module todoBotWithApp 'botWithApp.bicep' = {
     deploymentFamilyName: todoBotDeploymentFamilyName
     deployTime: deployTime
     location: location
+    storageAccountName: deploymentScriptStorageAccount.name
+    vnetSubnetId: vnet.properties.subnets[0].id
   }
 }
 
@@ -343,6 +637,14 @@ resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
     arguments: '\\"${todoBotWithApp.outputs.directLineSecret}\\" \\"${todoBotDirectLineSecret.name}\\" \\"${keyVault.name}\\" \\"${dateTimeAdd(deployTime, 'P7D')}\\"'
     azCliVersion: '2.61.0'
     cleanupPreference: 'Always'
+    containerSettings: {
+      containerGroupName: '${todoBotWithApp.name}-save-secret-aci'
+      subnetIds: [
+        {
+          id: vnet.properties.subnets[0].id
+        }
+      ]
+    }
     forceUpdateTag: deployTime
     retentionInterval: 'PT1H' // Minimal retention is 1 hour.
     scriptContent: '''
@@ -361,6 +663,9 @@ resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
         --value $DIRECT_LINE_SECRET \
         --vault-name $KEY_VAULT_NAME
     '''
+    storageAccountSettings: {
+      storageAccountName: deploymentScriptStorageAccount.name
+    }
     timeout: 'PT2M'
   }
 }
@@ -377,6 +682,15 @@ resource tokenAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
         sharedKey: logAnalytics.listKeys().primarySharedKey
       }
     }
+    vnetConfiguration: {
+      infrastructureSubnetId: vnet.properties.subnets[1].id
+    }
+    workloadProfiles: [
+      {
+        name: 'Consumption'
+        workloadProfileType: 'Consumption'
+      }
+    ]
   }
 }
 
