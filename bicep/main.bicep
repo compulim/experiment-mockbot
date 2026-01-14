@@ -186,13 +186,19 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-01-01' = {
     }
     subnets: [
       {
-        name: 'KeyVaultEndpointSubnet'
+        name: 'keyVaultEndpointSubnet'
         properties: {
           addressPrefix: '192.168.4.0/24'
+          // Need to solve this chicken-and-egg problem.
+          // serviceEndpoints: [
+          //   {
+          //     service: keyVault
+          //   }
+          // ]
         }
       }
       {
-        name: 'DeploymentScriptSubnet'
+        name: 'deploymentScriptSubnet'
         properties: {
           addressPrefix: '192.168.5.0/24'
           delegations: [
@@ -206,7 +212,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-01-01' = {
         }
       }
       {
-        name: 'ContainerAppsEndpointSubnet'
+        name: 'containerAppsEndpointSubnet'
         properties: {
           addressPrefix: '192.168.6.0/24'
           delegations: [
