@@ -189,9 +189,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-01-01' = {
   resource keyVaultEndpointSubnet 'subnets' = {
     name: 'KeyVaultEndpointSubnet'
     properties: {
-      addressPrefixes: [
-        '192.168.4.0/24'
-      ]
+      addressPrefix: '192.168.4.0/24'
     }
   }
 
@@ -204,7 +202,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-01-01' = {
       addressPrefix: '192.168.5.0/24'
       delegations: [
         {
-          name: 'containerDelegation'
+          name: 'deploymentScriptDelegation'
           properties: {
             serviceName: 'Microsoft.ContainerInstance/containerGroups'
           }
@@ -220,8 +218,14 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-01-01' = {
     ]
     name: 'ContainerAppsEndpointSubnet'
     properties: {
-      addressPrefixes: [
-        '192.168.6.0/24'
+      addressPrefix: '192.168.6.0/24'
+      delegations: [
+        {
+          name: 'containerAppsDelegation'
+          properties: {
+            serviceName: 'Microsoft.App/environments'
+          }
+        }
       ]
     }
   }
