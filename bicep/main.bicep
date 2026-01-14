@@ -764,14 +764,14 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
       secrets: [
         {
           identity: tokenAppIdentity.id
-          keyVaultUrl: 'https://${keyVaultPrivateDnsZone::keyVaultPrivateDnsZoneLink.name}.${keyVaultPrivateDnsZone.name}/secrets/${echoBotDirectLineSecret.name}'
-          // keyVaultUrl: echoBotDirectLineSecret.properties.secretUri
+          // keyVaultUrl: 'https://${keyVaultPrivateDnsZone::keyVaultPrivateDnsZoneLink.name}.${keyVaultPrivateDnsZone.name}/secrets/${echoBotDirectLineSecret.name}'
+          keyVaultUrl: echoBotDirectLineSecret.properties.secretUri
           name: '${echoBotDeploymentFamilyName}-direct-line-secret'
         }
         {
           identity: tokenAppIdentity.id
-          keyVaultUrl: 'https://${keyVaultPrivateDnsZone::keyVaultPrivateDnsZoneLink.name}.${keyVaultPrivateDnsZone.name}/secrets/${mockBotDirectLineSecret.name}'
-          // keyVaultUrl: mockBotDirectLineSecret.properties.secretUri
+          // keyVaultUrl: 'https://${keyVaultPrivateDnsZone::keyVaultPrivateDnsZoneLink.name}.${keyVaultPrivateDnsZone.name}/secrets/${mockBotDirectLineSecret.name}'
+          keyVaultUrl: mockBotDirectLineSecret.properties.secretUri
           name: '${mockBotDeploymentFamilyName}-direct-line-secret'
         }
         {
@@ -780,14 +780,14 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
         }
         {
           identity: tokenAppIdentity.id
-          keyVaultUrl: 'https://${keyVaultPrivateDnsZone::keyVaultPrivateDnsZoneLink.name}.${keyVaultPrivateDnsZone.name}/secrets/${speechServicesSubscriptionKey.name}'
-          // keyVaultUrl: speechServicesSubscriptionKey.properties.secretUri
+          // keyVaultUrl: 'https://${keyVaultPrivateDnsZone::keyVaultPrivateDnsZoneLink.name}.${keyVaultPrivateDnsZone.name}/secrets/${speechServicesSubscriptionKey.name}'
+          keyVaultUrl: speechServicesSubscriptionKey.properties.secretUri
           name: 'speech-services-subscription-key'
         }
         {
           identity: tokenAppIdentity.id
-          keyVaultUrl: 'https://${keyVaultPrivateDnsZone::keyVaultPrivateDnsZoneLink.name}.${keyVaultPrivateDnsZone.name}/secrets/${todoBotDirectLineSecret.name}'
-          // keyVaultUrl: todoBotDirectLineSecret.properties.secretUri
+          // keyVaultUrl: 'https://${keyVaultPrivateDnsZone::keyVaultPrivateDnsZoneLink.name}.${keyVaultPrivateDnsZone.name}/secrets/${todoBotDirectLineSecret.name}'
+          keyVaultUrl: todoBotDirectLineSecret.properties.secretUri
           name: '${todoBotDeploymentFamilyName}-direct-line-secret'
         }
       ]
