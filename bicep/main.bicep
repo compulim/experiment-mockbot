@@ -196,6 +196,9 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-01-01' = {
   }
 
   resource containerInstanceSubnet 'subnets' = {
+    dependsOn: [
+      virtualNetwork::privateEndpointSubnet
+    ]
     name: 'ContainerInstanceSubnet'
     properties: {
       addressPrefix: '192.168.5.0/24'
