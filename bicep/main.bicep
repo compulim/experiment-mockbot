@@ -178,7 +178,7 @@ resource deploymentScriptPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-01-01' = {
   name: vnetName
   location: location
-  properties:{
+  properties: {
     addressSpace: {
       addressPrefixes: [
         '192.168.4.0/23'
