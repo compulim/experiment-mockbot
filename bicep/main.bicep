@@ -191,7 +191,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-01-01' = {
           addressPrefix: '192.168.4.0/24'
           serviceEndpoints: [
             {
-              // A value from https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-service-endpoints-overview.
+              // A value from https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-service-endpoints-overview
               service: 'Microsoft.KeyVault'
             }
           ]
@@ -354,12 +354,12 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
-      virtualNetworkRules: [
-        {
-          id: virtualNetwork::keyVaultEndpointSubnet.id
-          ignoreMissingVnetServiceEndpoint: false
-        }
-      ]
+      // virtualNetworkRules: [
+      //   {
+      //     id: virtualNetwork::keyVaultEndpointSubnet.id
+      //     ignoreMissingVnetServiceEndpoint: false
+      //   }
+      // ]
     }
     publicNetworkAccess: 'Disabled'
     sku: {
@@ -369,6 +369,28 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     tenantId: tenant().tenantId
   }
 }
+
+// // Private Endpoint for Key Vault
+// resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01' = {
+//   location: location
+//   name: '${keyVaultName}-endpoint'
+//   properties: {
+//     subnet: {
+//       id: virtualNetwork::keyVaultEndpointSubnet.id
+//     }
+//     privateLinkServiceConnections: [
+//       {
+//         name: '${keyVaultName}-conn'
+//         properties: {
+//           privateLinkServiceId: keyVault.id
+//           groupIds: [
+//             'vault'
+//           ]
+//         }
+//       }
+//     ]
+//   }
+// }
 
 resource echoBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: '${echoBotDeploymentFamilyName}-direct-line-secret'
@@ -428,7 +450,7 @@ resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01'
     }
     privateLinkServiceConnections: [
       {
-        name: '${keyVaultName}-plsc'
+        name: '${keyVaultName}-conn'
         properties: {
           privateLinkServiceId: keyVault.id
           groupIds: [
@@ -440,24 +462,36 @@ resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01'
   }
 }
 
-// // Private DNS Zone for Key Vault
-// resource keyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-//   location: 'global'
-//   name: 'privatelink.vaultcore.azure.net'
-// }
+// Private DNS Zone for Key Vault
+resource keyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  location: 'global'
+  name: 'privatelink.vaultcore.azure.net'
 
-// // Link DNS Zone to VNet
-// resource keyVaultPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-//   location: 'global'
-//   name: '${vnetName}-link'
-//   parent: keyVaultPrivateDnsZone
-//   properties: {
-//     registrationEnabled: false
-//     virtualNetwork: {
-//       id: virtualNetwork::privateEndpointSubnet.id
-//     }
-//   }
-// }
+  // Link DNS Zone to VNet
+  resource keyVaultPrivateDnsZoneLink 'virtualNetworkLinks' = {
+    location: 'global'
+    name: '${vnetName}-dns-link'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: virtualNetwork.id
+      }
+    }
+  }
+
+  resource resRecord 'A' = {
+    name: keyVault.name
+    properties: {
+      ttl: 10
+      aRecords: [
+        {
+          // ipv4Address: first(first(deploymentScriptStorageAccountPrivateEndpoint.properties.customDnsConfigs)!.ipAddresses)
+          ipv4Address: keyVaultPrivateEndpoint.properties.networkInterfaces[0].properties.ipConfigurations[0].properties.privateIPAddress
+        }
+      ]
+    }
+  }
+}
 
 // // DNS Zone Group for Private Endpoint
 // resource keyVaultPrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = {
