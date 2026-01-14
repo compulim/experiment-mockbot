@@ -38,7 +38,6 @@ param todoBotDeploymentFamilyName string = '${deploymentFamilyName}-todo-bot'
 param speechServicesName string = '${deploymentFamilyName}-speech'
 param tokenAppName string = '${deploymentFamilyName}-token-app'
 param vnetName string = '${deploymentFamilyName}-vnet'
-param nspName string = '${deploymentFamilyName}-nsp'
 
 resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' existing = {
   name: builderIdentityName
@@ -301,56 +300,6 @@ resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@20
   }
 }
 
-// Network Security Perimeter
-resource nsp 'Microsoft.Network/networkSecurityPerimeters@2023-08-01-preview' = {
-  location: location
-  name: nspName
-  properties: {}
-}
-
-// NSP Profile for Key Vault
-resource nspProfile 'Microsoft.Network/networkSecurityPerimeters/profiles@2023-08-01-preview' = {
-  name: 'default'
-  parent: nsp
-  properties: {}
-}
-
-// NSP Access Rule to allow token app identity
-resource nspAccessRuleTokenApp 'Microsoft.Network/networkSecurityPerimeters/profiles/accessRules@2023-08-01-preview' = {
-  name: 'allow-token-app'
-  parent: nspProfile
-  properties: {
-    direction: 'Inbound'
-    addressPrefixes: []
-    subscriptions: [
-      {
-        id: subscription().subscriptionId
-      }
-    ]
-    fullyQualifiedDomainNames: []
-    emailAddresses: []
-    phoneNumbers: []
-  }
-}
-
-// NSP Access Rule to allow builder identity
-resource nspAccessRuleBuilder 'Microsoft.Network/networkSecurityPerimeters/profiles/accessRules@2023-08-01-preview' = {
-  name: 'allow-builder'
-  parent: nspProfile
-  properties: {
-    direction: 'Inbound'
-    addressPrefixes: []
-    subscriptions: [
-      {
-        id: subscription().subscriptionId
-      }
-    ]
-    fullyQualifiedDomainNames: []
-    emailAddresses: []
-    phoneNumbers: []
-  }
-}
-
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   location: location
   name: keyVaultName
@@ -485,20 +434,6 @@ resource keyVaultPrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/private
         }
       }
     ]
-  }
-}
-
-// Associate Key Vault with NSP
-resource nspAssociation 'Microsoft.Network/networkSecurityPerimeters/resourceAssociations@2023-08-01-preview' = {
-  name: '${keyVaultName}-association'
-  parent: nsp
-  properties: {
-    privateLinkResource: {
-      id: keyVault.id
-    }
-    profile: {
-      id: nspProfile.id
-    }
   }
 }
 
