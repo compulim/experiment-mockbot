@@ -28,13 +28,13 @@ param location string = 'westus'
 param keyVaultName string = '${deploymentFamilyName}-key'
 param logAnalyticsName string = '${deploymentFamilyName}-log'
 
-@maxLength(40)
+@maxLength(30)
 param echoBotDeploymentFamilyName string = '${deploymentFamilyName}-echo-bot'
-@maxLength(40)
+@maxLength(30)
 param mockBotDeploymentFamilyName string = '${deploymentFamilyName}-mock-bot'
-@maxLength(40)
+@maxLength(30)
 param todoBotDeploymentFamilyName string = '${deploymentFamilyName}-todo-bot'
-@maxLength(40)
+@maxLength(30)
 param speechServicesName string = '${deploymentFamilyName}-speech'
 param tokenAppName string = '${deploymentFamilyName}-token-app'
 param vnetName string = '${deploymentFamilyName}-vnet'
@@ -54,42 +54,6 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-previ
   }
 }
 
-// Virtual Network for private endpoint
-resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
-  location: location
-  name: vnetName
-  properties: {
-    addressSpace: {
-      addressPrefixes: [
-        '10.0.0.0/16'
-      ]
-    }
-    subnets: [
-      {
-        name: 'default'
-        properties: {
-          addressPrefix: '10.0.0.0/24'
-          privateEndpointNetworkPolicies: 'Disabled'
-        }
-      }
-      {
-        name: 'container-apps'
-        properties: {
-          addressPrefix: '10.0.1.0/24'
-          delegations: [
-            {
-              name: 'Microsoft.App.environments'
-              properties: {
-                serviceName: 'Microsoft.App/environments'
-              }
-            }
-          ]
-        }
-      }
-    ]
-  }
-}
-
 // Storage account for deployment scripts
 resource deploymentScriptStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   location: location
@@ -103,85 +67,150 @@ resource deploymentScriptStorageAccount 'Microsoft.Storage/storageAccounts@2023-
     minimumTlsVersion: 'TLS1_2'
     networkAcls: {
       defaultAction: 'Deny'
+      bypass: 'AzureServices'
     }
     publicNetworkAccess: 'Disabled'
   }
 }
 
 // Private endpoint for storage account
-resource storagePrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01' = {
+resource deploymentScriptStorageAccountPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01' = {
   location: location
   name: '${deploymentScriptStorageAccount.name}-endpoint'
   properties: {
-    subnet: {
-      id: vnet.properties.subnets[0].id
-    }
     privateLinkServiceConnections: [
       {
         name: '${deploymentScriptStorageAccount.name}-plsc'
         properties: {
           privateLinkServiceId: deploymentScriptStorageAccount.id
           groupIds: [
-            'blob'
+            'file'
           ]
         }
       }
     ]
-  }
-}
-
-// Private DNS Zone for Storage
-resource storagePrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  location: 'global'
-  name: 'privatelink.blob.${environment().suffixes.storage}'
-}
-
-// Link Storage DNS Zone to VNet
-resource storagePrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-  location: 'global'
-  name: '${vnetName}-storage-link'
-  parent: storagePrivateDnsZone
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: vnet.id
+    customNetworkInterfaceName: '${deploymentScriptStorageAccount.name}-nic'
+    subnet: {
+      id: virtualNetwork::privateEndpointSubnet.id
     }
   }
 }
 
-// DNS Zone Group for Storage Private Endpoint
-resource storagePrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = {
-  name: 'default'
-  parent: storagePrivateEndpoint
-  properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: 'privatelink-blob-core-windows-net'
-        properties: {
-          privateDnsZoneId: storagePrivateDnsZone.id
-        }
-      }
-    ]
-  }
-}
-
-// Storage Blob Data Contributor role for builder identity
-@description('This is the built-in Storage Blob Data Contributor role. See https://docs.microsoft.com/azure/role-based-access-control/built-in-roles')
-resource storageBlobDataContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  scope: subscription()
-  name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+// Storage File Data Privileged Contributor role for builder identity. See https://docs.microsoft.com/azure/role-based-access-control/built-in-roles')
+resource deploymentScriptStorageFileDataPrivilegedContributorReference 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: '69566ab7-960f-475b-8e7c-b3118f30c6bd'
+  scope: tenant()
 }
 
 resource builderStorageRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(deploymentScriptStorageAccount.id, builderIdentity.id, storageBlobDataContributorRoleDefinition.id)
+  name: guid(deploymentScriptStorageAccount.id, builderIdentity.id, deploymentScriptStorageFileDataPrivilegedContributorReference.id)
   properties: {
-    roleDefinitionId: storageBlobDataContributorRoleDefinition.id
     principalId: builderIdentity.properties.principalId
     principalType: 'ServicePrincipal'
+    roleDefinitionId: deploymentScriptStorageFileDataPrivilegedContributorReference.id
   }
   scope: deploymentScriptStorageAccount
 }
 
+// // Private DNS Zone for Storage
+// resource deploymentScriptStoragePrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+//   location: 'global'
+//   name: 'privatelink.blob.${environment().suffixes.storage}'
+// }
+
+// // Link Storage DNS Zone to VNet
+// resource storagePrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+//   location: 'global'
+//   name: '${vnetName}-storage-link'
+//   parent: deploymentScriptStoragePrivateDnsZone
+//   properties: {
+//     registrationEnabled: false
+//     virtualNetwork: {
+//       id: vnet.id
+//     }
+//   }
+// }
+
+// // DNS Zone Group for Storage Private Endpoint
+// resource storagePrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = {
+//   name: 'default'
+//   parent: deploymentScriptStorageAccountPrivateEndpoint
+//   properties: {
+//     privateDnsZoneConfigs: [
+//       {
+//         name: 'privatelink-blob-core-windows-net'
+//         properties: {
+//           privateDnsZoneId: deploymentScriptStoragePrivateDnsZone.id
+//         }
+//       }
+//     ]
+//   }
+// }
+
+resource deploymentScriptPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.file.${environment().suffixes.storage}'
+  // name: 'privatelink.file.core.windows.net'
+  location: 'global'
+
+  resource virtualNetworkLink 'virtualNetworkLinks' = {
+    name: uniqueString(virtualNetwork.name)
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: virtualNetwork.id
+      }
+    }
+  }
+
+  resource resRecord 'A' = {
+    name: deploymentScriptStorageAccount.name
+    properties: {
+      ttl: 10
+      aRecords: [
+        {
+          ipv4Address: first(first(deploymentScriptStorageAccountPrivateEndpoint.properties.customDnsConfigs)!.ipAddresses)
+        }
+      ]
+    }
+  }
+}
+
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-01-01' = {
+  name: vnetName
+  location: location
+  properties:{
+    addressSpace: {
+      addressPrefixes: [
+        '192.168.4.0/23'
+      ]
+    }
+  }
+
+  resource privateEndpointSubnet 'subnets' = {
+    name: 'PrivateEndpointSubnet'
+    properties: {
+      addressPrefixes: [
+        '192.168.4.0/24'
+      ]
+    }
+  }
+
+  resource containerInstanceSubnet 'subnets' = {
+    name: 'ContainerInstanceSubnet'
+    properties: {
+      addressPrefix: '192.168.5.0/24'
+      delegations: [
+        {
+          name: 'containerDelegation'
+          properties: {
+            serviceName: 'Microsoft.ContainerInstance/containerGroups'
+          }
+        }
+      ]
+    }
+  }
+}
 resource tokenAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
   name: '${tokenAppName}-identity'
@@ -226,6 +255,10 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 }
 
 resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  dependsOn: [
+    deploymentScriptStorageAccountPrivateEndpoint
+    deploymentScriptPrivateDnsZone::virtualNetworkLink
+  ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -244,7 +277,7 @@ resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@20
       containerGroupName: '${speechServices.name}-rotate-key-aci'
       subnetIds: [
         {
-          id: vnet.properties.subnets[0].id
+          id: virtualNetwork::containerInstanceSubnet.id
         }
       ]
     }
@@ -404,7 +437,7 @@ resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01'
   name: '${keyVaultName}-endpoint'
   properties: {
     subnet: {
-      id: vnet.properties.subnets[0].id
+      id: virtualNetwork::privateEndpointSubnet.id
     }
     privateLinkServiceConnections: [
       {
@@ -434,7 +467,7 @@ resource keyVaultPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNe
   properties: {
     registrationEnabled: false
     virtualNetwork: {
-      id: vnet.id
+      id: virtualNetwork::privateEndpointSubnet.id
     }
   }
 }
@@ -485,11 +518,14 @@ module echoBotWithApp 'botWithApp.bicep' = {
     deployTime: deployTime
     location: location
     storageAccountName: deploymentScriptStorageAccount.name
-    vnetSubnetId: vnet.properties.subnets[0].id
   }
 }
 
 resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  dependsOn: [
+    deploymentScriptStorageAccountPrivateEndpoint
+    deploymentScriptPrivateDnsZone::virtualNetworkLink
+  ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -508,7 +544,7 @@ resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
       containerGroupName: '${echoBotWithApp.name}-save-secret-aci'
       subnetIds: [
         {
-          id: vnet.properties.subnets[0].id
+          id: virtualNetwork::containerInstanceSubnet.id
         }
       ]
     }
@@ -555,11 +591,14 @@ module mockBotWithApp 'botWithApp.bicep' = {
     speechServicesRegion: speechServices.location
     speechServicesResourceId: speechServices.id
     storageAccountName: deploymentScriptStorageAccount.name
-    vnetSubnetId: vnet.properties.subnets[0].id
   }
 }
 
 resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  dependsOn: [
+    deploymentScriptStorageAccountPrivateEndpoint
+    deploymentScriptPrivateDnsZone::virtualNetworkLink
+  ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -578,7 +617,7 @@ resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
       containerGroupName: '${mockBotDeploymentFamilyName}-save-secret-aci'
       subnetIds: [
         {
-          id: vnet.properties.subnets[0].id
+          id: virtualNetwork::containerInstanceSubnet.id
         }
       ]
     }
@@ -623,11 +662,14 @@ module todoBotWithApp 'botWithApp.bicep' = {
     deployTime: deployTime
     location: location
     storageAccountName: deploymentScriptStorageAccount.name
-    vnetSubnetId: vnet.properties.subnets[0].id
   }
 }
 
 resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  dependsOn: [
+    deploymentScriptStorageAccountPrivateEndpoint
+    deploymentScriptPrivateDnsZone::virtualNetworkLink
+  ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -646,7 +688,7 @@ resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
       containerGroupName: '${todoBotWithApp.name}-save-secret-aci'
       subnetIds: [
         {
-          id: vnet.properties.subnets[0].id
+          id: virtualNetwork::containerInstanceSubnet.id
         }
       ]
     }
@@ -688,7 +730,7 @@ resource tokenAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
       }
     }
     vnetConfiguration: {
-      infrastructureSubnetId: vnet.properties.subnets[1].id
+      infrastructureSubnetId: virtualNetwork::privateEndpointSubnet.id
     }
     workloadProfiles: [
       {
