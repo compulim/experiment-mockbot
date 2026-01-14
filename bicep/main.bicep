@@ -27,9 +27,14 @@ param location string = 'westus'
 
 param keyVaultName string = '${deploymentFamilyName}-key'
 param logAnalyticsName string = '${deploymentFamilyName}-log'
+
+@maxLength(40)
 param echoBotDeploymentFamilyName string = '${deploymentFamilyName}-echo-bot'
+@maxLength(40)
 param mockBotDeploymentFamilyName string = '${deploymentFamilyName}-mock-bot'
+@maxLength(40)
 param todoBotDeploymentFamilyName string = '${deploymentFamilyName}-todo-bot'
+@maxLength(40)
 param speechServicesName string = '${deploymentFamilyName}-speech'
 param tokenAppName string = '${deploymentFamilyName}-token-app'
 param vnetName string = '${deploymentFamilyName}-vnet'
