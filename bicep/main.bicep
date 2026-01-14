@@ -184,52 +184,57 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-01-01' = {
         '192.168.4.0/22'
       ]
     }
-  }
-
-  resource keyVaultEndpointSubnet 'subnets' = {
-    name: 'KeyVaultEndpointSubnet'
-    properties: {
-      addressPrefix: '192.168.4.0/24'
-    }
-  }
-
-  resource deploymentScriptSubnet 'subnets' = {
-    dependsOn: [
-      virtualNetwork::keyVaultEndpointSubnet
-    ]
-    name: 'DeploymentScriptSubnet'
-    properties: {
-      addressPrefix: '192.168.5.0/24'
-      delegations: [
-        {
-          name: 'deploymentScriptDelegation'
-          properties: {
-            serviceName: 'Microsoft.ContainerInstance/containerGroups'
-          }
+    subnets: [
+      {
+        name: 'KeyVaultEndpointSubnet'
+        properties: {
+          addressPrefix: '192.168.4.0/24'
         }
-      ]
-    }
+      }
+      {
+        name: 'DeploymentScriptSubnet'
+        properties: {
+          addressPrefix: '192.168.5.0/24'
+          delegations: [
+            {
+              name: 'deploymentScriptDelegation'
+              properties: {
+                serviceName: 'Microsoft.ContainerInstance/containerGroups'
+              }
+            }
+          ]
+        }
+      }
+      {
+        name: 'ContainerAppsEndpointSubnet'
+        properties: {
+          addressPrefix: '192.168.6.0/24'
+          delegations: [
+            {
+              name: 'containerAppsDelegation'
+              properties: {
+                serviceName: 'Microsoft.App/environments'
+              }
+            }
+          ]
+        }
+      }
+    ]
   }
 
-  resource containerAppsEndpointSubnet 'subnets' = {
-    dependsOn: [
-      virtualNetwork::deploymentScriptSubnet
-      virtualNetwork::keyVaultEndpointSubnet
-    ]
+  resource containerAppsEndpointSubnet 'subnets' existing = {
     name: 'ContainerAppsEndpointSubnet'
-    properties: {
-      addressPrefix: '192.168.6.0/24'
-      delegations: [
-        {
-          name: 'containerAppsDelegation'
-          properties: {
-            serviceName: 'Microsoft.App/environments'
-          }
-        }
-      ]
-    }
+  }
+
+  resource deploymentScriptSubnet 'subnets' existing = {
+    name: 'DeploymentScriptSubnet'
+  }
+
+  resource keyVaultEndpointSubnet 'subnets' existing = {
+    name: 'KeyVaultEndpointSubnet'
   }
 }
+
 resource tokenAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
   name: '${tokenAppName}-identity'
