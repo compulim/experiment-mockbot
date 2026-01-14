@@ -90,7 +90,7 @@ resource deploymentScriptStorageAccountPrivateEndpoint 'Microsoft.Network/privat
     ]
     customNetworkInterfaceName: '${deploymentScriptStorageAccount.name}-nic'
     subnet: {
-      id: virtualNetwork::privateEndpointSubnet.id
+      id: virtualNetwork::keyVaultEndpointSubnet.id
     }
   }
 }
@@ -181,13 +181,13 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-01-01' = {
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '192.168.4.0/23'
+        '192.168.4.0/22'
       ]
     }
   }
 
-  resource privateEndpointSubnet 'subnets' = {
-    name: 'PrivateEndpointSubnet'
+  resource keyVaultEndpointSubnet 'subnets' = {
+    name: 'KeyVaultEndpointSubnet'
     properties: {
       addressPrefixes: [
         '192.168.4.0/24'
@@ -195,11 +195,11 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-01-01' = {
     }
   }
 
-  resource containerInstanceSubnet 'subnets' = {
+  resource deploymentScriptSubnet 'subnets' = {
     dependsOn: [
-      virtualNetwork::privateEndpointSubnet
+      virtualNetwork::keyVaultEndpointSubnet
     ]
-    name: 'ContainerInstanceSubnet'
+    name: 'DeploymentScriptSubnet'
     properties: {
       addressPrefix: '192.168.5.0/24'
       delegations: [
@@ -209,6 +209,19 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-01-01' = {
             serviceName: 'Microsoft.ContainerInstance/containerGroups'
           }
         }
+      ]
+    }
+  }
+
+  resource containerAppsEndpointSubnet 'subnets' = {
+    dependsOn: [
+      virtualNetwork::deploymentScriptSubnet
+      virtualNetwork::keyVaultEndpointSubnet
+    ]
+    name: 'ContainerAppsEndpointSubnet'
+    properties: {
+      addressPrefixes: [
+        '192.168.6.0/24'
       ]
     }
   }
@@ -279,7 +292,7 @@ resource speechServicesRotateKeyScript 'Microsoft.Resources/deploymentScripts@20
       containerGroupName: '${speechServices.name}-rotate-key-aci'
       subnetIds: [
         {
-          id: virtualNetwork::containerInstanceSubnet.id
+          id: virtualNetwork::deploymentScriptSubnet.id
         }
       ]
     }
@@ -328,7 +341,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
       defaultAction: 'Deny'
       virtualNetworkRules: [
         {
-          id: virtualNetwork::privateEndpointSubnet.id
+          id: virtualNetwork::keyVaultEndpointSubnet.id
           ignoreMissingVnetServiceEndpoint: false
         }
       ]
@@ -396,7 +409,7 @@ resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01'
   name: '${keyVaultName}-endpoint'
   properties: {
     subnet: {
-      id: virtualNetwork::privateEndpointSubnet.id
+      id: virtualNetwork::keyVaultEndpointSubnet.id
     }
     privateLinkServiceConnections: [
       {
@@ -488,7 +501,7 @@ resource echoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
       containerGroupName: '${echoBotWithApp.name}-save-secret-aci'
       subnetIds: [
         {
-          id: virtualNetwork::containerInstanceSubnet.id
+          id: virtualNetwork::deploymentScriptSubnet.id
         }
       ]
     }
@@ -560,7 +573,7 @@ resource mockBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
       containerGroupName: '${mockBotDeploymentFamilyName}-save-secret-aci'
       subnetIds: [
         {
-          id: virtualNetwork::containerInstanceSubnet.id
+          id: virtualNetwork::deploymentScriptSubnet.id
         }
       ]
     }
@@ -630,7 +643,7 @@ resource todoBotKeyVaultSaveSecretScript 'Microsoft.Resources/deploymentScripts@
       containerGroupName: '${todoBotWithApp.name}-save-secret-aci'
       subnetIds: [
         {
-          id: virtualNetwork::containerInstanceSubnet.id
+          id: virtualNetwork::deploymentScriptSubnet.id
         }
       ]
     }
@@ -672,7 +685,7 @@ resource tokenAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
       }
     }
     vnetConfiguration: {
-      infrastructureSubnetId: virtualNetwork::privateEndpointSubnet.id
+      infrastructureSubnetId: virtualNetwork::containerAppsEndpointSubnet.id
     }
     workloadProfiles: [
       {
