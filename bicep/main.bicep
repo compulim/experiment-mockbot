@@ -214,7 +214,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-01-01' = {
       {
         name: 'containerAppsEndpointSubnet'
         properties: {
-          addressPrefix: '192.168.6.0/24'
+          addressPrefix: '192.168.6.0/23'
           delegations: [
             {
               name: 'containerAppsDelegation'
