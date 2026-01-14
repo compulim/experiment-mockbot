@@ -354,6 +354,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
+      // VNet is for deployment scripts, while Private Link is for token web app.
       virtualNetworkRules: [
         {
           id: virtualNetwork::keyVaultEndpointSubnet.id
@@ -369,28 +370,6 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     tenantId: tenant().tenantId
   }
 }
-
-// // Private Endpoint for Key Vault
-// resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01' = {
-//   location: location
-//   name: '${keyVaultName}-endpoint'
-//   properties: {
-//     subnet: {
-//       id: virtualNetwork::keyVaultEndpointSubnet.id
-//     }
-//     privateLinkServiceConnections: [
-//       {
-//         name: '${keyVaultName}-conn'
-//         properties: {
-//           privateLinkServiceId: keyVault.id
-//           groupIds: [
-//             'vault'
-//           ]
-//         }
-//       }
-//     ]
-//   }
-// }
 
 resource echoBotDirectLineSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: '${echoBotDeploymentFamilyName}-direct-line-secret'
@@ -785,12 +764,14 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
       secrets: [
         {
           identity: tokenAppIdentity.id
-          keyVaultUrl: echoBotDirectLineSecret.properties.secretUri
+          keyVaultUrl: 'https://${keyVaultPrivateDnsZone::keyVaultPrivateDnsZoneLink.name}.${keyVaultPrivateDnsZone.name}/secrets/${echoBotDirectLineSecret.name}'
+          // keyVaultUrl: echoBotDirectLineSecret.properties.secretUri
           name: '${echoBotDeploymentFamilyName}-direct-line-secret'
         }
         {
           identity: tokenAppIdentity.id
-          keyVaultUrl: mockBotDirectLineSecret.properties.secretUri
+          keyVaultUrl: 'https://${keyVaultPrivateDnsZone::keyVaultPrivateDnsZoneLink.name}.${keyVaultPrivateDnsZone.name}/secrets/${mockBotDirectLineSecret.name}'
+          // keyVaultUrl: mockBotDirectLineSecret.properties.secretUri
           name: '${mockBotDeploymentFamilyName}-direct-line-secret'
         }
         {
@@ -799,12 +780,14 @@ resource tokenApp 'Microsoft.App/containerApps@2024-03-01' = {
         }
         {
           identity: tokenAppIdentity.id
-          keyVaultUrl: speechServicesSubscriptionKey.properties.secretUri
+          keyVaultUrl: 'https://${keyVaultPrivateDnsZone::keyVaultPrivateDnsZoneLink.name}.${keyVaultPrivateDnsZone.name}/secrets/${speechServicesSubscriptionKey.name}'
+          // keyVaultUrl: speechServicesSubscriptionKey.properties.secretUri
           name: 'speech-services-subscription-key'
         }
         {
           identity: tokenAppIdentity.id
-          keyVaultUrl: todoBotDirectLineSecret.properties.secretUri
+          keyVaultUrl: 'https://${keyVaultPrivateDnsZone::keyVaultPrivateDnsZoneLink.name}.${keyVaultPrivateDnsZone.name}/secrets/${todoBotDirectLineSecret.name}'
+          // keyVaultUrl: todoBotDirectLineSecret.properties.secretUri
           name: '${todoBotDeploymentFamilyName}-direct-line-secret'
         }
       ]
