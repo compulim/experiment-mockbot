@@ -405,40 +405,40 @@ resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01'
   }
 }
 
-// Private DNS Zone for Key Vault
-resource keyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  location: 'global'
-  name: 'privatelink.vaultcore.azure.net'
-}
+// // Private DNS Zone for Key Vault
+// resource keyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+//   location: 'global'
+//   name: 'privatelink.vaultcore.azure.net'
+// }
 
-// Link DNS Zone to VNet
-resource keyVaultPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-  location: 'global'
-  name: '${vnetName}-link'
-  parent: keyVaultPrivateDnsZone
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: virtualNetwork::privateEndpointSubnet.id
-    }
-  }
-}
+// // Link DNS Zone to VNet
+// resource keyVaultPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+//   location: 'global'
+//   name: '${vnetName}-link'
+//   parent: keyVaultPrivateDnsZone
+//   properties: {
+//     registrationEnabled: false
+//     virtualNetwork: {
+//       id: virtualNetwork::privateEndpointSubnet.id
+//     }
+//   }
+// }
 
-// DNS Zone Group for Private Endpoint
-resource keyVaultPrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = {
-  name: 'default'
-  parent: keyVaultPrivateEndpoint
-  properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: 'privatelink-vaultcore-azure-net'
-        properties: {
-          privateDnsZoneId: keyVaultPrivateDnsZone.id
-        }
-      }
-    ]
-  }
-}
+// // DNS Zone Group for Private Endpoint
+// resource keyVaultPrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = {
+//   name: 'default'
+//   parent: keyVaultPrivateEndpoint
+//   properties: {
+//     privateDnsZoneConfigs: [
+//       {
+//         name: 'privatelink-vaultcore-azure-net'
+//         properties: {
+//           privateDnsZoneId: keyVaultPrivateDnsZone.id
+//         }
+//       }
+//     ]
+//   }
+// }
 
 resource echoBotIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-07-31-preview' = {
   location: location
