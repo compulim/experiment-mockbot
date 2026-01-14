@@ -189,12 +189,12 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-01-01' = {
         name: 'keyVaultEndpointSubnet'
         properties: {
           addressPrefix: '192.168.4.0/24'
-          // Need to solve this chicken-and-egg problem.
-          // serviceEndpoints: [
-          //   {
-          //     service: keyVault
-          //   }
-          // ]
+          serviceEndpoints: [
+            {
+              // A value from https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-service-endpoints-overview.
+              service: 'Microsoft.KeyVault'
+            }
+          ]
         }
       }
       {
