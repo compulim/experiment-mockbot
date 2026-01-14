@@ -517,7 +517,6 @@ module echoBotWithApp 'botWithApp.bicep' = {
     deploymentFamilyName: echoBotDeploymentFamilyName
     deployTime: deployTime
     location: location
-    storageAccountName: deploymentScriptStorageAccount.name
   }
 }
 
@@ -590,7 +589,6 @@ module mockBotWithApp 'botWithApp.bicep' = {
     location: location
     speechServicesRegion: speechServices.location
     speechServicesResourceId: speechServices.id
-    storageAccountName: deploymentScriptStorageAccount.name
   }
 }
 
@@ -661,7 +659,6 @@ module todoBotWithApp 'botWithApp.bicep' = {
     deploymentFamilyName: todoBotDeploymentFamilyName
     deployTime: deployTime
     location: location
-    storageAccountName: deploymentScriptStorageAccount.name
   }
 }
 
