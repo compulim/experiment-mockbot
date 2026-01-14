@@ -485,8 +485,8 @@ resource keyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' =
       ttl: 10
       aRecords: [
         {
-          // ipv4Address: first(first(deploymentScriptStorageAccountPrivateEndpoint.properties.customDnsConfigs)!.ipAddresses)
-          ipv4Address: keyVaultPrivateEndpoint.properties.networkInterfaces[0].properties.ipConfigurations[0].properties.privateIPAddress
+          ipv4Address: first(first(keyVaultPrivateEndpoint.properties.customDnsConfigs)!.ipAddresses)
+          // ipv4Address: keyVaultPrivateEndpoint.properties.networkInterfaces[0].properties.ipConfigurations[0].properties.privateIPAddress
         }
       ]
     }
@@ -732,16 +732,16 @@ resource tokenAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
         customerId: logAnalytics.properties.customerId
         sharedKey: logAnalytics.listKeys().primarySharedKey
       }
-    }
+    y}
     vnetConfiguration: {
       infrastructureSubnetId: virtualNetwork::containerAppsEndpointSubnet.id
     }
-    workloadProfiles: [
-      {
-        name: 'Consumption'
-        workloadProfileType: 'Consumption'
-      }
-    ]
+    // workloadProfiles: [
+    //   {
+    //     name: 'Consumption'
+    //     workloadProfileType: 'Consumption'
+    //   }
+    // ]
   }
 }
 
